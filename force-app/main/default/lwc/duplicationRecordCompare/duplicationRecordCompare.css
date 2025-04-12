@@ -1,0 +1,12 @@
+.slds-item_label, .slds-item_detail {
+    padding: 0.25rem;
+    margin-bottom: 0.125rem;
+}
+
+.slds-text-color_error {
+    color: #c23934;
+}
+
+.slds-is-selected {
+    background-color: #f3f2f2;
+}

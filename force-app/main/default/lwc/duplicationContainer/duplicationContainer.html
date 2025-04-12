@@ -1,0 +1,314 @@
+<template>
+  <div class="slds-grid slds-grid_vertical slds-grid_frame">
+    <!-- Header Section -->
+    <div class="slds-col header">
+      <div class="slds-var-p-around_medium">
+        <div class="slds-grid slds-grid_vertical-align-center">
+          <div class="slds-col slds-size_3-of-4">
+            <div
+              class="slds-text-heading_large slds-var-p-bottom_x-small app-title"
+            >
+              Duplication Manager
+            </div>
+            <p class="slds-text-body_regular app-description">
+              Identify, analyze, and merge duplicate records
+            </p>
+          </div>
+          <div class="slds-col slds-size_1-of-4">
+            <div class="slds-grid slds-grid_align-end">
+              <lightning-button-icon
+                icon-name="utility:refresh"
+                alternative-text="Refresh"
+                title="Refresh"
+                class="slds-var-m-left_xx-small modern-button"
+                variant="border-filled"
+                onclick={handleRefresh}
+              >
+              </lightning-button-icon>
+              <lightning-button-icon
+                icon-name="utility:settings"
+                alternative-text="Settings"
+                title="Settings"
+                class="slds-var-m-left_xx-small modern-button"
+                variant="border-filled"
+                onclick={handleSettings}
+              >
+              </lightning-button-icon>
+              <lightning-button-icon
+                icon-name="utility:help"
+                alternative-text="Help"
+                title="Help"
+                class="slds-var-m-left_xx-small modern-button"
+                variant="border-filled"
+                onclick={handleHelp}
+              >
+              </lightning-button-icon>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Tabs Navigation -->
+      <div class="slds-tabs_default">
+        <ul class="slds-tabs_default__nav" role="tablist">
+          <li
+            for:each={tabs}
+            for:item="tab"
+            key={tab.name}
+            role="presentation"
+            onclick={handleTabClick}
+            data-id={tab.name}
+            class={tab.customClass}
+          >
+            <a
+              class="slds-tabs_default__link"
+              role="tab"
+              tabindex={tab.tabindex}
+              aria-selected={tab.selected}
+              aria-controls={tab.name}
+              id={tab.name}
+            >
+              <lightning-icon
+                icon-name={tab.icon}
+                size="x-small"
+                class="slds-var-m-right_x-small custom-tab-icon"
+              >
+              </lightning-icon>
+              {tab.label}
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="slds-col content-area">
+      <div class="slds-grid slds-grid_vertical-stretch slds-wrap">
+        <!-- Main Content Column -->
+        <div class="slds-col slds-size_9-of-12 main-column">
+          <div class="slds-is-relative">
+            <!-- Tab Content -->
+            <div
+              class={dashboardTabClass}
+              role="tabpanel"
+              aria-labelledby="dashboard"
+            >
+              <c-duplication-dashboard></c-duplication-dashboard>
+            </div>
+            <div
+              class={batchjobsTabClass}
+              role="tabpanel"
+              aria-labelledby="batchjobs"
+            >
+              <c-duplication-batch-controller></c-duplication-batch-controller>
+            </div>
+            <div
+              class={compareTabClass}
+              role="tabpanel"
+              aria-labelledby="compare"
+            >
+              <c-duplication-comparison-view
+                record-ids={selectedRecordIds}
+                object-api-name={selectedObjectApiName}
+                group-id={selectedGroupId}
+              >
+              </c-duplication-comparison-view>
+            </div>
+            <div class={jobsTabClass} role="tabpanel" aria-labelledby="jobs">
+              <c-duplication-job-manager></c-duplication-job-manager>
+            </div>
+            <div class={logsTabClass} role="tabpanel" aria-labelledby="logs">
+              <c-duplication-audit-logs></c-duplication-audit-logs>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar Column -->
+        <div class="slds-col slds-size_3-of-12 sidebar-column">
+          <!-- Configuration Selector (always visible) -->
+          <div class="slds-var-p-around_medium card-container slds-var-m-bottom_medium">
+            <c-duplication-config-selector onselected={handleConfigSelected}>
+            </c-duplication-config-selector>
+          </div>
+
+          <!-- Health Check Panel -->
+          <div class="slds-var-p-around_medium card-container slds-var-m-bottom_medium">
+            <c-duplication-health-check></c-duplication-health-check>
+          </div>
+
+          <!-- Metrics (Dashboard Tab Only) -->
+          <template if:true={isDashboardTab}>
+            <div
+              class="slds-var-p-around_medium card-container slds-var-m-bottom_medium metrics-container"
+            >
+              <c-duplication-metrics-card
+                title="Duplicates Found"
+                value={metrics.duplicatesFound}
+                subtitle="Last 30 days"
+                icon-name="utility:record_lookup"
+                show-trend="true"
+                trend={metrics.duplicatesTrend}
+                variant="default"
+              >
+              </c-duplication-metrics-card>
+            </div>
+
+            <div
+              class="slds-var-p-around_medium card-container slds-var-m-bottom_medium metrics-container"
+            >
+              <c-duplication-metrics-card
+                title="Records Merged"
+                value={metrics.recordsMerged}
+                subtitle="Last 30 days"
+                icon-name="utility:merge"
+                show-trend="true"
+                trend={metrics.mergesTrend}
+                variant="success"
+              >
+              </c-duplication-metrics-card>
+            </div>
+
+            <!-- Statistics Summary -->
+            <div class="slds-var-p-around_medium card-container">
+              <c-duplication-stats-summary
+                time-range="LAST_30_DAYS"
+              ></c-duplication-stats-summary>
+            </div>
+          </template>
+
+          <!-- Job Progress (Batch Jobs Tab Only) -->
+          <template if:true={isBatchJobsTab}>
+            <div class="slds-var-p-around_medium card-container">
+              <c-duplication-job-progress></c-duplication-job-progress>
+            </div>
+          </template>
+
+          <!-- Compare Tab Components -->
+          <template if:true={isCompareTab}>
+            <div
+              class="slds-var-p-around_medium card-container slds-var-m-bottom_medium"
+            >
+              <c-duplication-dry-run-result></c-duplication-dry-run-result>
+            </div>
+
+            <div class="slds-var-p-around_medium card-container">
+              <c-duplication-merge-preview></c-duplication-merge-preview>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <template if:true={showSettings}>
+    <section
+      role="dialog"
+      tabindex="-1"
+      class="slds-modal slds-fade-in-open slds-modal_medium settings-modal"
+    >
+      <div class="slds-modal__container">
+        <header class="slds-modal__header">
+          <button
+            class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse modern-button"
+            onclick={closeSettings}
+          >
+            <lightning-icon
+              icon-name="utility:close"
+              size="small"
+            ></lightning-icon>
+          </button>
+          <h2 class="slds-modal__title slds-hyphenate">Settings</h2>
+        </header>
+        <div class="slds-modal__content slds-var-p-around_medium">
+          <div class="slds-form slds-form_stacked">
+            <div class="slds-form-element">
+              <label class="slds-form-element__label" for="defaultBatchSize"
+                >Default Batch Size</label
+              >
+              <div class="slds-form-element__control">
+                <lightning-slider
+                  label="Batch Size"
+                  variant="label-hidden"
+                  min="50"
+                  max="2000"
+                  step="50"
+                  value={userSettings.defaultBatchSize}
+                  onchange={handleBatchSizeChange}
+                >
+                </lightning-slider>
+                <div class="slds-text-body_small slds-text-align_right">
+                  {userSettings.defaultBatchSize} records
+                </div>
+              </div>
+            </div>
+
+            <div class="slds-form-element">
+              <label class="slds-form-element__label">Data Display</label>
+              <div class="slds-form-element__control">
+                <lightning-checkbox-group
+                  options={displayOptions}
+                  value={selectedDisplayOptions}
+                  onchange={handleDisplayOptionsChange}
+                >
+                </lightning-checkbox-group>
+              </div>
+            </div>
+
+            <div class="slds-form-element">
+              <label class="slds-form-element__label">Default Time Range</label>
+              <div class="slds-form-element__control">
+                <lightning-combobox
+                  name="timeRange"
+                  value={userSettings.timeRange}
+                  options={timeRangeOptions}
+                  onchange={handleTimeRangeChange}
+                >
+                </lightning-combobox>
+              </div>
+            </div>
+
+            <div class="slds-form-element">
+              <label class="slds-form-element__label">Default View</label>
+              <div class="slds-form-element__control">
+                <lightning-combobox
+                  name="defaultView"
+                  value={userSettings.defaultView}
+                  options={viewOptions}
+                  onchange={handleDefaultViewChange}
+                >
+                </lightning-combobox>
+              </div>
+            </div>
+
+            <div class="slds-form-element">
+              <label class="slds-form-element__label">Notifications</label>
+              <div class="slds-form-element__control">
+                <lightning-checkbox-group
+                  options={notificationOptions}
+                  value={selectedNotificationOptions}
+                  onchange={handleNotificationOptionsChange}
+                >
+                </lightning-checkbox-group>
+              </div>
+            </div>
+          </div>
+        </div>
+        <footer class="slds-modal__footer">
+          <button
+            class="slds-button slds-button_neutral modern-button"
+            onclick={closeSettings}
+          >
+            Cancel
+          </button>
+          <button
+            class="slds-button slds-button_brand modern-button"
+            onclick={saveSettings}
+          >
+            Save
+          </button>
+        </footer>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+</template>

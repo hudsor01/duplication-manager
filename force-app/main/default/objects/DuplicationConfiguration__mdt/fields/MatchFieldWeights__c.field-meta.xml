@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>MatchFieldWeights__c</fullName>
+    <description>JSON mapping of fields to weights</description>
+    <externalId>false</externalId>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <label>Match Field Weights</label>
+    <required>false</required>
+    <type>TextArea</type>
+</CustomField>

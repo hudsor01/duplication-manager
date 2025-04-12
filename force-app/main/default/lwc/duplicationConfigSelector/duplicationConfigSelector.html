@@ -1,0 +1,169 @@
+<template>
+  <!-- Loading Spinner -->
+  <template if:true={isLoading}>
+    <lightning-spinner
+      alternative-text="Loading configurations"
+      size="small"
+    ></lightning-spinner>
+  </template>
+
+  <div class="slds-var-p-around_medium">
+    <!-- Error Display -->
+    <template if:true={hasError}>
+      <div class="slds-text-color_error slds-var-p-around_small">
+        <lightning-icon
+          icon-name="utility:error"
+          alternative-text="Error"
+          size="small"
+          class="slds-var-m-right_x-small"
+        ></lightning-icon>
+        <span>{error.message}</span>
+      </div>
+    </template>
+
+    <!-- Configuration Selection Section -->
+    <div
+      class="slds-form slds-form_stacked"
+      role="region"
+      aria-labelledby="config-heading"
+    >
+      <h2
+        id="config-heading"
+        class="slds-text-heading_small slds-var-m-bottom_small"
+      >
+        Duplication Detection Configuration
+      </h2>
+
+      <!-- No Configurations Message -->
+      <template if:false={hasConfigurations}>
+        <div class="slds-box slds-theme_info slds-var-p-around_medium">
+          <h3 class="slds-text-heading_small slds-var-m-bottom_small">
+            No Active Duplicate Finder Settings Found
+          </h3>
+          <p>
+            The Duplication Manager requires custom metadata configuration to be
+            deployed to your org.
+          </p>
+
+          <div class="slds-text-align_left slds-var-m-top_medium">
+            <ol class="slds-list_ordered">
+              <li class="slds-var-m-bottom_x-small">
+                Ensure the DuplicateFinderSetting__mdt custom metadata type
+                exists in your org
+              </li>
+              <li class="slds-var-m-bottom_x-small">
+                Verify you have at least one record with IsActive__c = true
+              </li>
+              <li class="slds-var-m-bottom_x-small">
+                Deploy the components by right-clicking the "customMetadata"
+                folder in VS Code and selecting "Deploy Source to Org"
+              </li>
+            </ol>
+          </div>
+
+          <div class="slds-var-m-top_medium slds-text-align_center">
+            <lightning-button
+              label="Open Setup Guide"
+              variant="brand"
+              onclick={handleViewGuide}
+            ></lightning-button>
+          </div>
+        </div>
+      </template>
+
+      <!-- Configuration Dropdown -->
+      <template if:true={hasConfigurations}>
+        <div class="slds-form-element">
+          <div class="slds-form-element__control">
+            <lightning-combobox
+              name="configuration"
+              label="Select Configuration"
+              variant="standard"
+              placeholder="--Select a Configuration--"
+              value={selectedConfigId}
+              options={configOptions}
+              onchange={handleConfigChange}
+            >
+            </lightning-combobox>
+          </div>
+        </div>
+
+        <!-- Recent Configurations -->
+        <template if:true={hasRecentConfigurations}>
+          <div class="slds-var-m-top_small">
+            <p class="slds-text-title slds-var-m-bottom_xx-small">
+              Recent Configurations
+            </p>
+            <div class="slds-var-p-vertical_x-small">
+              <template for:each={recentConfigurations} for:item="config">
+                <span
+                  key={config.DeveloperName}
+                  class="slds-var-m-right_xx-small slds-var-m-bottom_xx-small"
+                  data-id={config.DeveloperName}
+                  onclick={handleRecentSelection}
+                >
+                  <span class="">{config.MasterLabel}</span>
+                </span>
+              </template>
+            </div>
+          </div>
+        </template>
+      </template>
+
+      <!-- Selected Configuration Details -->
+      <template if:true={hasSelectedConfiguration}>
+        <div class="slds-box slds-theme_shade slds-var-m-top_medium">
+          <div class="slds-text-title slds-var-m-bottom_small">
+            Configuration Details
+          </div>
+          <lightning-layout multiple-rows>
+            <lightning-layout-item size="6" padding="horizontal-small">
+              <p>
+                <strong>Object:</strong> {selectedConfiguration.ObjectApiName}
+              </p>
+              <p>
+                <strong>Match Fields:</strong>
+                {selectedConfiguration.MatchFields}
+              </p>
+            </lightning-layout-item>
+            <lightning-layout-item size="6" padding="horizontal-small">
+              <p>
+                <strong>Master Record Strategy:</strong>
+                {selectedConfiguration.MasterRecordStrategy}
+              </p>
+              <p>
+                <strong>Batch Size:</strong> {selectedConfiguration.BatchSize}
+              </p>
+            </lightning-layout-item>
+          </lightning-layout>
+
+          <!-- Tooltips and Help Text -->
+          <div class="slds-var-m-top_small slds-text-body_small">
+            <div
+              class="slds-box slds-theme_info slds-var-p-around_small slds-text-align_left"
+            >
+              <p>
+                <lightning-icon
+                  icon-name="utility:info"
+                  size="xx-small"
+                  class="slds-var-m-right_xx-small"
+                ></lightning-icon>
+                <strong>Master Record Strategy:</strong> Determines which record
+                becomes the "master" during merge.
+              </p>
+              <p class="slds-var-m-top_xx-small">
+                <lightning-icon
+                  icon-name="utility:info"
+                  size="xx-small"
+                  class="slds-var-m-right_xx-small"
+                ></lightning-icon>
+                <strong>Match Fields:</strong> Fields used to determine if
+                records are duplicates.
+              </p>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+</template>

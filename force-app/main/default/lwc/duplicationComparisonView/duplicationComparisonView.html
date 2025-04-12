@@ -1,0 +1,169 @@
+<template>
+  <div class="comparison-container">
+    <div if:true={isLoading} class="slds-is-relative slds-var-p-around_large">
+      <lightning-spinner
+        alternative-text="Loading"
+        size="medium"
+      ></lightning-spinner>
+    </div>
+
+    <template if:false={isLoading}>
+      <div if:true={hasRecords} class="comparison-view">
+        <!-- Header Section -->
+        <div
+          class="slds-grid slds-wrap slds-grid_vertical-align-end comparison-header"
+        >
+          <div class="slds-col slds-size_1-of-3 slds-var-p-horizontal_x-small">
+            <div class="slds-text-heading_medium slds-var-p-bottom_small">
+              Master Record
+            </div>
+          </div>
+          <div class="slds-col slds-size_2-of-3">
+            <div class="slds-grid slds-wrap">
+              <template
+                for:each={duplicateRecords}
+                for:item="record"
+                for:index="index"
+              >
+                <div key={record.id} class="slds-col duplicate-column">
+                  <div class="slds-grid slds-grid_vertical-align-center">
+                    <div class="slds-text-heading_medium slds-truncate">
+                      Duplicate {index}
+                    </div>
+                    <div class="slds-var-m-left_x-small">
+                      <lightning-button-icon
+                        icon-name="utility:anchor"
+                        variant="border-filled"
+                        alternative-text="Set as Master"
+                        title="Set as Master"
+                        data-id={record.id}
+                        onclick={handleSetAsMaster}
+                      >
+                      </lightning-button-icon>
+                    </div>
+                    <div class="slds-var-m-left_xx-small">
+                      <lightning-badge
+                        label={record.matchScore}
+                        class="match-score"
+                      ></lightning-badge>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fields Section -->
+        <div class="slds-grid slds-wrap comparison-fields">
+          <template for:each={fieldGroups} for:item="group">
+            <div
+              key={group.label}
+              class="slds-col slds-size_12-of-12 field-group"
+            >
+              <div class="slds-grid slds-wrap">
+                <div
+                  class="slds-col slds-size_12-of-12 field-group-header slds-var-p-vertical_x-small slds-var-p-horizontal_small"
+                >
+                  <div class="slds-text-title_caps">{group.label}</div>
+                </div>
+              </div>
+
+              <template for:each={group.fields} for:item="field">
+                <div
+                  key={field.apiName}
+                  class="slds-grid slds-wrap field-row"
+                >
+                  <!-- Field Label -->
+                  <div
+                    class="slds-col slds-size_1-of-3 field-label slds-var-p-horizontal_small slds-var-p-vertical_x-small"
+                  >
+                    <div class="slds-form-element__label">{field.label}</div>
+                  </div>
+
+                  <!-- Master Record Value -->
+                  <div
+                    class="slds-col slds-size_1-of-3 field-value slds-var-p-horizontal_small slds-var-p-vertical_x-small"
+                  >
+                    <div class={field.masterClass}>{field.masterValue}</div>
+                  </div>
+
+                  <!-- Duplicate Record Values -->
+                  <div class="slds-col slds-size_2-of-3 slds-grid">
+                    <template
+                      for:each={field.duplicateValues}
+                      for:item="dupValue"
+                    >
+                      <div
+                        key={dupValue.id}
+                        class="slds-col duplicate-column field-value slds-var-p-horizontal_small slds-var-p-vertical_x-small"
+                      >
+                        <div class={dupValue.class}>
+                          {dupValue.value}
+                          <template if:true={dupValue.isSelected}>
+                            <lightning-icon
+                              icon-name="utility:check"
+                              class="slds-icon slds-icon_xx-small slds-icon-text-success slds-var-m-left_xx-small"
+                            ></lightning-icon>
+                          </template>
+                          <template if:true={dupValue.isDifferent}>
+                            <lightning-button-icon
+                              icon-name="utility:replace"
+                              class="slds-var-m-left_xx-small field-action"
+                              alternative-text="Use This Value"
+                              title="Use This Value"
+                              data-field={field.apiName}
+                              data-record={dupValue.id}
+                              onclick={handleSelectValue}
+                            >
+                            </lightning-button-icon>
+                          </template>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
+
+        <!-- Actions Section -->
+        <div
+          class="slds-grid slds-wrap slds-grid_align-center slds-var-p-around_medium action-bar"
+        >
+          <div class="slds-col">
+            <lightning-button
+              label="Cancel"
+              onclick={handleCancel}
+              class="slds-var-m-right_small"
+            >
+            </lightning-button>
+            <lightning-button
+              label="Preview Merge"
+              variant="brand"
+              onclick={handlePreviewMerge}
+            >
+            </lightning-button>
+          </div>
+        </div>
+      </div>
+
+      <div
+        if:false={hasRecords}
+        class="slds-text-align_center slds-var-p-around_large"
+      >
+        <div class="slds-illustration slds-illustration_small">
+          <img src="/img/chatter/Desert.svg" alt="No records found" />
+        </div>
+        <div class="slds-text-heading_medium slds-var-p-top_large">
+          No duplicate records available for comparison
+        </div>
+        <div class="slds-text-body_regular slds-var-p-top_small">
+          Please select a duplicate group to compare or run a duplicate
+          identification job.
+        </div>
+      </div>
+    </template>
+  </div>
+</template>

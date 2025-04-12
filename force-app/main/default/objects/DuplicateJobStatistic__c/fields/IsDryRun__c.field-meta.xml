@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>IsDryRun__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Indicates if the job was a dry run (find only, no merge)</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Indicates if the job was a dry run (find only, no merge)</inlineHelpText>
+    <label>Is Dry Run</label>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

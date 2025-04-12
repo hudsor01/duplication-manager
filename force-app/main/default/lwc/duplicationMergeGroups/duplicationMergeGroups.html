@@ -1,0 +1,470 @@
+<template>
+  <div class="slds-card">
+    <div class="slds-card__header slds-grid">
+      <header class="slds-media slds-media_center slds-has-flexi-truncate">
+        <div class="slds-media__figure">
+          <lightning-icon
+            icon-name="standard:merge"
+            alternative-text="Duplicate Groups"
+            size="medium"
+          ></lightning-icon>
+        </div>
+        <div class="slds-media__body">
+          <h2 class="slds-card__header-title">
+            <span class="slds-text-heading_medium">Duplicate Groups</span>
+          </h2>
+        </div>
+        <div class="slds-no-flex">
+          <lightning-button-icon
+            icon-name="utility:refresh"
+            alternative-text="Refresh"
+            title="Refresh"
+            onclick={loadGroups}
+          >
+          </lightning-button-icon>
+        </div>
+      </header>
+    </div>
+
+    <div class="slds-card__body slds-card__body_inner">
+      <!-- Loading State -->
+      <template if:true={isLoading}>
+        <div class="slds-var-p-around_medium slds-align_absolute-center">
+          <lightning-spinner
+            alternative-text="Loading"
+            size="medium"
+          ></lightning-spinner>
+          <p class="slds-var-p-left_small">Loading duplicate groups...</p>
+        </div>
+      </template>
+
+      <!-- Empty State -->
+      <template if:true={showEmptyState}>
+        <div
+          class="slds-illustration slds-illustration_small slds-var-p-around_medium"
+        >
+          <div class="slds-text-longform slds-text-align_center">
+            <h3 class="slds-text-heading_medium">No duplicate groups found</h3>
+            <p class="slds-text-body_regular">
+              No duplicate groups were detected for the current configuration
+            </p>
+          </div>
+        </div>
+      </template>
+
+      <!-- Error State -->
+      <template if:true={error}>
+        <div class="slds-var-p-around_medium">
+          <div class="slds-box slds-theme_error">
+            <p>{error}</p>
+          </div>
+        </div>
+      </template>
+
+      <!-- Groups Found State -->
+      <template if:true={hasGroups}>
+        <!-- Summary Actions -->
+        <div
+          class="slds-grid slds-grid_vertical-align-center slds-var-m-bottom_medium slds-border_bottom slds-var-p-bottom_small"
+        >
+          <div class="slds-col">
+            <lightning-badge
+              label={groupCountLabel}
+              class="slds-var-m-right_small"
+            ></lightning-badge>
+            <template if:true={hasExcludedGroups}>
+              <lightning-badge
+                label={excludedCountLabel}
+                class="slds-badge_inverse slds-var-m-right_small"
+              ></lightning-badge>
+            </template>
+            <template if:true={hasFlaggedGroups}>
+              <lightning-badge
+                label={flaggedCountLabel}
+                class="slds-badge_inverse slds-theme_warning slds-var-m-right_small"
+              ></lightning-badge>
+            </template>
+          </div>
+          <div class="slds-col slds-text-align_right">
+            <lightning-button
+              variant="brand"
+              label="Merge All Selected Groups"
+              title="Merge All Selected Groups"
+              onclick={mergeAllGroups}
+              disabled={isLoading}
+            >
+            </lightning-button>
+          </div>
+        </div>
+
+        <!-- Group List -->
+        <ul class="slds-has-dividers_bottom-space">
+          <template for:each={groups} for:item="group">
+            <li key={group.id} class="slds-item">
+              <div class="slds-grid slds-grid_vertical">
+                <!-- Group Header -->
+                <div
+                  class="slds-grid slds-grid_align-spread slds-var-p-around_small"
+                >
+                  <div class="slds-col slds-size_1-of-3">
+                    <div class="slds-form-element">
+                      <div class="slds-form-element__control">
+                        <div class="slds-checkbox">
+                          <lightning-input
+                            type="checkbox"
+                            label="Exclude from merge"
+                            checked={group.isExcluded}
+                            data-group-id={group.id}
+                            onchange={toggleGroupExclusion}
+                          >
+                          </lightning-input>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="slds-col slds-size_1-of-3">
+                    <div class="slds-form-element">
+                      <div class="slds-form-element__control">
+                        <div class="slds-checkbox">
+                          <lightning-input
+                            type="checkbox"
+                            label="Flag for review"
+                            checked={group.isFlagged}
+                            data-group-id={group.id}
+                            onchange={toggleGroupFlag}
+                          >
+                          </lightning-input>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="slds-col slds-size_1-of-3 slds-text-align_right">
+                    <lightning-button-group>
+                      <lightning-button
+                        variant="neutral"
+                        label="Compare"
+                        title="Side-by-side Comparison"
+                        data-group-id={group.id}
+                        onclick={openComparisonModal}
+                      >
+                      </lightning-button>
+                      <lightning-button
+                        variant="neutral"
+                        label="Note Preview"
+                        title="View Conflict Note Preview"
+                        data-group-id={group.id}
+                        onclick={openNotePreviewModal}
+                      >
+                      </lightning-button>
+                      <lightning-button
+                        variant="neutral"
+                        label="Master Preview"
+                        title="View Master Record Preview"
+                        data-group-id={group.id}
+                        onclick={openMasterPreviewModal}
+                      >
+                      </lightning-button>
+                      <lightning-button
+                        variant="success"
+                        label="Merge"
+                        title="Merge This Group"
+                        data-group-id={group.id}
+                        onclick={mergeGroup}
+                        disabled={group.isExcluded}
+                      >
+                      </lightning-button>
+                      <lightning-button-icon
+                        icon-name={expandIcon}
+                        variant="bare"
+                        alternative-text="Toggle Details"
+                        title="Toggle Details"
+                        data-group-id={group.id}
+                        onclick={toggleGroupExpansion}
+                      >
+                      </lightning-button-icon>
+                    </lightning-button-group>
+                  </div>
+                </div>
+
+                <!-- Group Summary -->
+                <div
+                  class="slds-grid slds-wrap slds-var-p-horizontal_small slds-var-p-bottom_small"
+                >
+                  <div class="slds-col slds-size_1-of-4">
+                    <div class="slds-text-title">Group ID</div>
+                    <div class="slds-text-body_small">{group.id}</div>
+                  </div>
+                  <div class="slds-col slds-size_1-of-4">
+                    <div class="slds-text-title">Record Count</div>
+                    <div class="slds-text-body_small">{group.recordCount}</div>
+                  </div>
+                  <div class="slds-col slds-size_1-of-4">
+                    <div class="slds-text-title">Match Score</div>
+                    <div class="slds-text-body_small">{group.matchScore}%</div>
+                  </div>
+                  <div class="slds-col slds-size_1-of-4">
+                    <div class="slds-text-title">Object</div>
+                    <div class="slds-text-body_small">{group.objectName}</div>
+                  </div>
+                </div>
+
+                <!-- Group Expanded Details -->
+                <div
+                  class="slds-grid slds-wrap slds-var-p-horizontal_small slds-var-p-bottom_small"
+                  if:true={group.isExpanded}
+                >
+                  <div class="slds-col slds-size_1-of-1 slds-var-m-bottom_small">
+                    <div class="slds-text-title">Master Record Selection</div>
+                    <div class="slds-form-element">
+                      <div class="slds-form-element__control">
+                        <div class="slds-radio_button-group">
+                          <template
+                            for:each={group.duplicateRecordIds}
+                            for:item="recordId"
+                          >
+                            <div key={recordId} class="slds-radio_button">
+                              <lightning-input
+                                type="radio"
+                                label={recordId}
+                                name={group.id}
+                                value={recordId}
+                                checked={isMasterRecord}
+                                data-group-id={group.id}
+                                onchange={setMasterRecord}
+                              >
+                              </lightning-input>
+                            </div>
+                          </template>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+          </template>
+        </ul>
+
+        <!-- Pagination -->
+        <div class="slds-grid slds-grid_align-center slds-var-m-top_medium">
+          <lightning-button-group>
+            <lightning-button
+              label="Previous"
+              title="Previous Page"
+              icon-name="utility:chevronleft"
+              disabled={isFirstPage}
+              onclick={handlePreviousPage}
+            >
+            </lightning-button>
+            <lightning-button label={paginationLabel} disabled>
+            </lightning-button>
+            <lightning-button
+              label="Next"
+              title="Next Page"
+              icon-name="utility:chevronright"
+              icon-position="right"
+              disabled={isLastPage}
+              onclick={handleNextPage}
+            >
+            </lightning-button>
+          </lightning-button-group>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <!-- Comparison Modal -->
+  <template if:true={showComparisonModal}>
+    <section
+      role="dialog"
+      tabindex="-1"
+      aria-labelledby="comparison-modal-heading"
+      aria-modal="true"
+      aria-describedby="comparison-modal-content"
+      class="slds-modal slds-fade-in-open"
+    >
+      <div class="slds-modal__container">
+        <!-- Modal Header -->
+        <header class="slds-modal__header">
+          <button
+            class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+            title="Close"
+            onclick={closeComparisonModal}
+          >
+            <lightning-icon
+              icon-name="utility:close"
+              alternative-text="Close"
+              variant="inverse"
+              size="small"
+            ></lightning-icon>
+            <span class="slds-assistive-text">Close</span>
+          </button>
+          <h2
+            id="comparison-modal-heading"
+            class="slds-text-heading_medium slds-hyphenate"
+          >
+            Side-by-Side Comparison
+          </h2>
+        </header>
+
+        <!-- Modal Body -->
+        <div
+          class="slds-modal__content slds-var-p-around_medium"
+          id="comparison-modal-content"
+        >
+          <lightning-tabset variant="scoped">
+            <lightning-tab label="Record Comparison">
+              <c-duplication-record-compare
+                group={groupForComparison}
+                object-api-name={objectApiName}
+              >
+              </c-duplication-record-compare>
+            </lightning-tab>
+            <lightning-tab label="Master Record Preview">
+              <c-duplication-master-preview
+                group={groupForComparison}
+                object-api-name={objectApiName}
+                master-record-id={groupForComparison.masterRecordId}
+              >
+              </c-duplication-master-preview>
+            </lightning-tab>
+          </lightning-tabset>
+        </div>
+
+        <!-- Modal Footer -->
+        <footer class="slds-modal__footer">
+          <button
+            class="slds-button slds-button_neutral"
+            onclick={closeComparisonModal}
+          >
+            Close
+          </button>
+        </footer>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+
+  <!-- Master Preview Modal -->
+  <template if:true={showMasterPreviewModal}>
+    <section
+      role="dialog"
+      tabindex="-1"
+      aria-labelledby="master-preview-modal-heading"
+      aria-modal="true"
+      aria-describedby="master-preview-modal-content"
+      class="slds-modal slds-fade-in-open"
+    >
+      <div class="slds-modal__container">
+        <!-- Modal Header -->
+        <header class="slds-modal__header">
+          <button
+            class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+            title="Close"
+            onclick={closeMasterPreviewModal}
+          >
+            <lightning-icon
+              icon-name="utility:close"
+              alternative-text="Close"
+              variant="inverse"
+              size="small"
+            ></lightning-icon>
+            <span class="slds-assistive-text">Close</span>
+          </button>
+          <h2
+            id="master-preview-modal-heading"
+            class="slds-text-heading_medium slds-hyphenate"
+          >
+            Master Record Preview
+          </h2>
+        </header>
+
+        <!-- Modal Body -->
+        <div
+          class="slds-modal__content slds-var-p-around_medium"
+          id="master-preview-modal-content"
+        >
+          <c-duplication-master-preview
+            group={groupForComparison}
+            object-api-name={objectApiName}
+            master-record-id={selectedMasterRecord}
+          >
+          </c-duplication-master-preview>
+        </div>
+
+        <!-- Modal Footer -->
+        <footer class="slds-modal__footer">
+          <button
+            class="slds-button slds-button_neutral"
+            onclick={closeMasterPreviewModal}
+          >
+            Close
+          </button>
+        </footer>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+
+  <!-- Note Preview Modal -->
+  <template if:true={showNotePreviewModal}>
+    <section
+      role="dialog"
+      tabindex="-1"
+      aria-labelledby="note-preview-modal-heading"
+      aria-modal="true"
+      aria-describedby="note-preview-modal-content"
+      class="slds-modal slds-fade-in-open"
+    >
+      <div class="slds-modal__container">
+        <!-- Modal Header -->
+        <header class="slds-modal__header">
+          <button
+            class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+            title="Close"
+            onclick={closeNotePreviewModal}
+          >
+            <lightning-icon
+              icon-name="utility:close"
+              alternative-text="Close"
+              variant="inverse"
+              size="small"
+            ></lightning-icon>
+            <span class="slds-assistive-text">Close</span>
+          </button>
+          <h2
+            id="note-preview-modal-heading"
+            class="slds-text-heading_medium slds-hyphenate"
+          >
+            Conflict Note Preview
+          </h2>
+        </header>
+
+        <!-- Modal Body -->
+        <div
+          class="slds-modal__content slds-var-p-around_medium"
+          id="note-preview-modal-content"
+        >
+          <div class="slds-text-longform">
+            <lightning-formatted-rich-text
+              value={notePreviewContent}
+            ></lightning-formatted-rich-text>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <footer class="slds-modal__footer">
+          <button
+            class="slds-button slds-button_neutral"
+            onclick={closeNotePreviewModal}
+          >
+            Close
+          </button>
+        </footer>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+</template>

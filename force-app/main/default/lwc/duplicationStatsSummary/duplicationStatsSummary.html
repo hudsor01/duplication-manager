@@ -1,0 +1,90 @@
+<!--
+  Statistics Summary Component
+  Displays key metrics about duplicate records in a clean card layout
+-->
+<template>
+  <!-- Loading State -->
+  <template if:true={isLoading}>
+    <lightning-spinner
+      alternative-text="Loading statistics"
+      size="small"
+    ></lightning-spinner>
+  </template>
+
+  <!-- Error State -->
+  <template if:true={hasError}>
+    <div
+      class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error"
+      role="alert"
+    >
+      <span class="slds-assistive-text">Error</span>
+      <lightning-icon
+        icon-name="utility:error"
+        alternative-text="Error"
+        size="small"
+        class="slds-var-m-right_x-small"
+      ></lightning-icon>
+      <h2>{errorMessage}</h2>
+    </div>
+  </template>
+
+  <!-- Statistics Cards -->
+  <div class="slds-grid slds-gutters slds-wrap">
+    <!-- Total Duplicates Found -->
+    <div
+      class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-var-p-around_small"
+    >
+      <div
+        class="slds-box slds-box_x-small slds-text-align_center slds-theme_default"
+      >
+        <div class="slds-text-heading_medium">Total Duplicates</div>
+        <div class="slds-text-heading_large slds-text-color_success">
+          {totalDuplicates}
+        </div>
+        <div
+          class="slds-text-body_small slds-text-color_weak slds-var-m-top_x-small"
+        >
+          <template if:true={objectApiName}> for {objectApiName} </template>
+          <template if:false={objectApiName}> across all objects </template>
+        </div>
+      </div>
+    </div>
+
+    <!-- Records Processed -->
+    <div
+      class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-var-p-around_small"
+    >
+      <div
+        class="slds-box slds-box_x-small slds-text-align_center slds-theme_default"
+      >
+        <div class="slds-text-heading_medium">Records Processed</div>
+        <div class="slds-text-heading_large">{recordsProcessed}</div>
+        <div
+          class="slds-text-body_small slds-text-color_weak slds-var-m-top_x-small"
+        >
+          total duplication jobs
+        </div>
+      </div>
+    </div>
+
+    <!-- Records Merged -->
+    <div
+      class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-var-p-around_small"
+    >
+      <div
+        class="slds-box slds-box_x-small slds-text-align_center slds-theme_default"
+      >
+        <div class="slds-text-heading_medium">Records Merged</div>
+        <div class="slds-text-heading_large slds-text-color_error">
+          {recordsMerged}
+        </div>
+        <div
+          class="slds-text-body_small slds-text-color_weak slds-var-m-top_x-small"
+        >
+          <template if:true={objectApiName}> for {objectApiName} </template>
+          <template if:false={objectApiName}> across all objects </template>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>

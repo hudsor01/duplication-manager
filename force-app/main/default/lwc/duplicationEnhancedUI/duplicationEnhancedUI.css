@@ -1,0 +1,101 @@
+.progress-ring {
+  --progress-angle: 0deg;
+  --ring-size: 60px;
+  --ring-width: 8px;
+  --ring-color: #0176d3;
+  --ring-bg-color: #ecebea;
+  position: relative;
+  display: inline-block;
+  width: var(--ring-size);
+  height: var(--ring-size);
+}
+
+.progress-ring_small {
+  --ring-size: 40px;
+  --ring-width: 4px;
+}
+
+.progress-ring_large {
+  --ring-size: 80px;
+  --ring-width: 10px;
+}
+
+.progress-ring_success {
+  --ring-color: #2e844a;
+}
+
+.progress-ring_warning {
+  --ring-color: #dd7a01;
+}
+
+.progress-ring_error {
+  --ring-color: #ea001e;
+}
+
+.progress-ring__circle {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: var(--ring-bg-color);
+  overflow: hidden;
+}
+
+.progress-ring__mask {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.progress-ring__full {
+  clip: rect(0, var(--ring-size), var(--ring-size), calc(var(--ring-size) / 2));
+  transform: rotate(var(--progress-angle));
+  transition: transform 0.3s ease;
+}
+
+.progress-ring__half {
+  clip: rect(0, calc(var(--ring-size) / 2), var(--ring-size), 0);
+}
+
+.progress-ring__fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--ring-color);
+  transform-origin: center;
+}
+
+.progress-ring__half .progress-ring__fill {
+  transform: rotate(180deg);
+  transition: transform 0.3s ease;
+}
+
+.progress-ring__full .progress-ring__fill {
+  transform: rotate(180deg);
+}
+
+.progress-ring__inset {
+  position: absolute;
+  top: var(--ring-width);
+  left: var(--ring-width);
+  width: calc(100% - (var(--ring-width) * 2));
+  height: calc(100% - (var(--ring-width) * 2));
+  border-radius: 50%;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-ring__text {
+  font-size: calc(var(--ring-size) / 4);
+  font-weight: bold;
+  color: #3e3e3c;
+}

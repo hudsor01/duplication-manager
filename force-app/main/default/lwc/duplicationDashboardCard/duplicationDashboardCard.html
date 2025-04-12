@@ -1,0 +1,16 @@
+<!-- Simple card wrapper component for duplicate manager sections -->
+<template>
+  <lightning-card title={cardTitle} icon-name={iconName}>
+    <div slot="actions">
+      <slot name="actions"></slot>
+    </div>
+
+    <div class="slds-var-p-horizontal_small">
+      <slot></slot>
+    </div>
+
+    <div slot="footer">
+      <slot name="footer"></slot>
+    </div>
+  </lightning-card>
+</template>

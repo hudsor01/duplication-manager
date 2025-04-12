@@ -1,0 +1,246 @@
+<template>
+    <div class="audit-logs-container">
+        <!-- Loading Spinner -->
+        <div if:true={isLoading} class="slds-is-relative slds-var-p-around_small">
+            <lightning-spinner alternative-text="Loading audit logs" size="small"></lightning-spinner>
+        </div>
+
+        <!-- Error Message -->
+        <template if:true={error}>
+            <div class="slds-text-color_error slds-var-p-around_small">
+                <lightning-icon icon-name="utility:error" size="x-small" class="slds-var-m-right_x-small"></lightning-icon>
+                <span>{error}</span>
+            </div>
+        </template>
+
+        <!-- Filters Section -->
+        <lightning-card title="Merge Audit Logs" icon-name="standard:record_lookup">
+            <div slot="actions">
+                <lightning-button-icon
+                    icon-name="utility:refresh"
+                    alternative-text="Refresh Logs"
+                    title="Refresh Logs"
+                    onclick={refreshLogs}>
+                </lightning-button-icon>
+            </div>
+
+            <!-- Filter Controls -->
+            <div class="slds-grid slds-gutters slds-var-m-bottom_medium slds-var-p-horizontal_medium">
+                <div class="slds-col slds-size_1-of-3">
+                    <lightning-combobox
+                        label="Date Range"
+                        value={filters.dateRange}
+                        options={dateRangeOptions}
+                        onchange={handleDateRangeChange}
+                        data-filter="dateRange">
+                    </lightning-combobox>
+                </div>
+
+                <div class="slds-col slds-size_1-of-3">
+                    <lightning-combobox
+                        label="Records Per Page"
+                        value={pagination.pageSize}
+                        options={pageSizeOptions}
+                        onchange={handlePageSizeChange}>
+                    </lightning-combobox>
+                </div>
+            </div>
+
+            <!-- Datatable -->
+            <div class="slds-var-p-horizontal_medium">
+                <template if:true={hasLogs}>
+                    <lightning-datatable
+                        key-field="id"
+                        data={logs}
+                        columns={columns}
+                        hide-checkbox-column
+                        sorted-by="executionTime"
+                        sorted-direction="desc"
+                        onrowaction={handleRowAction}>
+                    </lightning-datatable>
+
+                    <!-- Pagination Controls -->
+                    <div class="slds-grid slds-grid_align-spread slds-var-p-vertical_small">
+                        <div class="slds-text-body_small">
+                            Showing {pagination.pageSize} records per page, page {pagination.currentPage} of {pagination.totalPages}
+                        </div>
+                        <div>
+                            <lightning-button-group>
+                                <lightning-button
+                                    label="Previous"
+                                    icon-name="utility:chevronleft"
+                                    onclick={handlePreviousPage}
+                                    disabled={isFirstPage}>
+                                </lightning-button>
+                                <lightning-button
+                                    label="Next"
+                                    icon-name="utility:chevronright"
+                                    icon-position="right"
+                                    onclick={handleNextPage}
+                                    disabled={isLastPage}>
+                                </lightning-button>
+                            </lightning-button-group>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- No Logs Message -->
+                <template if:false={hasLogs}>
+                    <div class="slds-illustration slds-illustration_small slds-var-p-around_small">
+                        <div class="slds-text-longform">
+                            <h3 class="slds-text-heading_medium">No audit logs found</h3>
+                            <p class="slds-text-body_regular">
+                                No merge operations have been performed that match your filters.
+                            </p>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </lightning-card>
+
+        <!-- Log Details Modal -->
+        <template if:true={showLogDetailsModal}>
+            <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_medium">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                                title="Close"
+                                onclick={closeDetailsModal}>
+                            <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+                            <span class="slds-assistive-text">Close</span>
+                        </button>
+                        <h2 class="slds-text-heading_medium slds-hyphenate">Merge Log Details</h2>
+                    </header>
+                    <div class="slds-modal__content slds-var-p-around_medium">
+                        <template if:true={selectedLog}>
+                            <div class="slds-grid slds-gutters slds-wrap">
+                                <div class="slds-col slds-size_1-of-2">
+                                    <div class="slds-form-element">
+                                        <label class="slds-form-element__label">Date/Time</label>
+                                        <div class="slds-form-element__control">
+                                            <lightning-formatted-date-time
+                                                value={selectedLog.executionTime}
+                                                year="numeric"
+                                                month="long"
+                                                day="2-digit"
+                                                hour="2-digit"
+                                                minute="2-digit"
+                                                second="2-digit">
+                                            </lightning-formatted-date-time>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="slds-col slds-size_1-of-2">
+                                    <div class="slds-form-element">
+                                        <label class="slds-form-element__label">User</label>
+                                        <div class="slds-form-element__control">
+                                            <div>{selectedLog.userName}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="slds-col slds-size_1-of-2">
+                                    <div class="slds-form-element">
+                                        <label class="slds-form-element__label">Object</label>
+                                        <div class="slds-form-element__control">
+                                            <div>{selectedLog.objectApiName}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="slds-col slds-size_1-of-2">
+                                    <div class="slds-form-element">
+                                        <label class="slds-form-element__label">Configuration</label>
+                                        <div class="slds-form-element__control">
+                                            <div>{selectedLog.configName}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="slds-col slds-size_1-of-2">
+                                    <div class="slds-form-element">
+                                        <label class="slds-form-element__label">Master Record ID</label>
+                                        <div class="slds-form-element__control">
+                                            <lightning-formatted-url
+                                                value={selectedLog.masterRecordUrl}
+                                                label={selectedLog.masterId}
+                                                target="_blank">
+                                            </lightning-formatted-url>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="slds-col slds-size_1-of-2">
+                                    <div class="slds-form-element">
+                                        <label class="slds-form-element__label">Records Merged</label>
+                                        <div class="slds-form-element__control">
+                                            <div>{selectedLog.recordsMerged}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Merged Records Section -->
+                            <div class="slds-var-m-top_medium">
+                                <h3 class="slds-text-heading_small slds-var-m-bottom_small">Merged Records</h3>
+                                <template if:true={selectedLog.mergedRecords}>
+                                    <ul class="slds-has-dividers_bottom-space">
+                                        <template for:each={selectedLog.mergedRecords} for:item="record">
+                                            <li key={record.id} class="slds-item">
+                                                <div class="slds-grid slds-gutters">
+                                                    <div class="slds-col slds-size_5-of-12">
+                                                        <lightning-formatted-url
+                                                            value={record.url}
+                                                            label={record.id}
+                                                            target="_blank">
+                                                        </lightning-formatted-url>
+                                                    </div>
+                                                    <div class="slds-col slds-size_7-of-12">
+                                                        <div>{record.name}</div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </template>
+                                <template if:false={selectedLog.mergedRecords}>
+                                    <div class="slds-text-body_small slds-text-color_weak">
+                                        No detailed merged record information available.
+                                    </div>
+                                </template>
+                            </div>
+
+                            <!-- Field Merge Details -->
+                            <div class="slds-var-m-top_medium">
+                                <h3 class="slds-text-heading_small slds-var-m-bottom_small">Field Merge Details</h3>
+                                <template if:true={selectedLog.fieldMergeDetails}>
+                                    <div class="slds-box slds-theme_shade">
+                                        <pre>{selectedLog.fieldMergeDetails}</pre>
+                                    </div>
+                                </template>
+                                <template if:false={selectedLog.fieldMergeDetails}>
+                                    <div class="slds-text-body_small slds-text-color_weak">
+                                        No field merge details available.
+                                    </div>
+                                </template>
+                            </div>
+
+                            <!-- Error Messages (if any) -->
+                            <template if:true={selectedLog.errorMessages}>
+                                <div class="slds-var-m-top_medium">
+                                    <h3 class="slds-text-heading_small slds-var-m-bottom_small">Errors</h3>
+                                    <div class="slds-box slds-theme_error">
+                                        <pre>{selectedLog.errorMessages}</pre>
+                                    </div>
+                                </div>
+                            </template>
+                        </template>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <lightning-button
+                            label="Close"
+                            onclick={closeDetailsModal}>
+                        </lightning-button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+    </div>
+</template>

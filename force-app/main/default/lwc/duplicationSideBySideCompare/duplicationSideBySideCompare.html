@@ -1,0 +1,150 @@
+<template>
+  <div class="compare-container">
+    <!-- Loading indicator -->
+    <template if:true={isLoading}>
+      <lightning-spinner
+        alternative-text="Loading"
+        size="medium"
+      ></lightning-spinner>
+    </template>
+
+    <!-- Error message -->
+    <template if:true={error}>
+      <div class="slds-text-color_error slds-var-m-bottom_small">
+        Error loading records: {error}
+      </div>
+    </template>
+
+    <template if:true={hasRecords}>
+      <!-- Header with actions -->
+      <div class="slds-grid slds-gutters slds-var-m-bottom_medium">
+        <div class="slds-col slds-size_7-of-12">
+          <h2 class="slds-text-heading_medium">Compare Duplicate Records</h2>
+        </div>
+        <div class="slds-col slds-size_5-of-12 slds-text-align_right">
+          <lightning-button
+            label="Select All Different"
+            icon-name="utility:check"
+            variant="neutral"
+            onclick={handleSelectDifferent}
+            class="slds-var-m-right_x-small"
+          >
+          </lightning-button>
+          <lightning-button
+            label="Merge Selected"
+            icon-name="utility:merge"
+            variant="brand"
+            onclick={handleMergeSelected}
+          >
+          </lightning-button>
+        </div>
+      </div>
+
+      <!-- Record headers -->
+      <div class="slds-grid slds-gutters slds-var-m-bottom_small">
+        <!-- Field name column -->
+        <div
+          class="slds-col slds-size_2-of-12 slds-theme_shade slds-var-p-around_small"
+        >
+          <div class="slds-text-title_bold">Field</div>
+        </div>
+
+        <!-- Master record column -->
+        <div
+          class="slds-col slds-size_5-of-12 slds-theme_shade slds-var-p-around_small"
+        >
+          <div class="slds-text-title_bold">
+            Master Record
+            <span class="slds-badge slds-badge_lightest slds-var-m-left_x-small">
+              Selected
+            </span>
+          </div>
+        </div>
+
+        <!-- Duplicate record column -->
+        <div
+          class="slds-col slds-size_5-of-12 slds-theme_shade slds-var-p-around_small"
+        >
+          <div class="slds-text-title_bold">Duplicate Record</div>
+        </div>
+      </div>
+
+      <!-- Field comparison rows -->
+      <template for:each={compareFields} for:item="field">
+        <div
+          key={field.fieldName}
+          class="slds-grid slds-gutters slds-var-m-bottom_xx-small field-row"
+        >
+          <!-- Field name -->
+          <div class="slds-col slds-size_2-of-12 slds-var-p-around_small">
+            <div class="slds-text-body_regular">{field.label}</div>
+          </div>
+
+          <!-- Master record value -->
+          <div
+            class="slds-col slds-size_5-of-12 slds-var-p-around_small"
+            class:slds-theme_success={field.selected}
+          >
+            <div class="slds-form-element">
+              <lightning-radio-group
+                name={field.radioName}
+                value="master"
+                options={field.radioOptions}
+                type="radio"
+                variant="label-hidden"
+                onchange={handleValueSelection}
+              >
+              </lightning-radio-group>
+              <div class="slds-text-body_regular field-value">
+                {field.masterValue}
+              </div>
+            </div>
+          </div>
+
+          <!-- Duplicate record value -->
+          <div
+            class="slds-col slds-size_5-of-12 slds-var-p-around_small"
+            class:slds-theme_success={field.duplicateSelected}
+          >
+            <div class="slds-form-element">
+              <lightning-radio-group
+                name={field.radioName}
+                value="duplicate"
+                options={field.radioOptions}
+                type="radio"
+                variant="label-hidden"
+                onchange={handleValueSelection}
+              >
+              </lightning-radio-group>
+              <div
+                class="slds-text-body_regular field-value"
+                class:slds-text-color_success={field.isDifferent}
+              >
+                {field.duplicateValue}
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- Footer with actions -->
+      <div class="slds-grid slds-gutters slds-var-m-top_medium">
+        <div class="slds-col slds-size_12-of-12 slds-text-align_right">
+          <lightning-button
+            label="Cancel"
+            variant="neutral"
+            onclick={handleCancel}
+            class="slds-var-m-right_x-small"
+          >
+          </lightning-button>
+          <lightning-button
+            label="Merge Records"
+            variant="brand"
+            onclick={handleMergeRecords}
+          >
+          </lightning-button>
+        </div>
+      </div>
+    </template>
+  </div>
+</template>

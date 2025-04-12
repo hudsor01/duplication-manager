@@ -1,0 +1,67 @@
+<template>
+  <section
+    role="dialog"
+    tabindex="-1"
+    aria-modal="true"
+    class="slds-modal slds-fade-in-open"
+  >
+    <div class="slds-modal__container">
+      <header class="slds-modal__header">
+        <h2 class="slds-modal__title">Schedule Duplication Job</h2>
+      </header>
+
+      <div class="slds-modal__content slds-var-p-around_medium">
+        <lightning-input
+          label="Job Name"
+          name="jobName"
+          value={jobName}
+          onchange={handleChange}
+          required
+        ></lightning-input>
+
+        <lightning-radio-group
+          label="Schedule Type"
+          name="scheduleType"
+          options={scheduleTypeOptions}
+          value={scheduleType}
+          onchange={handleChange}
+        >
+        </lightning-radio-group>
+
+        <lightning-input
+          type="number"
+          label="Run Hour (0–23)"
+          name="runHour"
+          min="0"
+          max="23"
+          value={runHour}
+          onchange={handleChange}
+        >
+        </lightning-input>
+
+        <lightning-input
+          type="checkbox"
+          label="Dry Run"
+          name="isDryRun"
+          checked={isDryRun}
+          onchange={handleChange}
+        >
+        </lightning-input>
+      </div>
+
+      <footer class="slds-modal__footer">
+        <lightning-button
+          variant="neutral"
+          label="Cancel"
+          onclick={close}
+        ></lightning-button>
+        <lightning-button
+          variant="brand"
+          label="Schedule"
+          onclick={handleSubmit}
+        ></lightning-button>
+      </footer>
+    </div>
+  </section>
+  <div class="slds-backdrop slds-backdrop_open"></div>
+</template>

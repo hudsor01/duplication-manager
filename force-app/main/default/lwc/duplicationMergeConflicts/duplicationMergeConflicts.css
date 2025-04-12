@@ -1,0 +1,141 @@
+.conflict-card {
+  border-radius: 0.25rem;
+  border: 1px solid #dddbda;
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.05);
+  transition:
+    box-shadow 0.3s ease,
+    transform 0.2s ease;
+}
+
+.conflict-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.field-label {
+  font-weight: 600;
+  color: #032d60;
+}
+
+.conflict-table {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.conflict-table th {
+  background-color: #f3f3f3;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.conflict-table tr:hover {
+  background-color: #f8f8f8;
+}
+
+.action-button {
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
+}
+
+.action-button:active {
+  transform: scale(0.98);
+}
+
+.master-value {
+  background-color: rgba(21, 137, 238, 0.05);
+  border-left: 3px solid #1589ee;
+}
+
+.no-conflicts-container {
+  border-radius: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  background-color: #f8fcff;
+  border: 1px dashed #dddbda;
+  transition: all 0.3s ease;
+}
+
+.no-conflicts-container:hover {
+  border-color: #1589ee;
+  box-shadow: 0 2px 8px rgba(21, 137, 238, 0.1);
+}
+
+.success-icon {
+  --sds-c-icon-color-foreground-default: #04844b;
+}
+
+.error-container {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.value-option {
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s ease;
+}
+
+.value-option:hover {
+  background-color: #f3f3f3;
+}
+
+.value-option.selected {
+  background-color: rgba(21, 137, 238, 0.1);
+  border-left: 3px solid #1589ee;
+}
+
+.actions-container {
+  display: flex;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Scrollable container with shadows */
+.scrollable-container {
+  position: relative;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.scrollable-container::before,
+.scrollable-container::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 20px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.scrollable-container::before {
+  top: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.9),
+    rgba(255, 255, 255, 0)
+  );
+}
+
+.scrollable-container::after {
+  bottom: 0;
+  background: linear-gradient(
+    to top,
+    rgba(255, 255, 255, 0.9),
+    rgba(255, 255, 255, 0)
+  );
+}

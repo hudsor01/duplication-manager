@@ -1,0 +1,61 @@
+<template>
+  <template if:true={hasDifferences}>
+    <div class="slds-var-p-around_medium">
+      <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+        <thead>
+          <tr class="slds-line-height_reset">
+            <th scope="col">
+              <div class="slds-truncate" title="Field">Field</div>
+            </th>
+            <th scope="col">
+              <div class="slds-truncate" title="Master Value">Master Value</div>
+            </th>
+            <th scope="col">
+              <div class="slds-truncate" title="Other Values">Other Values</div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <template for:each={fieldDifferences} for:item="diff">
+            <tr key={diff.field} class="slds-hint-parent">
+              <th data-label="Field" scope="row">
+                <div class="slds-truncate" title={diff.fieldLabel}>
+                  {diff.fieldLabel}
+                </div>
+              </th>
+              <td data-label="Master Value">
+                <div class="slds-truncate" title={diff.masterValue}>
+                  <span class="slds-text-color_success"
+                    >{diff.masterValue}</span
+                  >
+                </div>
+              </td>
+              <td data-label="Other Values">
+                <ul class="slds-list_dotted">
+                  <template for:each={diff.otherValues} for:item="value">
+                    <li key={value} class="slds-truncate" title={value}>
+                      {value}
+                    </li>
+                  </template>
+                </ul>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+  </template>
+
+  <template if:false={hasDifferences}>
+    <div class="slds-var-p-around_medium">
+      <div class="slds-box slds-theme_success">
+        <lightning-icon
+          icon-name="utility:success"
+          size="small"
+          class="slds-var-m-right_small"
+        ></lightning-icon>
+        <span>No field differences detected between records.</span>
+      </div>
+    </div>
+  </template>
+</template>

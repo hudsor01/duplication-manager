@@ -1,0 +1,104 @@
+<template>
+  <!-- Loading Spinner -->
+  <template if:true={isLoading}>
+    <lightning-spinner
+      alternative-text="Processing batch operation"
+      size="small"
+    ></lightning-spinner>
+  </template>
+
+  <div class="slds-var-p-around_medium">
+    <!-- Error Display -->
+    <template if:true={hasError}>
+      <div class="slds-text-color_error slds-var-p-around_small">
+        <lightning-icon
+          icon-name="utility:error"
+          alternative-text="Error"
+          size="small"
+          class="slds-var-m-right_x-small"
+        ></lightning-icon>
+        <span>{error.message}</span>
+      </div>
+    </template>
+
+    <!-- Batch Settings -->
+    <div class="slds-var-m-bottom_medium">
+      <lightning-card
+        title="Batch Settings"
+        icon-name="standard:process_exception"
+      >
+        <div class="slds-var-p-horizontal_small">
+          <lightning-combobox
+            label="Batch Size"
+            name="batchSize"
+            value={batchSize}
+            options={batchSizeOptions}
+            onchange={handleBatchSizeChange}
+            class="slds-var-m-bottom_small"
+          >
+          </lightning-combobox>
+
+          <div
+            class="slds-box slds-theme_info slds-var-p-around_small slds-text-body_small"
+          >
+            <p>
+              <lightning-icon
+                icon-name="utility:info"
+                size="xx-small"
+                class="slds-var-m-right_xx-small"
+              ></lightning-icon>
+              Setting a smaller batch size can improve reliability but may take
+              longer to complete.
+            </p>
+          </div>
+        </div>
+      </lightning-card>
+    </div>
+
+    <!-- Action Buttons -->
+    <div>
+      <lightning-card title="Batch Operations" icon-name="standard:process">
+        <div class="slds-var-p-horizontal_small">
+          <lightning-layout>
+            <lightning-layout-item padding="around-small">
+              <lightning-button
+                label="Run Dry Run (Find Only)"
+                variant="brand"
+                onclick={handleDryRun}
+                disabled={isButtonDisabled}
+                access-key="d"
+                icon-name="utility:search"
+              >
+              </lightning-button>
+            </lightning-layout-item>
+            <lightning-layout-item padding="around-small">
+              <lightning-button
+                label="Run Merge"
+                variant="destructive"
+                onclick={handleRunMerge}
+                disabled={isButtonDisabled}
+                access-key="m"
+                icon-name="utility:merge"
+              >
+              </lightning-button>
+            </lightning-layout-item>
+          </lightning-layout>
+
+          <!-- Help Text -->
+          <div
+            class="slds-box slds-theme_shade slds-var-p-around_small slds-var-m-top_small slds-text-body_small"
+          >
+            <p>
+              <strong>Dry Run:</strong> Identifies potential duplicates without
+              merging them.
+            </p>
+            <p class="slds-var-m-top_xx-small">
+              <strong>Run Merge:</strong> Permanently merges identified
+              duplicate records.
+            </p>
+          </div>
+        </div>
+      </lightning-card>
+    </div>
+  </div>
+</template>

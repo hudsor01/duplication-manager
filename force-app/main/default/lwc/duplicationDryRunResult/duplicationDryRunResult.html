@@ -1,0 +1,198 @@
+<template>
+  <div class="slds-card">
+    <div class="slds-card__header slds-grid">
+      <header class="slds-media slds-media_center slds-has-flexi-truncate">
+        <div class="slds-media__figure">
+          <lightning-icon
+            icon-name="standard:report"
+            alternative-text="Dry Run Results"
+            size="medium"
+          ></lightning-icon>
+        </div>
+        <div class="slds-media__body">
+          <h2 class="slds-card__header-title">
+            <span class="slds-text-heading_medium">Dry Run Results</span>
+          </h2>
+        </div>
+        <div class="slds-no-flex">
+          <lightning-button-group>
+            <template if:true={showResults}>
+              <lightning-button
+                label="Save as Draft"
+                title="Save configuration as draft job"
+                icon-name="utility:save"
+                onclick={handleSaveDraft}
+              >
+              </lightning-button>
+            </template>
+            <lightning-button-icon
+              icon-name="utility:refresh"
+              alternative-text="Refresh"
+              title="Refresh"
+              onclick={handleRefresh}
+            >
+            </lightning-button-icon>
+          </lightning-button-group>
+        </div>
+      </header>
+    </div>
+
+    <div class="slds-card__body slds-card__body_inner">
+      <!-- Draft Job Banner -->
+      <template if:true={showDraftBanner}>
+        <div
+          class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_info"
+          role="alert"
+        >
+          <span class="slds-assistive-text">Info</span>
+          <span
+            class="slds-icon_container slds-icon-utility-info slds-var-m-right_small"
+          >
+            <lightning-icon
+              icon-name="utility:info"
+              size="small"
+              variant="inverse"
+            ></lightning-icon>
+          </span>
+          <h2>
+            Draft job saved on {draftJobDate}.
+            <a
+              href="javascript:void(0);"
+              onclick={handleLoadDraft}
+              class="slds-var-m-left_small"
+              >Load Draft</a
+            >
+            <a
+              href="javascript:void(0);"
+              onclick={handleClearDraft}
+              class="slds-var-m-left_small"
+              >Discard Draft</a
+            >
+          </h2>
+          <div class="slds-notify__close">
+            <button
+              class="slds-button slds-button_icon slds-button_icon-small"
+              title="Close"
+              onclick={handleClearDraft}
+            >
+              <lightning-icon
+                icon-name="utility:close"
+                size="small"
+                variant="inverse"
+              ></lightning-icon>
+              <span class="slds-assistive-text">Close</span>
+            </button>
+          </div>
+        </div>
+      </template>
+      <template if:true={isLoading}>
+        <div class="slds-var-p-around_medium slds-align_absolute-center">
+          <lightning-spinner
+            alternative-text="Loading"
+            size="medium"
+          ></lightning-spinner>
+          <p class="slds-var-p-left_small">Waiting for results...</p>
+        </div>
+      </template>
+
+      <template if:true={showEmptyState}>
+        <div
+          class="slds-illustration slds-illustration_small slds-var-p-around_medium"
+        >
+          <div class="slds-text-longform slds-text-align_center">
+            <h3 class="slds-text-heading_medium">
+              No dry run results available
+            </h3>
+            <p class="slds-text-body_regular">
+              Run a dry run to see duplicate detection results
+            </p>
+          </div>
+        </div>
+      </template>
+
+      <template if:true={showResults}>
+        <div class="slds-grid slds-gutters slds-wrap slds-var-p-around_medium">
+          <div
+            class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4 slds-var-p-bottom_small"
+          >
+            <div class="slds-box slds-box_x-small slds-text-align_center">
+              <div class="slds-text-heading_large">
+                {dryRunResults.RecordsProcessed__c}
+              </div>
+              <div class="slds-text-title">Records Processed</div>
+            </div>
+          </div>
+          <div
+            class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4 slds-var-p-bottom_small"
+          >
+            <div class="slds-box slds-box_x-small slds-text-align_center">
+              <div class="slds-text-heading_large">
+                {dryRunResults.DuplicatesFound__c}
+              </div>
+              <div class="slds-text-title">Duplicates Found</div>
+            </div>
+          </div>
+          <div
+            class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4 slds-var-p-bottom_small"
+          >
+            <div class="slds-box slds-box_x-small slds-text-align_center">
+              <div class="slds-text-heading_large">{formattedMatchScore}</div>
+              <div class="slds-text-title">Match Score</div>
+            </div>
+          </div>
+          <div
+            class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4 slds-var-p-bottom_small"
+          >
+            <div class="slds-box slds-box_x-small slds-text-align_center">
+              <div class="slds-text-heading_small">
+                <lightning-formatted-date-time
+                  value={dryRunResults.JobCompletionTime__c}
+                  year="numeric"
+                  month="short"
+                  day="2-digit"
+                  hour="2-digit"
+                  minute="2-digit"
+                >
+                </lightning-formatted-date-time>
+              </div>
+              <div class="slds-text-title">Completion Time</div>
+            </div>
+          </div>
+        </div>
+
+        <template if:true={dryRunResults.ErrorMessages__c}>
+          <div class="slds-var-p-around_medium">
+            <div class="slds-box slds-theme_error">
+              <h3 class="slds-text-heading_small">Error Messages</h3>
+              <p class="slds-var-p-top_x-small">
+                <lightning-formatted-text
+                  value={dryRunResults.ErrorMessages__c}
+                ></lightning-formatted-text>
+              </p>
+            </div>
+          </div>
+        </template>
+
+        <!-- Duplicate Groups Component -->
+        <template if:true={hasBatchJobId}>
+          <div class="slds-var-p-around_medium">
+            <c-duplication-merge-groups
+              batch-job-id={dryRunResults.BatchJobId__c}
+              config-id={configId}
+              object-api-name={dryRunResults.ObjectApiName__c}
+            >
+            </c-duplication-merge-groups>
+          </div>
+        </template>
+      </template>
+
+      <template if:true={error}>
+        <div class="slds-var-p-around_medium">
+          <div class="slds-box slds-theme_error">
+            <p>{error}</p>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+</template>

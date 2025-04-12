@@ -1,0 +1,52 @@
+<template>
+  <div class="slds-card slds-card_extension metric-card">
+    <div class="slds-card__header slds-grid">
+      <header class="slds-media slds-media_center slds-has-flexi-truncate">
+        <div class="slds-media__figure">
+          <lightning-icon
+            icon-name={iconName}
+            size="small"
+            variant={iconVariant}
+          ></lightning-icon>
+        </div>
+        <div class="slds-media__body">
+          <h2 class="slds-card__header-title">
+            <span class="slds-text-heading_small">{title}</span>
+          </h2>
+        </div>
+        <div class="slds-no-flex">
+          <template if:true={showTrend}>
+            <span class={trendClass}>
+              <lightning-icon
+                icon-name={trendIcon}
+                size="xx-small"
+                class="slds-var-m-right_xx-small"
+              ></lightning-icon>
+              {formattedTrend}
+            </span>
+          </template>
+        </div>
+      </header>
+    </div>
+    <div class="slds-card__body slds-card__body_inner">
+      <div class="slds-grid slds-gutters">
+        <div class="slds-col slds-size_3-of-4">
+          <div class="metric-value">
+            <div class="slds-text-heading_large">{formattedValue}</div>
+            <div class="slds-text-title slds-text-color_weak">{subtitle}</div>
+          </div>
+        </div>
+        <div class="slds-col slds-size_1-of-4">
+          <template if:true={showChart}>
+            <div class="chart-container" style="height: 50px">
+              <canvas class="mini-chart" lwc:dom="manual"></canvas>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+    <footer class="slds-card__footer" if:true={footerText}>
+      <div class="slds-text-body_small slds-text-color_weak">{footerText}</div>
+    </footer>
+  </div>
+</template>

@@ -1,0 +1,17 @@
+.preview-container {
+  background-color: white;
+  border-radius: 0.25rem;
+}
+
+.conflict-row {
+  background-color: #fff3e0;
+}
+
+.note-preview {
+  background-color: #f8f8f8;
+  max-height: 200px;
+  overflow-y: auto;
+  font-family: monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+}

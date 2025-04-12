@@ -1,0 +1,96 @@
+<template>
+  <div class="slds-tabs_card">
+    <lightning-tabset>
+      <!-- Dashboard Tab -->
+      <lightning-tab label="Dashboard" icon-name="utility:dashboard">
+        <div class="slds-var-p-around_medium">
+          <c-duplication-stats-summary
+                      object-api-name={selectedObjectType}
+                      time-range="ALL_TIME">
+          </c-duplication-stats-summary>
+
+          <div class="slds-var-m-top_large">
+            <c-duplication-job-progress></c-duplication-job-progress>
+          </div>
+        </div>
+      </lightning-tab>
+
+      <!-- Duplicate Management Tab -->
+      <lightning-tab
+        label="Manage Duplicates"
+        icon-name="utility:record_lookup">
+        <div class="slds-var-p-around_medium">
+          <div class="slds-grid slds-gutters slds-wrap">
+            <!-- Object Type Selection -->
+            <div
+              class="slds-col slds-size_1-of-1 slds-medium-size_4-of-12 slds-var-m-bottom_medium">
+              <lightning-combobox
+                              label="Object Type"
+                              value={selectedObjectType}
+                              options={objectTypeOptions}
+                              onchange={handleObjectTypeChange}>
+              </lightning-combobox>
+            </div>
+
+            <!-- Configuration Selection -->
+            <div
+              class="slds-col slds-size_1-of-1 slds-medium-size_4-of-12 slds-var-m-bottom_medium">
+              <c-duplication-config-selector
+                              object-api-name={selectedObjectType}
+                              onselect={handleConfigSelect}>
+              </c-duplication-config-selector>
+            </div>
+
+            <!-- Run Button -->
+            <div
+              class="slds-col slds-size_1-of-1 slds-medium-size_4-of-12 slds-var-m-bottom_medium">
+              <div class="slds-form-element">
+                <label class="slds-form-element__label slds-assistive-text">Actions</label>
+                <div class="slds-form-element__control slds-var-p-top_large">
+                  <lightning-button
+                                      label="Run Duplicate Detection"
+                                      icon-name="utility:search"
+                                      variant="brand"
+                                      onclick={handleRunDuplicateDetection}
+                                      disabled={isRunButtonDisabled}>
+                  </lightning-button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Duplication Manager Results -->
+          <div class="slds-var-m-top_medium">
+            <c-duplication-manager-app
+                          object-api-name={selectedObjectType}
+                          active-config-id={selectedConfigId}>
+            </c-duplication-manager-app>
+          </div>
+        </div>
+      </lightning-tab>
+
+      <!-- Job History Tab -->
+      <lightning-tab label="Job History" icon-name="utility:record">
+        <div class="slds-var-p-around_medium">
+          <c-duplication-audit-logs object-api-name={selectedObjectType}>
+          </c-duplication-audit-logs>
+        </div>
+      </lightning-tab>
+
+      <!-- Configuration Tab -->
+      <lightning-tab label="Configuration" icon-name="utility:settings">
+        <div class="slds-var-p-around_medium">
+          <p class="slds-text-body_regular">
+            Configuration settings for duplicate detection and merging are
+            managed through custom metadata types. Please contact your
+            administrator to modify these settings.
+          </p>
+
+          <div class="slds-var-m-top_medium">
+            <c-duplication-health-check></c-duplication-health-check>
+          </div>
+        </div>
+      </lightning-tab>
+    </lightning-tabset>
+  </div>
+</template>

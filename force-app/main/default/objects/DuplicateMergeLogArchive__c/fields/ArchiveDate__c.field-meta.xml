@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ArchiveDate__c</fullName>
+    <description>Date when the log was archived</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Date and time when this record was archived</inlineHelpText>
+    <label>Archive Date</label>
+    <required>true</required>
+    <trackTrending>false</trackTrending>
+    <type>DateTime</type>
+</CustomField>

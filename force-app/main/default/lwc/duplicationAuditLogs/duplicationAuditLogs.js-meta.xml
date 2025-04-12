@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>62.0</apiVersion>
+    <isExposed>true</isExposed>
+    <masterLabel>Duplication Audit Logs</masterLabel>
+    <description>Displays audit logs for merge operations</description>
+    <targets>
+        <target>lightning__AppPage</target>
+        <target>lightning__RecordPage</target>
+        <target>lightning__HomePage</target>
+    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightning__AppPage,lightning__HomePage,lightning__RecordPage">
+            <property name="objectApiName" type="String" label="Object API Name" description="Filter logs by object type" required="false" />
+            <property name="configId" type="String" label="Configuration ID" description="Filter logs by configuration" required="false" />
+            <property name="recordLimit" type="Integer" label="Record Limit" description="Number of logs to display" default="10" required="false" />
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>

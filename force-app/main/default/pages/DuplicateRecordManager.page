@@ -1,0 +1,39 @@
+<apex:page lightningStylesheets="true" docType="html-5.0">
+    <apex:slds />
+
+    <div class="slds-scope">
+        <div class="slds-page-header">
+            <div class="slds-page-header__row">
+                <div class="slds-page-header__col-title">
+                    <div class="slds-media">
+                        <div class="slds-media__body">
+                            <h1 class="slds-page-header__title slds-truncate">Duplicate Record Manager</h1>
+                            <p class="slds-page-header__name-meta">Find and merge duplicate records</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slds-card slds-var-m-around_medium">
+            <div class="slds-card__body slds-card__body_inner">
+                <!-- Simple static content -->
+                <div class="slds-form-element slds-var-m-bottom_large">
+                    <h2 class="slds-text-heading_medium">DuplicateRecordUtility Interface</h2>
+                    <p class="slds-var-m-top_medium">
+                        The DuplicateRecordUtility class provides methods to:
+                    </p>
+                    <ul class="slds-list_dotted slds-var-m-top_small">
+                        <li>Find duplicate records using custom matching criteria</li>
+                        <li>Merge duplicate records while preserving data</li>
+                        <li>Create documentation of merged records</li>
+                    </ul>
+                </div>
+
+                <div class="slds-box slds-theme_info slds-var-m-top_medium">
+                    <p>To use this utility, call its methods from Apex triggers, classes, or create a custom Visualforce/Lightning interface.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</apex:page>

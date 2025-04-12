@@ -1,0 +1,182 @@
+<template>
+    <div class="preview-container">
+        <div if:true={isLoading} class="slds-is-relative slds-var-p-around_large">
+            <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+        </div>
+
+        <div if:false={isLoading}>
+            <template if:true={previewData}>
+                <div class="slds-text-heading_medium slds-var-p-bottom_medium">
+                    Merge Preview
+                </div>
+
+                <!-- Tabs -->
+                <div class="slds-tabs_default">
+                    <ul class="slds-tabs_default__nav" role="tablist">
+                        <li class={tabClassPreview} role="presentation" onclick={handleTabChange} data-value="preview">
+                            <a class="slds-tabs_default__link" role="tab" aria-selected={tabSelectedPreview} aria-controls="preview-tab" id="preview">
+                                <lightning-icon icon-name="utility:preview" size="x-small" class="slds-var-m-right_x-small"></lightning-icon>
+                                Preview
+                            </a>
+                        </li>
+
+                        <li if:true={showConflictsTab} class={tabClassConflicts} role="presentation" onclick={handleTabChange} data-value="conflicts">
+                            <a class="slds-tabs_default__link" role="tab" aria-selected={tabSelectedConflicts} aria-controls="conflicts-tab" id="conflicts">
+                                <lightning-icon icon-name="utility:warning" size="x-small" class="slds-var-m-right_x-small"></lightning-icon>
+                                Conflicts
+                                <span class="slds-badge slds-var-m-left_x-small">{conflicts.length}</span>
+                            </a>
+                        </li>
+
+                        <li if:true={showNonMergeableTab} class={tabClassNonMergeable} role="presentation" onclick={handleTabChange} data-value="non-mergeable">
+                            <a class="slds-tabs_default__link" role="tab" aria-selected={tabSelectedNonMergeable} aria-controls="non-mergeable-tab" id="non-mergeable">
+                                <lightning-icon icon-name="utility:info" size="x-small" class="slds-var-m-right_x-small"></lightning-icon>
+                                Non-Mergeable Data
+                                <span class="slds-badge slds-var-m-left_x-small">{nonMergeableData.length}</span>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <!-- Preview Tab Content -->
+                    <div class={contentClassPreview} role="tabpanel" aria-labelledby="preview">
+                        <div class="slds-text-title_caps slds-var-p-bottom_small">Final Merged Record Preview</div>
+
+                        <div class="slds-box">
+                            <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                                <thead>
+                                    <tr>
+                                        <th>Field</th>
+                                        <th>Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={fieldList} for:item="field">
+                                        <tr key={field.apiName}>
+                                            <td>{field.label}</td>
+                                            <td>{field.value}</td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Conflicts Tab Content -->
+                    <div if:true={showConflictsTab} class={contentClassConflicts} role="tabpanel" aria-labelledby="conflicts">
+                        <div class="slds-text-title_caps slds-var-p-bottom_small">
+                            Field Value Conflicts
+                        </div>
+
+                        <div class="slds-box slds-theme_warning slds-var-m-bottom_medium">
+                            <div class="slds-media">
+                                <div class="slds-media__figure">
+                                    <lightning-icon icon-name="utility:warning" size="small" variant="warning"></lightning-icon>
+                                </div>
+                                <div class="slds-media__body">
+                                    <p class="slds-text-body_regular">
+                                        These field values have conflicts that will not be merged into the master record. The master record values will be preserved.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="slds-box">
+                            <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                                <thead>
+                                    <tr>
+                                        <th>Field</th>
+                                        <th>Master Value</th>
+                                        <th>Duplicate Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={conflicts} for:item="conflict">
+                                        <tr key={conflict.field} class="conflict-row">
+                                            <td>{conflict.fieldLabel}</td>
+                                            <td>{conflict.masterValue}</td>
+                                            <td>{conflict.dupValue}</td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Non-Mergeable Tab Content -->
+                    <div if:true={showNonMergeableTab} class={contentClassNonMergeable} role="tabpanel" aria-labelledby="non-mergeable">
+                        <div class="slds-text-title_caps slds-var-p-bottom_small">
+                            Non-Mergeable Data
+                        </div>
+
+                        <div class="slds-box slds-theme_info slds-var-m-bottom_medium">
+                            <div class="slds-media">
+                                <div class="slds-media__figure">
+                                    <lightning-icon icon-name="utility:info" size="small" variant="info"></lightning-icon>
+                                </div>
+                                <div class="slds-media__body">
+                                    <p class="slds-text-body_regular">
+                                        This data exists only in the duplicate records and cannot be automatically merged. It will be saved as a note on the master record.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="slds-box">
+                            <div class="slds-text-title slds-var-p-bottom_small">
+                                Data That Will Be Preserved in Note
+                            </div>
+
+                            <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                                <thead>
+                                    <tr>
+                                        <th>Field</th>
+                                        <th>Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={nonMergeableData} for:item="data">
+                                        <tr key={data.field}>
+                                            <td>{data.fieldLabel}</td>
+                                            <td>{data.value}</td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+
+                            <div class="slds-text-title slds-var-p-vertical_small">
+                                Note Preview
+                            </div>
+
+                            <div class="slds-box slds-box_small note-preview">
+                                <pre>{noteContents}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="slds-var-m-top_medium slds-grid slds-grid_align-center">
+                    <lightning-button
+                        label="Cancel"
+                        onclick={handleCancel}
+                        class="slds-var-m-right_small">
+                    </lightning-button>
+                    <lightning-button
+                        label="Confirm Merge"
+                        variant="brand"
+                        onclick={handleConfirmMerge}>
+                    </lightning-button>
+                </div>
+            </template>
+
+            <template if:false={previewData}>
+                <div class="slds-illustration slds-illustration_small">
+                    <div class="slds-text-longform">
+                        <h3 class="slds-text-heading_medium">No preview data available</h3>
+                        <p class="slds-text-body_regular">Preview a merge from the Compare tab to see details here.</p>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+</template>

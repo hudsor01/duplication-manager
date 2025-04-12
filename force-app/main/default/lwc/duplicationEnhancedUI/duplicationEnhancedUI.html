@@ -1,0 +1,15 @@
+<template>
+  <div class={ringClass} style={computedStyle}>
+    <div class="progress-ring__circle">
+      <div class="progress-ring__mask progress-ring__full">
+        <div class="progress-ring__fill"></div>
+      </div>
+      <div class="progress-ring__mask progress-ring__half">
+        <div class="progress-ring__fill"></div>
+      </div>
+      <div class="progress-ring__inset">
+        <span class="progress-ring__text">{formattedPercentage}</span>
+      </div>
+    </div>
+  </div>
+</template>

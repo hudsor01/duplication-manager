@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomTab xmlns="https://soap.sforce.com/2006/04/metadata">
+    <description>Duplicatation Manager application</description>
+    <flexiPage>Duplicate_Manager</flexiPage>
+    <label>Duplicate Manager</label>
+    <motif>Custom83: Pencil</motif>
+</CustomTab>

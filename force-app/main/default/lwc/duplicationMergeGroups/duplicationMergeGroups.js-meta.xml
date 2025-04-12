@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>62.0</apiVersion>
+    <isExposed>true</isExposed>
+    <masterLabel>Duplication Merge Groups</masterLabel>
+    <description>Displays duplicate groups with controls for exclusion, flagging, and side-by-side comparison</description>
+    <targets>
+        <target>lightning__AppPage</target>
+        <target>lightning__RecordPage</target>
+        <target>lightning__HomePage</target>
+    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightning__AppPage,lightning__HomePage,lightning__RecordPage">
+            <property name="batchJobId" type="String" label="Batch Job ID" description="ID of the batch job" required="false" />
+            <property name="configId" type="String" label="Configuration ID" description="ID of the duplication configuration" required="false" />
+            <property name="objectApiName" type="String" label="Object API Name" description="API name of the Salesforce object" required="false" />
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>

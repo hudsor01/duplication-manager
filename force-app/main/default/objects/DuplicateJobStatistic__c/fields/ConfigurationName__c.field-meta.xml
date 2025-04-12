@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ConfigurationName__c</fullName>
+    <description>Name of the duplicate configuration used</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Name of the duplicate configuration used</inlineHelpText>
+    <label>Configuration Name</label>
+    <length>255</length>
+    <required>true</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

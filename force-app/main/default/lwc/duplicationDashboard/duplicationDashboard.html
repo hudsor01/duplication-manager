@@ -1,0 +1,435 @@
+<template>
+  <div class={dashboardContainerClass}>
+    <!-- Loading Spinner -->
+    <template if:true={isLoading}>
+      <div class="loading-spinner-container">
+        <lightning-spinner
+          alternative-text="Loading statistics"
+          size="medium"
+          variant="brand"
+        ></lightning-spinner>
+      </div>
+    </template>
+
+    <!-- Error Display -->
+    <template if:true={hasError}>
+      <div
+        class="error-container slds-notify slds-notify_alert slds-alert_error slds-var-m-bottom_medium"
+        role="alert"
+        aria-live="assertive"
+      >
+        <span class="slds-assistive-text">Error</span>
+        <lightning-icon
+          icon-name="utility:error"
+          alternative-text="Error"
+          size="small"
+          class="slds-var-m-right_x-small"
+        ></lightning-icon>
+        <h2>{error.message}: {error.details}</h2>
+        <div class="slds-notify__close">
+          <lightning-button-icon
+            icon-name="utility:close"
+            variant="bare"
+            size="small"
+            alternative-text="Close"
+            title="Dismiss"
+            onclick={dismissError}
+          ></lightning-button-icon>
+        </div>
+      </div>
+    </template>
+
+    <!-- Dashboard Header -->
+    <div
+      class="dashboard-header slds-grid slds-grid_vertical-align-center slds-var-m-bottom_medium"
+    >
+      <h2 class="dashboard-title slds-text-heading_medium slds-col">
+        <lightning-icon
+          icon-name="standard:metrics"
+          size="small"
+          class="slds-var-m-right_x-small"
+        ></lightning-icon>
+        Duplication Statistics Dashboard
+      </h2>
+      <div class="filter-section slds-col slds-text-align_right">
+        <div class="slds-form-element">
+          <lightning-combobox
+            label="Time Range"
+            name="timeRange"
+            value={timeRange}
+            options={timeRangeOptions}
+            onchange={handleTimeRangeChange}
+            variant="label-hidden"
+            class="time-range-filter"
+          ></lightning-combobox>
+        </div>
+        <lightning-button-icon
+          icon-name="utility:refresh"
+          variant="border-filled"
+          alternative-text="Refresh Data"
+          tooltip="Refresh Data"
+          onclick={handleRefresh}
+          disabled={isLoading}
+        >
+        </lightning-button-icon>
+      </div>
+    </div>
+
+    <!-- Last Refresh Time -->
+    <div class="refresh-timestamp slds-var-m-bottom_small">
+      <template if:true={lastRefresh}>
+        <lightning-icon
+          icon-name="utility:clock"
+          size="xx-small"
+          class="slds-var-m-right_x-small"
+        ></lightning-icon>
+        {lastRefreshFormatted}
+      </template>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="slds-grid slds-gutters slds-wrap">
+      <!-- Total Duplicates Card -->
+      <div
+        class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-var-m-bottom_medium"
+      >
+        <div class="stats-card primary">
+          <div class="stats-card-header">
+            <div class="stats-icon">
+              <lightning-icon
+                icon-name="standard:search"
+                size="small"
+              ></lightning-icon>
+            </div>
+            <div class="slds-truncate">Total Duplicates Found</div>
+          </div>
+          <div class="stats-card-body">
+            <div class="stats-value">
+              <lightning-formatted-number
+                value={statistics.totalDuplicates}
+              ></lightning-formatted-number>
+            </div>
+            <template if:true={duplicatesTrend}>
+              <div class={duplicatesTrendClass}>
+                <lightning-icon
+                  icon-name={duplicatesTrendIcon}
+                  size="xx-small"
+                  class="slds-var-m-right_xx-small"
+                ></lightning-icon>
+                <lightning-formatted-number
+                  value={duplicatesTrendValue}
+                  format-style="percent"
+                  maximum-fraction-digits="1"
+                ></lightning-formatted-number>
+                <span class="slds-assistive-text"
+                  >{duplicatesTrendDescription}</span
+                >
+              </div>
+            </template>
+          </div>
+          <div class="stats-card-footer">Based on {timeRangeLabel} data</div>
+        </div>
+      </div>
+
+      <!-- Total Merged Card -->
+      <div
+        class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-var-m-bottom_medium"
+      >
+        <div class="stats-card success">
+          <div class="stats-card-header">
+            <div class="stats-icon">
+              <lightning-icon
+                icon-name="standard:merge"
+                size="small"
+              ></lightning-icon>
+            </div>
+            <div class="slds-truncate">Records Merged</div>
+          </div>
+          <div class="stats-card-body">
+            <div class="stats-value">
+              <lightning-formatted-number
+                value={statistics.totalMerged}
+              ></lightning-formatted-number>
+            </div>
+            <template if:true={mergesTrend}>
+              <div class={mergesTrendClass}>
+                <lightning-icon
+                  icon-name={mergesTrendIcon}
+                  size="xx-small"
+                  class="slds-var-m-right_xx-small"
+                ></lightning-icon>
+                <lightning-formatted-number
+                  value={mergesTrendValue}
+                  format-style="percent"
+                  maximum-fraction-digits="1"
+                ></lightning-formatted-number>
+                <span class="slds-assistive-text"
+                  >{mergesTrendDescription}</span
+                >
+              </div>
+            </template>
+          </div>
+          <div class="stats-card-footer">Based on {timeRangeLabel} data</div>
+        </div>
+      </div>
+
+      <!-- Merge Rate Card -->
+      <div
+        class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-var-m-bottom_medium"
+      >
+        <div class="stats-card">
+          <div class="stats-card-header">
+            <div class="stats-icon">
+              <lightning-icon
+                icon-name="standard:metrics"
+                size="small"
+              ></lightning-icon>
+            </div>
+            <div class="slds-truncate">Overall Merge Rate</div>
+          </div>
+          <div class="stats-card-body">
+            <div class="stats-value">
+              <template if:true={statistics.totalDuplicates}>
+                <lightning-formatted-number
+                  value={mergeRate}
+                  format-style="percent"
+                  maximum-fraction-digits="1"
+                ></lightning-formatted-number>
+              </template>
+              <template if:false={statistics.totalDuplicates}> 0% </template>
+            </div>
+            <template if:true={mergeRateTrend}>
+              <div class={mergeRateTrendClass}>
+                <lightning-icon
+                  icon-name={mergeRateTrendIcon}
+                  size="xx-small"
+                  class="slds-var-m-right_xx-small"
+                ></lightning-icon>
+                <lightning-formatted-number
+                  value={mergeRateTrendValue}
+                  format-style="percent"
+                  maximum-fraction-digits="1"
+                ></lightning-formatted-number>
+                <span class="slds-assistive-text"
+                  >{mergeRateTrendDescription}</span
+                >
+              </div>
+            </template>
+          </div>
+          <div class="stats-card-footer">Duplicates merged / total found</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Section -->
+    <div class="chart-section">
+      <div class="chart-section-header">
+        <lightning-icon
+          icon-name="utility:chart"
+          size="x-small"
+          class="slds-var-m-right_x-small"
+        ></lightning-icon>
+        Duplicate Records by Object
+      </div>
+
+      <template if:true={hasStatistics}>
+        <template if:false={showChartError}>
+          <div class="chart-container">
+            <canvas
+              class="duplicate-chart"
+              lwc:dom="manual"
+              aria-label="Bar chart showing duplicate records by object"
+            ></canvas>
+          </div>
+        </template>
+        <template if:true={showChartError}>
+          <div class="empty-state">
+            <lightning-icon
+              class="empty-state-icon"
+              icon-name="utility:warning"
+              alternative-text="Chart Error"
+              size="medium"
+            ></lightning-icon>
+            <p>Unable to load chart visualization</p>
+            <p class="slds-var-m-top_small">
+              Displaying data in tabular format below
+            </p>
+          </div>
+        </template>
+      </template>
+
+      <template if:false={hasStatistics}>
+        <div class="empty-state">
+          <lightning-icon
+            class="empty-state-icon"
+            icon-name="utility:info"
+            alternative-text="No data"
+            size="medium"
+          ></lightning-icon>
+          <p>No duplicate statistics available yet</p>
+          <p class="slds-var-m-top_small">
+            Run duplication finder jobs to collect statistics.
+          </p>
+        </div>
+      </template>
+    </div>
+
+    <!-- Recent Merges Section -->
+    <div class="timeline-section">
+      <div class="timeline-header">
+        <lightning-icon
+          icon-name="utility:activity"
+          size="x-small"
+          class="slds-var-m-right_x-small"
+        ></lightning-icon>
+        Recent Merge Activity
+      </div>
+
+      <template if:true={hasRecentMerges}>
+        <div class="slds-var-p-around_medium">
+          <template for:each={statistics.recentMerges} for:item="merge">
+            <div key={merge.id} class={timelineItemClass}>
+              <div class="timeline-content">
+                <div class="timeline-title">
+                  <lightning-formatted-number
+                    value={merge.count}
+                  ></lightning-formatted-number>
+                  {merge.objectApiName} records
+                  <template if:true={merge.isDryRun}>
+                    <span class="badge badge-dry-run">Dry Run</span>
+                  </template>
+                  <template if:false={merge.isDryRun}>
+                    <span class="badge badge-merge">Merged</span>
+                  </template>
+                </div>
+                <div class="timeline-date">
+                  <lightning-formatted-date-time
+                    value={merge.timestamp}
+                    year="numeric"
+                    month="short"
+                    day="2-digit"
+                    hour="2-digit"
+                    minute="2-digit"
+                  >
+                  </lightning-formatted-date-time>
+                  <template if:true={merge.configName}>
+                    · Configuration: {merge.configName}
+                  </template>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </template>
+
+      <template if:false={hasRecentMerges}>
+        <div class="empty-state">
+          <lightning-icon
+            class="empty-state-icon"
+            icon-name="utility:activity"
+            alternative-text="No activity"
+            size="medium"
+          ></lightning-icon>
+          <p>No recent merge activity found</p>
+          <p class="slds-var-m-top_small">
+            Run merge jobs to see activity in this timeline.
+          </p>
+        </div>
+      </template>
+    </div>
+
+    <!-- Stats by Object - Always visible now for accessibility -->
+    <div class="slds-var-m-top_medium">
+      <div class="chart-section">
+        <div class="chart-section-header">
+          <lightning-icon
+            icon-name="utility:table"
+            size="x-small"
+            class="slds-var-m-right_x-small"
+          ></lightning-icon>
+          Statistics by Object
+        </div>
+
+        <div class="slds-var-p-around_medium">
+          <template if:true={hasStatistics}>
+            <table
+              class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped"
+              aria-label="Statistics by Object"
+            >
+              <thead>
+                <tr class="slds-line-height_reset">
+                  <th scope="col">
+                    <div class="slds-truncate" title="Object">Object</div>
+                  </th>
+                  <th scope="col">
+                    <div class="slds-truncate" title="Duplicates Found">
+                      Duplicates Found
+                    </div>
+                  </th>
+                  <th scope="col">
+                    <div class="slds-truncate" title="Records Merged">
+                      Records Merged
+                    </div>
+                  </th>
+                  <th scope="col">
+                    <div class="slds-truncate" title="Merge Rate">
+                      Merge Rate
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <template for:each={objectStatsList} for:item="stat">
+                  <tr key={stat.name} class="slds-hint-parent">
+                    <th scope="row">
+                      <div class="slds-truncate" title={stat.name}>
+                        {stat.name}
+                      </div>
+                    </th>
+                    <td>
+                      <div class="slds-truncate" title={stat.totalDuplicates}>
+                        <lightning-formatted-number
+                          value={stat.totalDuplicates}
+                        ></lightning-formatted-number>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="slds-truncate" title={stat.totalMerged}>
+                        <lightning-formatted-number
+                          value={stat.totalMerged}
+                        ></lightning-formatted-number>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="slds-truncate" title={stat.mergeRate}>
+                        <lightning-formatted-number
+                          value={stat.mergeRate}
+                          format-style="percent"
+                          maximum-fraction-digits="1"
+                        ></lightning-formatted-number>
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </template>
+          <template if:false={hasStatistics}>
+            <div class="empty-state">
+              <lightning-icon
+                class="empty-state-icon"
+                icon-name="utility:info"
+                alternative-text="No data"
+                size="medium"
+              ></lightning-icon>
+              <p>No statistics available yet</p>
+              <p class="slds-var-m-top_small">
+                Run duplication finder jobs to collect statistics.
+              </p>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>

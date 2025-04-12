@@ -1,0 +1,8 @@
+.job-progress-container {
+  padding: 8px;
+}
+
+lightning-progress-bar {
+  --slds-c-progress-bar-color-background: #f3f3f3;
+  --slds-c-progress-bar-color-background-fill: #0176d3;
+}

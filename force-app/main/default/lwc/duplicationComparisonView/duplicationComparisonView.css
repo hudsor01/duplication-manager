@@ -1,0 +1,80 @@
+.comparison-container {
+  background: white;
+  border-radius: 0.25rem;
+}
+
+.comparison-header {
+  background: #f3f3f3;
+  border-bottom: 1px solid #dddbda;
+  padding: 0.75rem;
+}
+
+.comparison-fields {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.field-group {
+  margin-bottom: 1rem;
+}
+
+.field-group-header {
+  background: #f3f3f3;
+  border-bottom: 1px solid #dddbda;
+  font-weight: bold;
+}
+
+.field-row {
+  border-bottom: 1px solid #f3f3f3;
+}
+
+.field-row:hover {
+  background-color: #f8f8f8;
+}
+
+.field-label {
+  border-right: 1px solid #f3f3f3;
+  display: flex;
+  align-items: center;
+}
+
+.field-value {
+  min-height: 2rem;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.field-action {
+  visibility: hidden;
+  position: absolute;
+  right: 0.5rem;
+}
+
+.field-value:hover .field-action {
+  visibility: visible;
+}
+
+.field-different {
+  color: #6b6d70;
+  font-weight: bold;
+}
+
+.field-master {
+  font-weight: bold;
+}
+
+.duplicate-column {
+  flex: 1;
+  min-width: 0;
+  border-left: 1px solid #f3f3f3;
+}
+
+.match-score {
+  background-color: #0176d3;
+}
+
+.action-bar {
+  background: #f3f3f3;
+  border-top: 1px solid #dddbda;
+}

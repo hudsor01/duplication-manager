@@ -1,0 +1,8 @@
+.field-row:nth-child(odd) {
+  background-color: #f3f3f3;
+}
+
+.field-value {
+  margin-top: 8px;
+  word-break: break-word;
+}

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>OriginalCreatedDate__c</fullName>
+    <description>CreatedDate from the original log record</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Original creation date of the log before archiving</inlineHelpText>
+    <label>Original Created Date</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>DateTime</type>
+</CustomField>

@@ -1,0 +1,16 @@
+{
+  "orgName": "spotio",
+  "edition": "Developer",
+  "features": ["EnableSetPasswordInApi", "LightningScheduler", "AuthorApex", "API",
+"AuthorApex", "BatchManagement", "BigObjectsBulkAPI", "DebugApex", "DevOpsCenter",
+"ObjectLinking", "StreamingAPI", "LightningServiceConsole", "LightningSalesConsole" ],
+  "settings": {
+    "lightningExperienceSettings": {
+      "enableS1DesktopEnabled": true,
+      "enableLightningPreviewPref": true
+    },
+    "mobileSettings": {
+      "enableS1EncryptedStoragePref2": false
+    }
+  }
+}

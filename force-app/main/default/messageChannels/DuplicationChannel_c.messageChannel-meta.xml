@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningMessageChannel xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Enhanced message channel for Duplication Manager application</description>
+    <isExposed>true</isExposed>
+    <lightningMessageFields>
+        <description>Type of message being sent</description>
+        <fieldName>type</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>Job ID for reference</description>
+        <fieldName>jobId</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>Configuration ID for reference</description>
+        <fieldName>configId</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>Timestamp for the event</description>
+        <fieldName>timestamp</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>Additional data payload</description>
+        <fieldName>payload</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>Source component ID</description>
+        <fieldName>source</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>Priority level for the message</description>
+        <fieldName>priority</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>Message correlation ID for request/response tracking</description>
+        <fieldName>correlationId</fieldName>
+    </lightningMessageFields>
+    <masterLabel>Duplication Channel</masterLabel>
+</LightningMessageChannel>

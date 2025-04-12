@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>59.0</apiVersion>
+    <isExposed>true</isExposed>
+    <targets>
+        <target>lightning__AppPage</target>
+        <target>lightning__RecordPage</target>
+        <target>lightning__HomePage</target>
+    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightning__AppPage,lightning__RecordPage,lightning__HomePage">
+            <property name="title" type="String" default="Metric" label="Title" description="Title of the metric card"/>
+            <property name="value" type="Integer" default="0" label="Value" description="Value to display"/>
+            <property name="subtitle" type="String" default="" label="Subtitle" description="Subtitle text below the value"/>
+            <property name="footerText" type="String" default="" label="Footer Text" description="Text to display in the footer"/>
+            <property name="iconName" type="String" default="utility:chart" label="Icon Name" description="SLDS icon name"/>
+            <property name="trend" type="Integer" default="0" label="Trend Percentage" description="Trend percentage change"/>
+            <property name="showTrend" type="Boolean" default="false" label="Show Trend" description="Whether to show trend indicator"/>
+            <property name="showChart" type="Boolean" default="false" label="Show Chart" description="Whether to show mini chart"/>
+            <property name="format" type="String" default="number" label="Format" description="Format of the value" datasource="number,percentage,currency"/>
+            <property name="decimals" type="Integer" default="0" label="Decimal Places" description="Number of decimal places to display"/>
+            <property name="variant" type="String" default="default" label="Variant" description="Color variant of the card" datasource="default,success,warning,danger"/>
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>

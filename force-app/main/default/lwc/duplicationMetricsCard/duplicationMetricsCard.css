@@ -1,0 +1,59 @@
+.metric-card {
+  height: 100%;
+}
+
+.metric-value {
+  padding: 0.5rem 0;
+}
+
+.trend-indicator {
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+}
+
+.chart-container {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.mini-chart {
+  width: 40px;
+  height: 24px;
+  border-radius: 4px;
+  margin-left: auto;
+}
+
+.chart-default {
+  background: linear-gradient(
+    90deg,
+    rgba(1, 118, 211, 0.1) 0%,
+    rgba(1, 118, 211, 1) 100%
+  );
+}
+
+.chart-success {
+  background: linear-gradient(
+    90deg,
+    rgba(46, 132, 74, 0.1) 0%,
+    rgba(46, 132, 74, 1) 100%
+  );
+}
+
+.chart-warning {
+  background: linear-gradient(
+    90deg,
+    rgba(221, 122, 1, 0.1) 0%,
+    rgba(221, 122, 1, 1) 100%
+  );
+}
+
+.chart-danger {
+  background: linear-gradient(
+    90deg,
+    rgba(234, 0, 30, 0.1) 0%,
+    rgba(234, 0, 30, 1) 100%
+  );
+}

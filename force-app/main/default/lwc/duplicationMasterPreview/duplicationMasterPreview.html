@@ -1,0 +1,188 @@
+<template>
+  <div class="master-preview-container">
+    <!-- Loading state -->
+    <template if:true={isLoading}>
+      <lightning-spinner
+        alternative-text="Loading record data"
+        size="medium"
+      ></lightning-spinner>
+    </template>
+
+    <!-- Error state -->
+    <template if:true={error}>
+      <div
+        class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error"
+        role="alert"
+      >
+        <span class="slds-assistive-text">Error</span>
+        <lightning-icon
+          icon-name="utility:error"
+          size="small"
+          class="slds-var-m-right_x-small"
+        ></lightning-icon>
+        <h2>{error}</h2>
+      </div>
+    </template>
+
+    <!-- Content when records are loaded -->
+    <template if:true={hasRecords}>
+      <lightning-card title="Master Record Preview" icon-name="standard:merge">
+        <div class="slds-var-p-around_medium">
+          <!-- Information banner about conflicts -->
+          <template if:true={hasFieldConflicts}>
+            <div class="slds-box slds-theme_warning slds-var-m-bottom_medium">
+              <div class="slds-media">
+                <div class="slds-media__figure">
+                  <lightning-icon
+                    icon-name="utility:warning"
+                    size="small"
+                    variant="warning"
+                  ></lightning-icon>
+                </div>
+                <div class="slds-media__body">
+                  <p class="slds-text-body_regular">
+                    There are conflicts between the master record and duplicate
+                    records. Conflicting values will be preserved in a note
+                    attached to the master record after merge.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- Control for selecting which fields to display -->
+          <div class="slds-var-m-bottom_medium">
+            <lightning-combobox
+              label="Select fields to display"
+              options={fieldOptions}
+              value={selectedFields}
+              onchange={handleFieldSelection}
+              multiple
+            ></lightning-combobox>
+          </div>
+
+          <!-- Preview fields table -->
+          <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+            <thead>
+              <tr class="slds-line-height_reset">
+                <th class="slds-text-title_caps">Field</th>
+                <th class="slds-text-title_caps">Value After Merge</th>
+                <th class="slds-text-title_caps">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template for:each={fieldInfos} for:item="field">
+                <tr key={field.apiName} class="slds-hint-parent">
+                  <td>
+                    <div class="slds-truncate" title={field.label}>
+                      {field.label}
+                    </div>
+                  </td>
+                  <td>
+                    <!-- Field value display -->
+                    <div class="slds-truncate" title={field.displayValue}>
+                      {field.displayValue}
+                    </div>
+                  </td>
+                  <td>
+                    <!-- Status display -->
+                    <div class="slds-media slds-media_center">
+                      <div class="slds-media__figure">
+                        <lightning-icon
+                          icon-name={field.iconName}
+                          variant={field.iconVariant}
+                          size="x-small"
+                          title={field.statusLabel}
+                        ></lightning-icon>
+                      </div>
+                      <div class="slds-media__body">
+                        <div class="slds-truncate" title={field.statusLabel}>
+                          {field.statusLabel}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+
+          <!-- Conflicting data preview -->
+          <template if:true={hasFieldConflicts}>
+            <div class="slds-var-m-top_medium">
+              <div class="slds-text-heading_small slds-var-m-bottom_small">
+                Conflicting Data Will Be Preserved in Note
+              </div>
+
+              <table
+                class="slds-table slds-table_bordered slds-table_cell-buffer"
+              >
+                <thead>
+                  <tr class="slds-line-height_reset">
+                    <th class="slds-text-title_caps">Field</th>
+                    <th class="slds-text-title_caps">Master Value (Kept)</th>
+                    <th class="slds-text-title_caps">
+                      Duplicate Value(s) (Preserved in Note)
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template for:each={conflictingFields} for:item="conflict">
+                    <tr key={conflict.fieldName} class="slds-hint-parent">
+                      <td>
+                        <div
+                          class="slds-truncate"
+                          title={conflict.fieldLabel}
+                        >
+                          {conflict.fieldLabel}
+                        </div>
+                      </td>
+                      <td>
+                        <div
+                          class="slds-truncate"
+                          title={conflict.masterValue}
+                        >
+                          {conflict.masterValue}
+                        </div>
+                      </td>
+                      <td>
+                        <div
+                          class="slds-truncate"
+                          title={conflict.duplicateValue}
+                        >
+                          {conflict.duplicateValue}
+                        </div>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+
+              <!-- Preview of note content -->
+              <div class="slds-var-m-top_medium">
+                <div class="slds-text-heading_small slds-var-m-bottom_small">
+                  Note Preview
+                </div>
+                <div class="slds-box slds-box_x-small slds-theme_shade">
+                  <pre class="slds-text-longform">{notePreviewContent}</pre>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </lightning-card>
+    </template>
+
+    <!-- No records state -->
+    <template if:false={hasRecords}>
+      <div class="slds-illustration slds-illustration_small">
+        <div class="slds-text-longform">
+          <h3 class="slds-text-heading_medium">No records loaded</h3>
+          <p class="slds-text-body_regular">
+            Select records to compare and generate a merge preview.
+          </p>
+        </div>
+      </div>
+    </template>
+  </div>
+</template>

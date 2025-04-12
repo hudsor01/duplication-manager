@@ -1,0 +1,179 @@
+<template>
+  <!-- Loading Spinner -->
+  <template if:true={isLoading}>
+    <lightning-spinner
+      alternative-text="Processing conflicts"
+      size="small"
+    ></lightning-spinner>
+  </template>
+
+  <!-- Error Display -->
+  <template if:true={hasError}>
+    <div
+      class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error error-container"
+      role="alert"
+    >
+      <span class="slds-assistive-text">Error</span>
+      <lightning-icon
+        icon-name="utility:error"
+        alternative-text="Error"
+        size="small"
+        class="slds-var-m-right_x-small"
+      ></lightning-icon>
+      <h2>{error.message}</h2>
+    </div>
+  </template>
+
+  <!-- No Conflicts Message -->
+  <template if:false={hasConflicts}>
+    <div class="no-conflicts-container">
+      <lightning-icon
+        icon-name="utility:success"
+        size="medium"
+        class="slds-var-m-bottom_small success-icon"
+      ></lightning-icon>
+      <h3 class="slds-text-heading_small slds-var-m-bottom_small">
+        No Conflicts Detected
+      </h3>
+      <p class="slds-text-body_regular">
+        All fields can be merged automatically without conflicts.
+      </p>
+    </div>
+  </template>
+
+  <!-- Conflicts Display -->
+  <template if:true={hasConflicts}>
+    <lightning-card
+      title="Field Conflicts"
+      icon-name="standard:merge"
+      class="conflict-card"
+    >
+      <div class="slds-var-p-horizontal_medium">
+        <!-- Number of conflicts summary -->
+        <div
+          class="slds-text-body_small slds-text-color_weak slds-var-m-bottom_x-small"
+        >
+          {conflictsCount} field conflicts detected
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="slds-var-p-bottom_medium actions-container">
+          <lightning-button
+            label="Select All from Master"
+            icon-name="utility:favorite"
+            variant="neutral"
+            class="action-button"
+            onclick={selectAllMaster}
+          >
+          </lightning-button>
+          <lightning-button
+            label="Select Non-null Values"
+            icon-name="utility:check"
+            variant="neutral"
+            class="action-button slds-var-m-left_x-small"
+            onclick={selectAllNonNull}
+          >
+          </lightning-button>
+          <lightning-button
+            label="Select Most Recent"
+            icon-name="utility:clock"
+            variant="neutral"
+            class="action-button slds-var-m-left_x-small"
+            onclick={selectMostRecent}
+          >
+          </lightning-button>
+        </div>
+
+        <!-- Conflict Table -->
+        <div class="scrollable-container">
+          <table
+            class="slds-table slds-table_bordered slds-table_cell-buffer conflict-table"
+          >
+            <thead>
+              <tr class="slds-line-height_reset">
+                <th class="slds-text-title_caps" scope="col">
+                  <div class="slds-truncate" title="Field">Field</div>
+                </th>
+                <th class="slds-text-title_caps" scope="col">
+                  <div class="slds-truncate" title="Value Options">
+                    Value Options
+                  </div>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <template for:each={conflicts} for:item="conflict">
+                <tr key={conflict.field} class="slds-hint-parent">
+                  <th data-label="Field" scope="row">
+                    <div
+                      class="field-label slds-truncate"
+                      title={conflict.fieldLabel}
+                    >
+                      {conflict.fieldLabel}
+                    </div>
+                  </th>
+                  <td data-label="Value Options">
+                    <fieldset class="slds-form-element">
+                      <legend class="slds-assistive-text">
+                        Value options for {conflict.fieldLabel}
+                      </legend>
+                      <div class="slds-form-element__control">
+                        <div class="slds-grid slds-wrap">
+                          <template
+                            for:each={conflict.values}
+                            for:item="valueOption"
+                          >
+                            <div
+                              key={valueOption.recordId}
+                              class={valueOption.className}
+                            >
+                              <span class="slds-radio">
+                                <input
+                                  type="radio"
+                                  id={valueOption.id}
+                                  name={conflict.field}
+                                  value={valueOption.recordId}
+                                  checked={valueOption.isSelected}
+                                  onchange={handleValueSelection}
+                                  data-field={conflict.field}
+                                />
+                                <label
+                                  class="slds-radio__label"
+                                  for={valueOption.id}
+                                >
+                                  <span class="slds-radio_faux"></span>
+                                  <span class="slds-form-element__label">
+                                    <span
+                                      class="slds-truncate slds-var-m-right_x-small"
+                                    >
+                                      {valueOption.value}
+                                    </span>
+                                    <template if:true={valueOption.isMaster}>
+                                      <lightning-badge
+                                        label="Master"
+                                        class="slds-badge_lightest"
+                                      ></lightning-badge>
+                                    </template>
+                                    <div
+                                      class="slds-text-body_small slds-text-color_weak"
+                                    >
+                                      From: {valueOption.recordName}
+                                    </div>
+                                  </span>
+                                </label>
+                              </span>
+                            </div>
+                          </template>
+                        </div>
+                      </div>
+                    </fieldset>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </lightning-card>
+  </template>
+</template>

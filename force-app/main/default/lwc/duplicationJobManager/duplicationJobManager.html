@@ -1,0 +1,254 @@
+<template>
+  <!-- Loading Spinner -->
+  <template if:true={isLoading}>
+    <lightning-spinner
+      alternative-text="Loading jobs"
+      size="small"
+    ></lightning-spinner>
+  </template>
+
+  <div class="slds-var-p-around_medium">
+    <!-- Error Display -->
+    <template if:true={hasError}>
+      <div class="slds-text-color_error slds-var-p-around_small">
+        <lightning-icon
+          icon-name="utility:error"
+          alternative-text="Error"
+          size="small"
+          class="slds-var-m-right_x-small"
+        ></lightning-icon>
+        <span>{error.message}</span>
+      </div>
+    </template>
+
+    <!-- Jobs Header with Actions -->
+    <div class="slds-grid slds-grid_align-spread slds-var-m-bottom_small">
+      <div class="slds-col">
+        <h2 class="slds-text-heading_medium">Scheduled Jobs</h2>
+      </div>
+      <div class="slds-col slds-grid slds-grid_align-end">
+        <lightning-button-icon
+          icon-name="utility:refresh"
+          alternative-text="Refresh Jobs"
+          title="Refresh Jobs"
+          onclick={refreshJobs}
+          class="slds-var-m-right_x-small"
+        >
+        </lightning-button-icon>
+        <lightning-button-icon
+          icon-name={autoRefreshIconName}
+          alternative-text={autoRefreshAltText}
+          title={autoRefreshTitle}
+          onclick={handleAutoRefreshToggle}
+        >
+        </lightning-button-icon>
+      </div>
+    </div>
+
+    <!-- Jobs List -->
+    <template if:true={hasScheduledJobs}>
+      <div class="slds-box slds-theme_default">
+        <table
+          class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped"
+        >
+          <thead>
+            <tr class="slds-line-height_reset">
+              <th class="slds-text-title_caps" scope="col">
+                <div class="slds-truncate" title="Job Name">Job Name</div>
+              </th>
+              <th class="slds-text-title_caps" scope="col">
+                <div class="slds-truncate" title="Configuration">
+                  Configuration
+                </div>
+              </th>
+              <th class="slds-text-title_caps" scope="col">
+                <div class="slds-truncate" title="Type">Type</div>
+              </th>
+              <th class="slds-text-title_caps" scope="col">
+                <div class="slds-truncate" title="Next Run">Next Run</div>
+              </th>
+              <th class="slds-text-title_caps" scope="col">
+                <div class="slds-truncate" title="Actions">Actions</div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <template for:each={scheduledJobs} for:item="job">
+              <tr key={job.Id} class="slds-hint-parent">
+                <td data-label="Job Name">
+                  <div class="slds-truncate" title={job.CronJobDetail.Name}>
+                    {job.CronJobDetail.Name}
+                  </div>
+                </td>
+                <td data-label="Configuration">
+                  <div class="slds-truncate" title={job.Setting}>
+                    {job.Setting}
+                  </div>
+                </td>
+                <td data-label="Type">
+                  <div class="slds-truncate" title={job.Type}>
+                    <lightning-badge
+                      label={job.JobTypeLabel}
+                      class="slds-badge slds-theme_info"
+                    >
+                    </lightning-badge>
+                  </div>
+                </td>
+                <td data-label="Next Run">
+                  <div class="slds-truncate" title={job.NextFireTime}>
+                    {job.NextFireTimeFormatted}
+                  </div>
+                </td>
+                <td data-label="Actions">
+                  <div class="slds-truncate">
+                    <lightning-button-icon
+                      icon-name="utility:preview"
+                      alternative-text="View Details"
+                      title="View Details"
+                      data-id={job.Id}
+                      onclick={handleViewJobDetails}
+                      class="slds-var-m-right_xx-small"
+                    >
+                    </lightning-button-icon>
+                    <lightning-button-icon
+                      icon-name="utility:delete"
+                      alternative-text="Delete Job"
+                      title="Delete Job"
+                      data-id={job.Id}
+                      onclick={handleDeleteJob}
+                      variant="destructive"
+                    >
+                    </lightning-button-icon>
+                  </div>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </template>
+
+    <!-- No Jobs Message -->
+    <template if:false={hasScheduledJobs}>
+      <div class="slds-box slds-theme_shade slds-text-align_center">
+        <p>
+          No scheduled jobs found. Use the "Schedule Job" button to create a new
+          job.
+        </p>
+      </div>
+    </template>
+
+    <!-- Auto-Refresh Info -->
+    <div
+      class="slds-text-body_small slds-text-color_weak slds-var-m-top_x-small slds-text-align_right"
+    >
+      <template if:true={isAutoRefreshActive}>
+        Auto-refreshing every 30 seconds
+      </template>
+      <template if:false={isAutoRefreshActive}>
+        Auto-refresh disabled
+      </template>
+    </div>
+  </div>
+
+  <!-- Job Detail Modal -->
+  <template if:true={isJobDetailModalOpen}>
+    <section
+      role="dialog"
+      tabindex="-1"
+      aria-modal="true"
+      aria-labelledby="modal-heading-01"
+      class="slds-modal slds-fade-in-open"
+    >
+      <div class="slds-modal__container">
+        <header class="slds-modal__header">
+          <button
+            class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+            title="Close"
+            onclick={handleCloseJobDetail}
+          >
+            <lightning-icon
+              icon-name="utility:close"
+              alternative-text="Close"
+              size="small"
+            ></lightning-icon>
+            <span class="slds-assistive-text">Close</span>
+          </button>
+          <h2 id="modal-heading-01" class="slds-modal__title slds-hyphenate">
+            Job Details
+          </h2>
+        </header>
+        <div
+          class="slds-modal__content slds-var-p-around_medium"
+          id="modal-content-id-1"
+        >
+          <template if:true={selectedJob}>
+            <div class="slds-grid slds-gutters slds-wrap">
+              <div class="slds-col slds-size_1-of-2">
+                <dl class="slds-dl_horizontal">
+                  <dt class="slds-dl_horizontal__label slds-text-color_weak">
+                    <p class="slds-truncate" title="Job Name">Job Name:</p>
+                  </dt>
+                  <dd class="slds-dl_horizontal__detail slds-tile__detail">
+                    <p>{selectedJob.CronJobDetail.Name}</p>
+                  </dd>
+                  <dt class="slds-dl_horizontal__label slds-text-color_weak">
+                    <p class="slds-truncate" title="Configuration">
+                      Configuration:
+                    </p>
+                  </dt>
+                  <dd class="slds-dl_horizontal__detail slds-tile__detail">
+                    <p>{selectedJob.Setting}</p>
+                  </dd>
+                  <dt class="slds-dl_horizontal__label slds-text-color_weak">
+                    <p class="slds-truncate" title="Job Type">Job Type:</p>
+                  </dt>
+                  <dd class="slds-dl_horizontal__detail slds-tile__detail">
+                    <lightning-badge label={jobTypeLabel}> </lightning-badge>
+                  </dd>
+                </dl>
+              </div>
+              <div class="slds-col slds-size_1-of-2">
+                <dl class="slds-dl_horizontal">
+                  <dt class="slds-dl_horizontal__label slds-text-color_weak">
+                    <p class="slds-truncate" title="Next Run">Next Run:</p>
+                  </dt>
+                  <dd class="slds-dl_horizontal__detail slds-tile__detail">
+                    <p>{selectedJob.NextFireTimeFormatted}</p>
+                  </dd>
+                  <dt class="slds-dl_horizontal__label slds-text-color_weak">
+                    <p class="slds-truncate" title="Created By">Created By:</p>
+                  </dt>
+                  <dd class="slds-dl_horizontal__detail slds-tile__detail">
+                    <p>{selectedJobCreatedBy}</p>
+                  </dd>
+                  <dt class="slds-dl_horizontal__label slds-text-color_weak">
+                    <p class="slds-truncate" title="Cron Expression">
+                      Cron Expression:
+                    </p>
+                  </dt>
+                  <dd class="slds-dl_horizontal__detail slds-tile__detail">
+                    <p>{selectedJob.CronExpression}</p>
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </template>
+        </div>
+        <footer class="slds-modal__footer">
+          <lightning-button label="Close" onclick={handleCloseJobDetail}>
+          </lightning-button>
+          <lightning-button
+            variant="destructive"
+            label="Delete Job"
+            data-id={selectedJobId}
+            onclick={handleDeleteJob}
+            class="slds-var-m-left_x-small"
+          >
+          </lightning-button>
+        </footer>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+</template>

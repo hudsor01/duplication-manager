@@ -1,0 +1,162 @@
+<template>
+  <div class="slds-card">
+    <div class="slds-card__header slds-grid">
+      <header class="slds-media slds-media_center slds-has-flexi-truncate">
+        <div class="slds-media__figure">
+          <lightning-icon
+            icon-name="standard:maintenance_plan"
+            alternative-text="Health Check"
+            size="medium"
+          ></lightning-icon>
+        </div>
+        <div class="slds-media__body">
+          <h2 class="slds-card__header-title">
+            <span class="slds-text-heading_medium"
+              >Configuration Health Check</span
+            >
+          </h2>
+        </div>
+        <div class="slds-no-flex">
+          <lightning-button
+            label="Run Health Check"
+            icon-name="utility:checkin"
+            onclick={runHealthChecks}
+            disabled={isLoading}
+          >
+          </lightning-button>
+        </div>
+      </header>
+    </div>
+
+    <div class="slds-card__body slds-card__body_inner">
+      <!-- Loading State -->
+      <template if:true={isLoading}>
+        <div class="slds-var-p-around_medium slds-align_absolute-center">
+          <lightning-spinner
+            alternative-text="Loading"
+            size="medium"
+          ></lightning-spinner>
+          <p class="slds-var-p-left_small">Running health checks...</p>
+        </div>
+      </template>
+
+      <!-- Health Check Summary -->
+      <template if:false={isLoading}>
+        <div class="slds-var-p-around_medium">
+          <template if:true={hasIssues}>
+            <div
+              class="slds-grid slds-gutters slds-grid_vertical-align-center slds-var-m-bottom_medium"
+            >
+              <div class="slds-col">
+                <div class="slds-text-heading_small">Health Check Results</div>
+              </div>
+              <div class="slds-col slds-text-align_right">
+                <template if:true={hasErrors}>
+                  <lightning-badge
+                    label={errorCount}
+                    class="slds-theme_error slds-var-m-right_x-small"
+                  >
+                    <lightning-icon
+                      icon-name="utility:error"
+                      size="x-small"
+                      alternative-text="Errors"
+                      class="slds-var-m-right_xx-small"
+                    ></lightning-icon>
+                    Errors
+                  </lightning-badge>
+                </template>
+                <template if:true={hasWarnings}>
+                  <lightning-badge
+                    label={warningCount}
+                    class="slds-theme_warning slds-var-m-right_x-small"
+                  >
+                    <lightning-icon
+                      icon-name="utility:warning"
+                      size="x-small"
+                      alternative-text="Warnings"
+                      class="slds-var-m-right_xx-small"
+                    ></lightning-icon>
+                    Warnings
+                  </lightning-badge>
+                </template>
+                <lightning-badge label={infoCount} class="slds-theme_info">
+                  <lightning-icon
+                    icon-name="utility:info"
+                    size="x-small"
+                    alternative-text="Info"
+                    class="slds-var-m-right_xx-small"
+                  ></lightning-icon>
+                  Info
+                </lightning-badge>
+              </div>
+            </div>
+
+            <!-- Health Check Issues List -->
+            <div class="slds-var-p-around_medium slds-border_top">
+              <ul class="slds-has-dividers_bottom-space">
+                <template for:each={healthIssues} for:item="issue">
+                  <li key={issue.id} class="slds-item">
+                    <div class="slds-grid slds-grid_vertical-align-center">
+                      <div class="slds-media__figure">
+                        <template if:true={issue.isError}>
+                          <lightning-icon
+                            icon-name="utility:error"
+                            size="small"
+                            alternative-text="Error"
+                            class="slds-icon-text-error"
+                          ></lightning-icon>
+                        </template>
+                        <template if:true={issue.isWarning}>
+                          <lightning-icon
+                            icon-name="utility:warning"
+                            size="small"
+                            alternative-text="Warning"
+                            class="slds-icon-text-warning"
+                          ></lightning-icon>
+                        </template>
+                        <template if:true={issue.isInfo}>
+                          <lightning-icon
+                            icon-name="utility:info"
+                            size="small"
+                            alternative-text="Info"
+                            class="slds-icon-text-default"
+                          ></lightning-icon>
+                        </template>
+                      </div>
+                      <div class="slds-media__body">
+                        <div class="slds-text-heading_small">{issue.title}</div>
+                        <div class="slds-text-body_small">
+                          {issue.description}
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                </template>
+              </ul>
+            </div>
+          </template>
+
+          <!-- No Issues Found -->
+          <template if:false={hasIssues}>
+            <div class="slds-illustration slds-illustration_small">
+              <div class="slds-text-longform slds-text-align_center">
+                <h3 class="slds-text-heading_medium">All Clear!</h3>
+                <p class="slds-text-body_regular">
+                  No issues detected with your current configuration.
+                </p>
+                <div class="slds-var-p-around_medium">
+                  <lightning-icon
+                    icon-name="utility:success"
+                    size="large"
+                    alternative-text="Success"
+                    class="slds-icon-text-success"
+                  ></lightning-icon>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </template>
+    </div>
+  </div>
+</template>

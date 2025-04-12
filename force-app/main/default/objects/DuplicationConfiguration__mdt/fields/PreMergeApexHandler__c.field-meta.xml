@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>PreMergeApexHandler__c</fullName>
+    <description>Apex class to invoke before merge operations</description>
+    <externalId>false</externalId>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <label>Pre-Merge Apex Handler</label>
+    <length>255</length>
+    <required>false</required>
+    <type>Text</type>
+</CustomField>

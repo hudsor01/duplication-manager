@@ -1,0 +1,200 @@
+<template>
+  <lightning-card title="Duplication Record Manager" icon-name="standard:merge">
+    <!-- Loading Spinner -->
+    <template if:true={isLoading}>
+      <lightning-spinner
+        alternative-text="Loading"
+        size="medium"
+      ></lightning-spinner>
+    </template>
+
+    <div class="slds-var-p-around_medium">
+      <!-- Error Display -->
+      <template if:true={hasError}>
+        <div class="slds-text-color_error slds-var-p-around_small">
+          <lightning-icon
+            icon-name="utility:error"
+            alternative-text="Error"
+            size="small"
+            class="slds-var-m-right_x-small"
+          ></lightning-icon>
+          <span>{error.message}</span>
+        </div>
+      </template>
+
+      <!-- Draft Job Banner (if available) -->
+      <template if:true={hasDraftJob}>
+        <div class="slds-notify slds-notify_alert slds-theme_info" role="alert">
+          <span class="slds-assistive-text">Info</span>
+          <lightning-icon
+            icon-name="utility:info"
+            alternative-text="Info"
+            class="slds-var-m-right_x-small"
+          ></lightning-icon>
+          <h2>
+            You have a draft job saved for {draftJobLabel}.
+            <lightning-button-group class="slds-var-m-left_small">
+              <lightning-button
+                label="Resume"
+                variant="brand"
+                onclick={loadDraftJob}
+              >
+              </lightning-button>
+              <lightning-button
+                label="Discard"
+                variant="destructive"
+                onclick={clearDraftJob}
+              >
+              </lightning-button>
+            </lightning-button-group>
+          </h2>
+        </div>
+      </template>
+
+      <!-- Settings Selection Section -->
+      <div
+        class="slds-form slds-form_stacked"
+        role="region"
+        aria-labelledby="settings-heading"
+      >
+        <h2 id="settings-heading" class="slds-assistive-text">
+          Duplication Detection Settings
+        </h2>
+        <div class="slds-form-element">
+          <div class="slds-form-element__control">
+            <lightning-combobox
+              name="setting"
+              label="Select Configuration"
+              variant="standard"
+              placeholder="--Select a Configuration--"
+              value={selectedSettingId}
+              options={settingOptions}
+              onchange={handleSettingChange}
+            >
+            </lightning-combobox>
+          </div>
+        </div>
+
+        <!-- Display Selected Setting Details -->
+        <template if:true={selectedSetting}>
+          <div class="slds-box slds-theme_shade slds-var-m-top_medium">
+            <lightning-layout multiple-rows>
+              <lightning-layout-item size="6" padding="horizontal-small">
+                <p><strong>Object:</strong> {selectedSetting.ObjectApiName}</p>
+                <p>
+                  <strong>Match Fields:</strong> {selectedSetting.MatchFields}
+                </p>
+              </lightning-layout-item>
+              <lightning-layout-item size="6" padding="horizontal-small">
+                <p>
+                  <strong>Master Record Strategy:</strong>
+                  {selectedSetting.MasterRecordStrategy}
+                </p>
+                <p><strong>Batch Size:</strong> {selectedSetting.BatchSize}</p>
+              </lightning-layout-item>
+            </lightning-layout>
+          </div>
+        </template>
+
+        <!-- Health Check Component -->
+        <div class="slds-var-m-top_medium">
+          <c-duplication-health-check
+            config-id={selectedSettingId}
+            object-api-name={selectedSetting.ObjectApiName__c}
+            batch-size={selectedSetting.BatchSize__c}
+            match-fields={selectedSetting.MatchFields__c}
+            onhealthcheckcomplete={handleHealthCheckComplete}
+          >
+          </c-duplication-health-check>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <lightning-layout class="slds-var-m-top_medium">
+        <lightning-layout-item padding="around-small">
+          <lightning-button
+            label="Run Dry Run (Find Only)"
+            variant="brand"
+            onclick={handleDryRun}
+            disabled={isButtonDisabled}
+            access-key="d"
+          >
+          </lightning-button>
+        </lightning-layout-item>
+        <lightning-layout-item padding="around-small">
+          <lightning-button
+            label="Run Merge"
+            variant="destructive"
+            onclick={handleRunMerge}
+            disabled={isButtonDisabled}
+            access-key="m"
+          >
+          </lightning-button>
+        </lightning-layout-item>
+        <lightning-layout-item padding="around-small">
+          <lightning-button
+            label="Schedule Job"
+            variant="success"
+            onclick={openScheduleModal}
+            disabled={isButtonDisabled}
+            access-key="s"
+          >
+          </lightning-button>
+        </lightning-layout-item>
+      </lightning-layout>
+
+      <!-- Dry Run Results Component -->
+      <div class="slds-var-m-top_medium">
+        <c-duplication-dry-run-result config-id={selectedSettingId}>
+        </c-duplication-dry-run-result>
+      </div>
+
+      <!-- Jobs List Child Component -->
+      <c-duplication-manager-jobs
+        jobs={scheduledJobs}
+        ondelete={handleJobDeleted}
+        onjobcomplete={handleJobCompleted}
+        onmergerequest={handleMergeRequest}
+      >
+      </c-duplication-manager-jobs>
+    </div>
+
+    <!-- Schedule Modal Child Component -->
+    <template if:true={isScheduleModalOpen}>
+      <c-duplication-manager-scheduler
+        setting={selectedSetting}
+        onclose={closeScheduleModal}
+        onschedule={handleScheduleJob}
+      >
+      </c-duplication-manager-scheduler>
+    </template>
+
+    <!-- Confirmation Modal -->
+    <div class={confirmationModalClass} role="dialog" tabindex="-1">
+      <div class="slds-modal__container">
+        <header class="slds-modal__header">
+          <h2 class="slds-text-heading_medium slds-hyphenate">Confirmation</h2>
+        </header>
+        <div class="slds-modal__content slds-var-p-around_medium">
+          <p>{confirmationMessage}</p>
+        </div>
+        <footer class="slds-modal__footer">
+          <lightning-button
+            label="Cancel"
+            variant="neutral"
+            onclick={handleCancelMerge}
+            class="slds-var-m-right_x-small"
+          >
+          </lightning-button>
+          <lightning-button
+            label="Confirm"
+            variant="brand"
+            onclick={handleConfirmMerge}
+          >
+          </lightning-button>
+        </footer>
+      </div>
+    </div>
+    <div class={confirmationBackdropClass}></div>
+  </lightning-card>
+</template>

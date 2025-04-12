@@ -1,0 +1,361 @@
+<template>
+  <!-- Loading Spinner -->
+  <template if:true={isLoading}>
+    <lightning-spinner
+      alternative-text="Loading"
+      size="small"
+    ></lightning-spinner>
+  </template>
+
+  <!-- Error Display -->
+  <template if:true={hasError}>
+    <div class="slds-notify slds-notify_alert slds-alert_error" role="alert">
+      <span class="slds-assistive-text">Error</span>
+      <lightning-icon
+        icon-name="utility:error"
+        alternative-text="Error"
+        size="small"
+        class="slds-var-m-right_x-small"
+      ></lightning-icon>
+      <h2>{error.message}: {error.details}</h2>
+      <div class="slds-notify__close">
+        <button
+          class="slds-button slds-button_icon slds-button_icon-small"
+          title="Dismiss"
+        >
+          <lightning-icon
+            icon-name="utility:close"
+            size="small"
+            alternative-text="Close"
+          ></lightning-icon>
+        </button>
+      </div>
+    </div>
+  </template>
+
+  <!-- Scheduled Jobs Section -->
+  <div
+    class="slds-var-m-top_large"
+    role="region"
+    aria-labelledby="jobs-heading"
+  >
+    <div
+      class="slds-grid slds-grid_vertical-align-center slds-var-m-bottom_small"
+    >
+      <h2 id="jobs-heading" class="slds-text-heading_medium slds-col">
+        Scheduled Jobs
+      </h2>
+      <!-- Stats message -->
+      <div class="slds-col slds-text-align_right slds-text-body_small">
+        {jobsStatsMessage}
+      </div>
+    </div>
+
+    <template if:true={hasJobs}>
+      <div class="slds-table_header-fixed_container" tabindex="0">
+        <div class="slds-scrollable" tabindex="0">
+          <table
+            class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped slds-table_fixed-layout"
+          >
+            <thead>
+              <tr class="slds-line-height_reset">
+                <th scope="col" class="slds-cell-shrink">
+                  <div class="slds-truncate" title="Job Name">
+                    <lightning-icon
+                      icon-name="utility:info"
+                      size="xx-small"
+                      class="slds-var-m-right_xx-small"
+                    ></lightning-icon>
+                    Job Name
+                  </div>
+                </th>
+                <th scope="col" class="slds-cell-shrink">
+                  <div class="slds-truncate" title="Cron Expression">
+                    <lightning-icon
+                      icon-name="utility:date_time"
+                      size="xx-small"
+                      class="slds-var-m-right_xx-small"
+                    ></lightning-icon>
+                    Schedule
+                  </div>
+                </th>
+                <th scope="col" class="slds-cell-shrink">
+                  <div class="slds-truncate" title="Next Run Time">
+                    <lightning-icon
+                      icon-name="utility:event"
+                      size="xx-small"
+                      class="slds-var-m-right_xx-small"
+                    ></lightning-icon>
+                    Next Run
+                  </div>
+                </th>
+                <th scope="col" class="slds-cell-shrink">
+                  <div class="slds-truncate" title="State">
+                    <lightning-icon
+                      icon-name="utility:macros"
+                      size="xx-small"
+                      class="slds-var-m-right_xx-small"
+                    ></lightning-icon>
+                    Status
+                  </div>
+                </th>
+                <th scope="col" class="slds-cell-shrink">
+                  <div class="slds-truncate" title="Action">Actions</div>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <template for:each={paginatedJobs} for:item="job">
+                <tr key={job.Id}>
+                  <td data-label="Job Name">
+                    <div class="slds-grid slds-grid_vertical-align-center">
+                      <div
+                        class="slds-truncate"
+                        title={job.CronJobDetail.Name}
+                      >
+                        <lightning-formatted-text
+                          value={job.CronJobDetail.Name}
+                        ></lightning-formatted-text>
+                      </div>
+                      <div class="slds-var-m-left_x-small">
+                        <lightning-helptext
+                          content="This job will run the duplicate finder with the specified configuration."
+                        ></lightning-helptext>
+                      </div>
+                    </div>
+                  </td>
+                  <td data-label="Cron Expression">
+                    <div class="slds-grid slds-grid_vertical-align-center">
+                      <div class="slds-truncate" title={job.CronExpression}>
+                        {job.CronExpression}
+                      </div>
+                      <div class="slds-var-m-left_x-small">
+                        <lightning-helptext
+                          content="Cron expression defines when the job runs. Format: Seconds Minutes Hours Day-of-month Month Day-of-week Optional-year"
+                        ></lightning-helptext>
+                      </div>
+                    </div>
+                  </td>
+                  <td data-label="Next Run Time">
+                    <lightning-formatted-date-time
+                      value={job.NextFireTime}
+                      year="numeric"
+                      month="short"
+                      day="2-digit"
+                      hour="2-digit"
+                      minute="2-digit"
+                    >
+                    </lightning-formatted-date-time>
+                  </td>
+                  <td data-label="State">
+                    <div class="slds-grid slds-grid_vertical-align-center">
+                      <lightning-badge
+                        class="slds-badge_lightest"
+                        label={job.State}
+                      >
+                      </lightning-badge>
+                    </div>
+                  </td>
+                  <td data-label="Action">
+                    <lightning-button-group>
+                      <lightning-button
+                        label="Delete"
+                        variant="destructive-text"
+                        data-id={job.Id}
+                        onclick={handleDeleteClick}
+                        disabled={job.isBeingDeleted}
+                      >
+                      </lightning-button>
+                      <template if:true={job.CompletedDate}>
+                        <lightning-button
+                          label="View Results"
+                          variant="brand-outline"
+                          data-id={job.Id}
+                          data-status={job.Status}
+                          data-records={job.NumberOfRecords}
+                          data-object={job.ObjectApiName}
+                          onclick={handleJobCompletion}
+                        >
+                        </lightning-button>
+                      </template>
+                    </lightning-button-group>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <template if:true={showPagination}>
+        <div class="slds-var-m-top_small slds-grid slds-grid_align-spread">
+          <div class="slds-col">
+            <lightning-button-icon
+              icon-name="utility:chevronleft"
+              variant="border-filled"
+              alternative-text="Previous Page"
+              title="Previous Page"
+              disabled={disablePrevious}
+              onclick={handlePrevious}
+            >
+            </lightning-button-icon>
+          </div>
+          <div class="slds-col slds-text-align_center">
+            <span class="slds-text-body_small">
+              Page {paginationInfo.currentPage} of {paginationInfo.totalPages}
+              ({paginationInfo.totalRecords} records)
+            </span>
+          </div>
+          <div class="slds-col slds-text-align_right">
+            <lightning-button-icon
+              icon-name="utility:chevronright"
+              variant="border-filled"
+              alternative-text="Next Page"
+              title="Next Page"
+              disabled={disableNext}
+              onclick={handleNext}
+            >
+            </lightning-button-icon>
+          </div>
+        </div>
+      </template>
+    </template>
+
+    <!-- No Jobs Message -->
+    <template if:false={hasJobs}>
+      <div
+        class="slds-box slds-theme_shade slds-text-align_center slds-var-p-around_medium"
+      >
+        <lightning-icon
+          icon-name="utility:info"
+          variant="info"
+          size="small"
+          class="slds-var-m-bottom_small"
+        ></lightning-icon>
+        <p>
+          No scheduled jobs found. Use the buttons above to run or schedule
+          duplicate finder jobs.
+        </p>
+        <p class="slds-text-body_small slds-var-m-top_small">
+          Scheduled jobs will automatically run your selected duplicate finder
+          configuration at the specified time.
+        </p>
+      </div>
+    </template>
+  </div>
+
+  <!-- Dry Run Results Modal -->
+  <template if:true={isDryRunResultsModalOpen}>
+    <section
+      role="dialog"
+      tabindex="-1"
+      aria-labelledby="modal-heading-01"
+      aria-modal="true"
+      aria-describedby="modal-content-id-1"
+      class="slds-modal slds-fade-in-open"
+    >
+      <div class="slds-modal__container">
+        <header class="slds-modal__header">
+          <button
+            class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+            title="Close"
+            onclick={closeDryRunResultsModal}
+          >
+            <lightning-icon
+              icon-name="utility:close"
+              alternative-text="Close"
+              size="small"
+            ></lightning-icon>
+            <span class="slds-assistive-text">Close</span>
+          </button>
+          <h2
+            id="modal-heading-01"
+            class="slds-text-heading_medium slds-hyphenate"
+          >
+            Dry Run Results
+          </h2>
+        </header>
+        <div
+          class="slds-modal__content slds-var-p-around_medium"
+          id="modal-content-id-1"
+        >
+          <template if:true={isLoadingDryRunResults}>
+            <lightning-spinner
+              alternative-text="Loading Results"
+              size="small"
+            ></lightning-spinner>
+          </template>
+
+          <template if:false={isLoadingDryRunResults}>
+            <div class="slds-grid slds-gutters slds-wrap">
+              <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                <div
+                  class="slds-box slds-box_x-small slds-text-align_center slds-var-m-bottom_x-small"
+                >
+                  <div class="slds-text-heading_large">
+                    {dryRunStats.duplicatesFound}
+                  </div>
+                  <div class="slds-text-title">Duplicates Found</div>
+                </div>
+              </div>
+              <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                <div
+                  class="slds-box slds-box_x-small slds-text-align_center slds-var-m-bottom_x-small"
+                >
+                  <div class="slds-text-heading_large">
+                    {dryRunStats.totalRecords}
+                  </div>
+                  <div class="slds-text-title">Total Records Processed</div>
+                </div>
+              </div>
+            </div>
+
+            <template if:true={hasDryRunDetails}>
+              <div class="slds-var-m-top_medium">
+                <h3 class="slds-text-heading_small slds-var-m-bottom_small">
+                  Duplicate Groups
+                </h3>
+
+                <lightning-datatable
+                  key-field="id"
+                  data={dryRunDuplicateGroups}
+                  columns={duplicateGroupColumns}
+                  hide-checkbox-column
+                >
+                </lightning-datatable>
+              </div>
+            </template>
+
+            <template if:false={hasDryRunDetails}>
+              <div class="slds-box slds-theme_info slds-var-m-top_medium">
+                <p>
+                  Detailed information about duplicate records is not available
+                  for this job. To see duplicate records, run a new dry run with
+                  the latest version of the duplication manager.
+                </p>
+              </div>
+            </template>
+          </template>
+        </div>
+        <footer class="slds-modal__footer">
+          <button
+            class="slds-button slds-button_neutral"
+            onclick={closeDryRunResultsModal}
+          >
+            Close
+          </button>
+          <template if:true={hasDryRunDetails}>
+            <button
+              class="slds-button slds-button_brand"
+              onclick={handleMergeSelectedButton}
+            >
+              Merge Duplicates
+            </button>
+          </template>
+        </footer>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+</template>

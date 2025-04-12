@@ -1,0 +1,150 @@
+.header {
+  background-color: white;
+  border-bottom: 1px solid #dddbda;
+  z-index: 2;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.content-area {
+  flex: 1;
+  overflow: hidden;
+  background-color: #f3f3f3;
+}
+
+.sidebar-column {
+  background-color: white;
+  border-left: 1px solid #dddbda;
+  overflow-y: auto;
+  box-shadow: -1px 0 3px rgba(0, 0, 0, 0.05);
+}
+
+.main-column {
+  overflow-y: auto;
+  height: 100%;
+  padding: 0.75rem;
+}
+
+.app-title {
+  font-weight: 700;
+  color: #032d60;
+}
+
+.app-description {
+  color: #444444;
+}
+
+.metrics-container {
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease;
+}
+
+.metrics-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Tab styling */
+.custom-tab {
+  border-radius: 4px 4px 0 0;
+  border-bottom: 3px solid transparent;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.custom-tab.active {
+  border-bottom-color: #1589ee;
+  background-color: rgba(21, 137, 238, 0.05);
+}
+
+.custom-tab:hover:not(.active) {
+  background-color: rgba(0, 0, 0, 0.03);
+  border-bottom-color: #dddbda;
+}
+
+.custom-tab-icon {
+  --sds-c-icon-color-foreground-default: #706e6b;
+}
+
+.custom-tab.active .custom-tab-icon {
+  --sds-c-icon-color-foreground-default: #1589ee;
+}
+
+/* Card styling */
+.card-container {
+  border-radius: 0.25rem;
+  border: 1px solid #dddbda;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.card-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Animation for content transitions */
+.tab-content-container {
+  transition: opacity 0.3s ease;
+}
+
+.tab-content-hide {
+  opacity: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.tab-content-show {
+  opacity: 1;
+  height: auto;
+}
+
+/* Health check status colors */
+.status-success {
+  color: #04844b;
+}
+
+.status-warning {
+  color: #ffb75d;
+}
+
+.status-error {
+  color: #c23934;
+}
+
+.match-score {
+  background-color: #0176d3;
+  color: white;
+  border-radius: 4px;
+  padding: 0.125rem 0.5rem;
+  font-weight: bold;
+}
+
+/* Modern button styles */
+.modern-button {
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
+}
+
+.modern-button:active {
+  transform: scale(0.98);
+}
+
+/* Settings modal animation */
+.settings-modal {
+  animation: slideInDown 0.3s ease-out;
+}
+
+@keyframes slideInDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

@@ -1,0 +1,8 @@
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+<apiVersion>62.0</apiVersion>
+<isExposed>true</isExposed>
+<masterLabel>Duplication Master Preview</masterLabel>
+<description>
+Shows a preview of what the master record will look like after merge
+</description>
+</LightningComponentBundle>
