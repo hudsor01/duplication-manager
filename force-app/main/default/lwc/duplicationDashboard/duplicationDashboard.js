@@ -525,7 +525,10 @@ export default class DuplicationDashboard extends LightningElement {
   get hasStatistics() {
     return (
       this.statistics &&
-      (this.statistics.totalDuplicates > 0 || this.statistics.totalMerged > 0)
+      (this.statistics.totalDuplicates > 0 || this.statistics.totalMerged > 0) &&
+      // Make sure we have real data and not just default values
+      this.statistics.byObject &&
+      Object.keys(this.statistics.byObject).length > 0
     );
   }
 

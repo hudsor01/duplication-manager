@@ -1,20 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomApplication xmlns="http://soap.sforce.com/2006/04/metadata">
     <brand>
-        <headerColor>#0070D2</headerColor>
+        <headerColor>#1589EE</headerColor>
+        <logo>dedupicon</logo>
+        <logoVersion>1</logoVersion>
         <shouldOverrideOrgTheme>false</shouldOverrideOrgTheme>
     </brand>
+    <description>Advanced solution for detecting and merging duplicate records</description>
+    <formFactors>Small</formFactors>
     <formFactors>Large</formFactors>
     <isNavAutoTempTabsDisabled>false</isNavAutoTempTabsDisabled>
     <isNavPersonalizationDisabled>false</isNavPersonalizationDisabled>
     <isNavTabPersistenceDisabled>false</isNavTabPersistenceDisabled>
-    <label>Duplicatation Manager</label>
+    <label>Duplication Manager</label>
     <navType>Standard</navType>
     <setupExperience>all</setupExperience>
     <tabs>Duplicate_Manager</tabs>
     <tabs>standard-Account</tabs>
     <tabs>standard-Contact</tabs>
     <tabs>standard-Lead</tabs>
+    <tabs>standard-Dashboard</tabs>
+    <tabs>DuplicateJobStatistic__c</tabs>
+    <tabs>DuplicateRunResult__c</tabs>
+    <tabs>MergeJobLog__c</tabs>
     <uiType>Lightning</uiType>
     <utilityBar>Duplication_Manager_UtilityBar</utilityBar>
 </CustomApplication>

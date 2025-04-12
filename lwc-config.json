@@ -1,0 +1,7 @@
+{
+  "sourceDir": "./force-app/main/default/lwc",
+  "moduleDir": "./force-app/main/default/lwc/modules",
+  "server": {
+    "port": 3001
+  }
+}

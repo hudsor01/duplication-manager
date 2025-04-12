@@ -13,7 +13,8 @@
     "prettier": "prettier --write \"**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,xml,yaml,yml}\"",
     "prettier:verify": "prettier --check \"**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,xml,yaml,yml}\"",
     "postinstall": "husky install",
-    "precommit": "lint-staged"
+    "precommit": "lint-staged",
+    "lwc:dev": "sf lightning lwc start"
   },
   "devDependencies": {
     "@lwc/eslint-plugin-lwc": "2.1.0",
@@ -21,6 +22,7 @@
     "@salesforce/eslint-config-lwc": "3.7.1",
     "@salesforce/eslint-plugin-aura": "2.1.0",
     "@salesforce/eslint-plugin-lightning": "1.0.1",
+    "@salesforce/lwc-dev-server": "^2.11.0",
     "@salesforce/sfdx-lwc-jest": "7.1.0",
     "eslint": "8.57.0",
     "eslint-plugin-import": "2.31.0",

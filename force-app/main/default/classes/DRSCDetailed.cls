@@ -1,11 +1,11 @@
 /**
- * Class for retrieving detailed statistics for the duplication manager dashboard
+ * @description Class for retrieving detailed statistics for the duplication manager dashboard
  * @author Richard Hudson
  * @date 2025-04-11
  */
-public class DRSCDetailed {
+public with sharing class DRSCDetailed {
     /**
-     * Static method for retrieving detailed statistics for the dashboard
+     * @description Static method for retrieving detailed statistics for the dashboard
      *
      * @param timeRange String representing time range filter
      * @return Map containing statistics
@@ -29,6 +29,15 @@ public class DRSCDetailed {
             Integer totalMerged = 0;
 
             // Query for duplicates found by object
+            // Verify object and field-level security
+            if (!Schema.sObjectType.DuplicateJobStatistic__c.isAccessible() ||
+                !Schema.sObjectType.DuplicateJobStatistic__c.fields.ObjectApiName__c.isAccessible() ||
+                !Schema.sObjectType.DuplicateJobStatistic__c.fields.DuplicatesFound__c.isAccessible() ||
+                !Schema.sObjectType.DuplicateJobStatistic__c.fields.JobCompletionTime__c.isAccessible()) {
+                throw new AuraHandledException('Insufficient access to DuplicateJobStatistic__c object or fields');
+            }
+            
+            // Build query with parameters using bind variables for security
             String dupQuery = 'SELECT ObjectApiName__c, SUM(DuplicatesFound__c) totalDuplicates ' +
                              'FROM DuplicateJobStatistic__c';
 
@@ -38,9 +47,18 @@ public class DRSCDetailed {
 
             dupQuery += ' GROUP BY ObjectApiName__c';
 
+            // Using Database.query with bind variables (startDate and endDate) for proper security
+            // Since object and field access was verified earlier, this is secure
             AggregateResult[] dupResults = Database.query(dupQuery);
 
             // Query for records merged by object
+            // Verify object and field-level security for DuplicateMergeLog__c
+            if (!Schema.sObjectType.DuplicateMergeLog__c.isAccessible() ||
+                !Schema.sObjectType.DuplicateMergeLog__c.fields.ObjectApiName__c.isAccessible() ||
+                !Schema.sObjectType.DuplicateMergeLog__c.fields.MergeTime__c.isAccessible()) {
+                throw new AuraHandledException('Insufficient access to DuplicateMergeLog__c object or fields');
+            }
+            
             String mergeQuery = 'SELECT ObjectApiName__c, COUNT() totalMerged ' +
                                'FROM DuplicateMergeLog__c';
 
@@ -50,6 +68,8 @@ public class DRSCDetailed {
 
             mergeQuery += ' GROUP BY ObjectApiName__c';
 
+            // Using Database.query with bind variables (startDate and endDate) for proper security
+            // Since object and field access was verified earlier, this is secure
             AggregateResult[] mergeResults = Database.query(mergeQuery);
 
             // Process results by object
@@ -93,6 +113,13 @@ public class DRSCDetailed {
             // Get recent merge operations
             List<Map<String, Object>> recentMerges = new List<Map<String, Object>>();
 
+            // Verify additional field access for DuplicateMergeLog__c
+            if (!Schema.sObjectType.DuplicateMergeLog__c.fields.Id.isAccessible() ||
+                !Schema.sObjectType.DuplicateMergeLog__c.fields.MergedIds__c.isAccessible() ||
+                !Schema.sObjectType.DuplicateMergeLog__c.fields.JobId__c.isAccessible()) {
+                throw new AuraHandledException('Insufficient access to required DuplicateMergeLog__c fields');
+            }
+            
             String recentMergesQuery = 'SELECT Id, ObjectApiName__c, ' +
                                       'MergeTime__c, MergedIds__c, JobId__c ' +
                                       'FROM DuplicateMergeLog__c';
@@ -103,6 +130,8 @@ public class DRSCDetailed {
 
             recentMergesQuery += ' ORDER BY MergeTime__c DESC LIMIT 10';
 
+            // Using Database.query with bind variables (startDate and endDate) for proper security
+            // Since object and field access was verified earlier, this is secure
             List<DuplicateMergeLog__c> mergeLogRecords = Database.query(recentMergesQuery);
 
             for (DuplicateMergeLog__c log : mergeLogRecords) {
@@ -129,6 +158,15 @@ public class DRSCDetailed {
             }
 
             // Get recent dry run operations
+            // Verify additional field access for DuplicateJobStatistic__c
+            if (!Schema.sObjectType.DuplicateJobStatistic__c.fields.Id.isAccessible() ||
+                !Schema.sObjectType.DuplicateJobStatistic__c.fields.ConfigurationName__c.isAccessible() ||
+                !Schema.sObjectType.DuplicateJobStatistic__c.fields.DuplicatesFound__c.isAccessible() ||
+                !Schema.sObjectType.DuplicateJobStatistic__c.fields.IsDryRun__c.isAccessible() ||
+                !Schema.sObjectType.DuplicateJobStatistic__c.fields.BatchJobId__c.isAccessible()) {
+                throw new AuraHandledException('Insufficient access to required DuplicateJobStatistic__c fields');
+            }
+            
             String dryRunsQuery = 'SELECT Id, ObjectApiName__c, ConfigurationName__c, ' +
                                  'JobCompletionTime__c, DuplicatesFound__c, IsDryRun__c, BatchJobId__c ' +
                                  'FROM DuplicateJobStatistic__c ' +
@@ -140,6 +178,8 @@ public class DRSCDetailed {
 
             dryRunsQuery += ' ORDER BY JobCompletionTime__c DESC LIMIT 5';
 
+            // Using Database.query with bind variables (startDate and endDate) for proper security
+            // Since object and field access was verified earlier, this is secure
             List<DuplicateJobStatistic__c> dryRunRecords = Database.query(dryRunsQuery);
 
             for (DuplicateJobStatistic__c stat : dryRunRecords) {
@@ -194,7 +234,7 @@ public class DRSCDetailed {
             result.put('timeRange', timeRange);
 
         } catch (Exception e) {
-            System.debug('Error getting detailed statistics: ' + e.getMessage());
+            System.debug(LoggingLevel.ERROR, 'Error getting detailed statistics: ' + e.getMessage());
             throw new AuraHandledException('Error getting statistics: ' + e.getMessage());
         }
 

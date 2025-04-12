@@ -7,8 +7,8 @@
  * @updated May 2025
  */
 
-// Use a mock version of the message service for deployment
-// This will be replaced by the actual implementation when the channel is available
+import { createMessageContext, releaseMessageContext, publish, subscribe, unsubscribe } from 'lightning/messageService';
+import DUPLICATION_CHANNEL from '@salesforce/messageChannel/DuplicationChannel_c__c';
 
 // Unique ID for this component instance
 const INSTANCE_ID = generateUuid();
@@ -16,11 +16,8 @@ const INSTANCE_ID = generateUuid();
 // Middleware stack for message processing
 const middleware = [];
 
-// Fallback object to use while we can't load the actual channel
-const MOCK_CHANNEL = {
-    messageService: true,
-    mockImplementation: true
-};
+// Create a message context that will be shared across all subscribers
+const messageContext = createMessageContext();
 
 /**
  * Subscribe to channel events with enhanced capabilities
@@ -34,20 +31,29 @@ export function subscribeToChannel(messageHandler, options = {}) {
     return null;
   }
 
-  // Return a mock subscription object
-  // This is a temporary implementation until the LMS channel is properly deployed
-  console.log('Using mock message service subscription');
-
-  const mockSubscription = {
-    id: generateUuid(),
-    active: true,
-    unsubscribe: function() {
-      this.active = false;
-      return true;
+  // Create a wrapper handler that applies middleware
+  const wrappedHandler = (message) => {
+    // Apply middleware
+    let processedMessage = message;
+    for (const middlewareFn of middleware) {
+      processedMessage = middlewareFn(processedMessage, "incoming");
+      // Stop processing if middleware returns null
+      if (!processedMessage) return;
     }
+    
+    // Call the original handler with the processed message
+    messageHandler(processedMessage);
   };
 
-  return mockSubscription;
+  // Subscribe to the Lightning Message Channel
+  const subscription = subscribe(
+    messageContext,
+    DUPLICATION_CHANNEL,
+    wrappedHandler,
+    options
+  );
+
+  return subscription;
 }
 
 /**
@@ -55,8 +61,8 @@ export function subscribeToChannel(messageHandler, options = {}) {
  * @param {object} subscription - Subscription returned by subscribeToChannel
  */
 export function unsubscribeFromChannel(subscription) {
-  if (subscription && typeof subscription.unsubscribe === 'function') {
-    subscription.unsubscribe();
+  if (subscription) {
+    unsubscribe(subscription);
   }
 }
 
@@ -65,6 +71,7 @@ export function unsubscribeFromChannel(subscription) {
  * @param {string} type - Message type/action
  * @param {object} data - Message payload
  * @param {object} options - Additional message options
+ * @returns {string} Correlation ID for tracking the message
  */
 export function sendMessage(type, data, options = {}) {
   const defaultOptions = {
@@ -95,8 +102,8 @@ export function sendMessage(type, data, options = {}) {
     if (!message) return null;
   }
 
-  // Log message instead of publishing (mock implementation)
-  console.log('Mock message sent:', message);
+  // Publish to the Lightning Message Channel
+  publish(messageContext, DUPLICATION_CHANNEL, message);
 
   // Return the correlation ID for tracking
   return message.correlationId;
@@ -121,35 +128,39 @@ export function clearMiddleware() {
 
 /**
  * Send a request and wait for a response with the same correlation ID
- * Uses Promise-based timeout implementation instead of setTimeout to comply with LWC restrictions
  * @param {string} type - Message type/action
  * @param {object} data - Message payload
  * @param {number} timeout - Timeout in ms (default: 5000)
  * @returns {Promise} Promise that resolves with the response
  */
 export function sendRequest(type, data, timeout = 5000) {
-  // This is a mock implementation that auto-resolves for testing
-  return new Promise((resolve) => {
-    // Create a mock response
-    const mockResponse = {
-      success: true,
-      data: {
-        message: "Mock response for " + type,
-        timestamp: new Date().toISOString()
+  return new Promise((resolve, reject) => {
+    // Generate correlation ID for this request
+    const correlationId = generateUuid();
+    
+    // Create a one-time subscription to listen for the response
+    const subscription = subscribeToChannel((message) => {
+      // Only process responses with matching correlation ID
+      if (message.correlationId === correlationId) {
+        // Unsubscribe from the channel since we got our response
+        unsubscribeFromChannel(subscription);
+        
+        // Clear the timeout
+        clearTimeout(timeoutId);
+        
+        // Resolve the promise with the response payload
+        resolve(message.payload);
       }
-    };
-
-    // Log the mock request
-    console.log('Mock request sent:', {
-      type,
-      data,
-      correlationId: generateUuid()
     });
-
-    // Auto-resolve after a brief delay
-    setTimeout(() => {
-      resolve(mockResponse);
-    }, 100);
+    
+    // Set a timeout to reject the promise if no response is received
+    const timeoutId = setTimeout(() => {
+      unsubscribeFromChannel(subscription);
+      reject(new Error(`Request timed out after ${timeout}ms`));
+    }, timeout);
+    
+    // Send the request message with the correlation ID
+    sendMessage(type, data, { correlationId });
   });
 }
 

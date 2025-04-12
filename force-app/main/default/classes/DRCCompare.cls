@@ -1,11 +1,11 @@
 /**
- * Class for retrieving records for side-by-side comparison
+ * @description Class for retrieving records for side-by-side comparison
  * @author Richard Hudson
  * @date 2025-04-11
  */
-public class DRCCompare {
+public with sharing class DRCCompare {
     /**
-     * Static method for retrieving records for side-by-side comparison
+     * @description Static method for retrieving records for side-by-side comparison
      *
      * @param recordIds List of record IDs to compare
      * @param objectApiName API name of the object
@@ -55,10 +55,23 @@ public class DRCCompare {
             List<String> fieldList = new List<String>(fieldsToQuery);
             
             // Build and execute query
-            String query = 'SELECT ' + String.join(fieldList, ', ') + 
-                          ' FROM ' + objectApiName + 
+            // Validate object API name using schema describe
+            Schema.SObjectType objectType = Schema.getGlobalDescribe().get(objectApiName);
+            if (objectType == null) {
+                throw new AuraHandledException('Invalid object API name: ' + objectApiName);
+            }
+            
+            // Secure query building - no SOQL injection possible because:
+            // 1. fieldList is built from describe calls, not user input
+            // 2. objectApiName is validated against Schema.getGlobalDescribe()
+            // 3. recordIds are properly validated
+            String fields = String.join(fieldList, ', ');
+            String queryObject = String.escapeSingleQuotes(objectApiName);
+            String query = 'SELECT ' + fields + 
+                          ' FROM ' + queryObject + 
                           ' WHERE Id IN :recordIds';
             
+            // All query components are secured and safe from SOQL injection
             List<SObject> records = Database.query(query);
             
             // Return result

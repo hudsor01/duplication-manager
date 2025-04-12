@@ -1,11 +1,11 @@
 /**
- * Class for retrieving field metadata for an object
+ * @description Class for retrieving field metadata for an object
  * @author Richard Hudson
  * @date 2025-04-11
  */
 public class DRCFields {
     /**
-     * Static method for getting field metadata for an object organized into groups
+     * @description Static method for getting field metadata for an object organized into groups
      *
      * @param objectApiName API name of the object
      * @return Map containing field groups and metadata

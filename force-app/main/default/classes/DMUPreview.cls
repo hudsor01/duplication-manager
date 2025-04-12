@@ -1,11 +1,11 @@
 /**
- * Class for previewing merge results without performing the merge
+ * @description Class for previewing merge results without performing the merge
  * @author Richard Hudson
  * @date 2025-04-11
  */
-public class DMUPreview {
+public with sharing class DMUPreview {
     /**
-     * Static method for previewing the result of merging records without actually performing the merge
+     * @description Static method for previewing the result of merging records without actually performing the merge
      *
      * @param request Map containing merge parameters (masterId, duplicateIds, objectApiName, fieldSelections)
      * @return Map containing the preview of the merged record
@@ -65,11 +65,25 @@ public class DMUPreview {
                 allIds.add(Id.valueOf(dupId));
             }
             
-            String query = 'SELECT ' + String.join(fieldList, ', ') + 
-                          ' FROM ' + objectApiName + 
+            // Use schema describe call to confirm valid object API name
+            Schema.SObjectType objectType = Schema.getGlobalDescribe().get(objectApiName);
+            if (objectType == null) {
+                throw new AuraHandledException('Invalid object API name: ' + objectApiName);
+            }
+            
+            // Secure query building - no SOQL injection possible because:
+            // 1. fieldList is built from describe calls, not user input
+            // 2. objectApiName is validated against Schema.getGlobalDescribe()
+            // 3. allIds are converted to Id type
+            String fields = String.join(fieldList, ', ');
+            String queryObject = String.escapeSingleQuotes(objectApiName);
+            String query = 'SELECT ' + fields + 
+                          ' FROM ' + queryObject + 
                           ' WHERE Id IN :allIds';
             
-            List<SObject> records = Database.query(query);
+            // Since all variables are secured and Id list is type-safe
+            // Add security enforcement to the query
+            List<SObject> records = Database.query(query + ' WITH SECURITY_ENFORCED');
             
             // Find master record
             SObject masterRecord = null;

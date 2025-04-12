@@ -5,7 +5,7 @@
  * @author Richard Hudson
  * @created May 2025
  */
-public abstract class SpotioBatchProcessor implements Database.Batchable<SObject>, Database.Stateful {
+public abstract class DuplicateBatchProcessor implements Database.Batchable<SObject>, Database.Stateful {
 
     // Batch configuration
     protected Integer batchSize;

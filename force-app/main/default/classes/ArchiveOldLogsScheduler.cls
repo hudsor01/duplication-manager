@@ -1,23 +1,25 @@
-/***
- * Scheduler class for ArchiveOldLogsBatch
+/**
+ * @description Scheduler class for ArchiveOldLogsBatch
  * Schedules automatic archiving of old DuplicateMergeLog__c records
  *
  * @author Richard Hudson
  * @since April 2025
  */
-global class ArchiveOldLogsScheduler implements Schedulable {
+public with sharing class ArchiveOldLogsScheduler implements Schedulable {
     // Default number of days to retain logs before archiving
     private Integer daysToRetain = 90;
 
     /**
-     * Constructor with default retention period
+     * @description Constructor with default retention period
      */
     public ArchiveOldLogsScheduler() {
-        // Use default retention period
+        // Default retention period is set through the class variable initialization
+        // Using 90 days as default retention period
+        this.daysToRetain = 90;
     }
 
     /**
-     * Constructor with custom retention period
+     * @description Constructor with custom retention period
      * @param daysToRetain Number of days to retain logs
      */
     public ArchiveOldLogsScheduler(Integer daysToRetain) {
@@ -27,10 +29,10 @@ global class ArchiveOldLogsScheduler implements Schedulable {
     }
 
     /**
-     * Execute method required by Schedulable interface
+     * @description Execute method required by Schedulable interface
      * @param sc SchedulableContext
      */
-    global void execute(SchedulableContext sc) {
+    public void execute(SchedulableContext sc) {
         // Initialize batch job
         ArchiveOldLogsBatch batch = new ArchiveOldLogsBatch(daysToRetain);
 
@@ -42,7 +44,7 @@ global class ArchiveOldLogsScheduler implements Schedulable {
     }
 
     /**
-     * Gets the configured batch size from custom settings or returns default value
+     * @description Gets the configured batch size from custom settings or returns default value
      * @return The batch size to use for the archive batch job
      */
     private Integer getBatchSize() {

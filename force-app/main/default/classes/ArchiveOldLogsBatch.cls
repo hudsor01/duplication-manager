@@ -226,7 +226,7 @@ public class ArchiveOldLogsBatch implements Database.Batchable<SObject> {
             );
             insert errorLog;
         } catch (Exception e) {
-            System.debug('Failed to insert error log: ' + e.getMessage());
+            System.debug(LoggingLevel.ERROR, 'Failed to insert error log: ' + e.getMessage());
         }
     }
 

@@ -65,12 +65,14 @@ public class AddressMatcher {
     }
     
     /**
-     * Normalizes an address string
+     * @description Normalizes an address string by removing special characters and standardizing format
      * @param address The address to normalize
      * @return Normalized address
      */
     private static String normalizeAddress(String address) {
-        if (String.isBlank(address)) return '';
+        if (String.isBlank(address)) {
+            return '';
+        }
         
         // Convert to lowercase
         String result = address.toLowerCase();

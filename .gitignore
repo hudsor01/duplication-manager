@@ -1,0 +1,13 @@
+# Salesforce DX Project .gitignore
+# Ignore specific files and directories for Salesforce projects
+.sfdx/
+.sf/
+.vscode/
+.idea/
+node_modules/
+.DS_Store
+*.log
+.tern-project
+coverage/
+.localdevserver/
+.settings/

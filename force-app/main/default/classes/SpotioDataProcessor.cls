@@ -2,7 +2,7 @@
  * Data processor implementation for Spotio
  * @description Handles data processing in queueable context
  */
-public class SpotioDataProcessor {
+public class DuplicateDataProcessor {
     // Simple context map to store values
     private Map<String, Object> context;
     private String objectName;
@@ -11,7 +11,7 @@ public class SpotioDataProcessor {
     /**
      * @description Default constructor
      */
-    public SpotioDataProcessor() {
+    public DuplicateDataProcessor() {
         this.context = new Map<String, Object>();
     }
     
@@ -19,7 +19,7 @@ public class SpotioDataProcessor {
      * @description Constructor with context
      * @param contextMap The context map for this processor
      */
-    public SpotioDataProcessor(Map<String, Object> contextMap) {
+    public DuplicateDataProcessor(Map<String, Object> contextMap) {
         this.context = contextMap != null ? contextMap : new Map<String, Object>();
     }
     
@@ -28,7 +28,7 @@ public class SpotioDataProcessor {
      * @param objectName The API name of the object to process
      * @param recordIds Set of record IDs to process
      */
-    public SpotioDataProcessor(String objectName, Set<Id> recordIds) {
+    public DuplicateDataProcessor(String objectName, Set<Id> recordIds) {
         this.context = new Map<String, Object>();
         this.objectName = objectName;
         this.recordIds = recordIds;

@@ -25,7 +25,7 @@
                                     <template for:each={fieldData} for:item="field">
                                         <dt key={field.field} class="slds-item_label slds-truncate" title={field.field}>{field.field}:</dt>
                                         <dd key={field.field} class="field-value" data-id={field.field} title={field.field}>
-                                            <lightning-formatted-text value={field.value1}></lightning-formatted-text>
+                                            {field.value1}
                                         </dd>
                                     </template>
                                 </dl>
@@ -43,7 +43,7 @@
                                     <template for:each={fieldData} for:item="field">
                                         <dt key={field.field} class="slds-item_label slds-truncate" title={field.field}>{field.field}:</dt>
                                         <dd key={field.field} class="field-value" data-id={field.field} title={field.field}>
-                                            <lightning-formatted-text value={field.value2}></lightning-formatted-text>
+                                            {field.value2}
                                         </dd>
                                     </template>
                                 </dl>
@@ -68,8 +68,8 @@
                                 <template for:each={fieldData} for:item="field">
                                     <tr key={field.field} class="field-row" data-id={field.field}>
                                         <td>{field.label}</td>
-                                        <td><lightning-formatted-text value={field.value1}></lightning-formatted-text></td>
-                                        <td><lightning-formatted-text value={field.value2}></lightning-formatted-text></td>
+                                        <td>{field.value1}</td>
+                                        <td>{field.value2}</td>
                                     </tr>
                                 </template>
                             </tbody>

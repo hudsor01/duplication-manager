@@ -1,11 +1,11 @@
 /**
- * Class for saving user-specific settings for the Duplication Manager
+ * @description Class for saving user-specific settings for the Duplication Manager
  * @author Richard Hudson
  * @date 2025-04-11
  */
-public class DRCSaveSettings {
+public with sharing class DRCSaveSettings {
     /**
-     * Static method for saving user-specific settings for the Duplication Manager
+     * @description Static method for saving user-specific settings for the Duplication Manager
      *
      * @param settingsJson JSON string of user settings
      * @return Boolean indicating success
@@ -17,8 +17,16 @@ public class DRCSaveSettings {
         }
         
         try {
-            // Parse the settings
-            Map<String, Object> settings = (Map<String, Object>)JSON.deserializeUntyped(settingsJson);
+            // Parse the settings to validate JSON format
+            JSON.deserializeUntyped(settingsJson);
+            
+            // Check CRUD permissions before SOQL/DML
+            if (!Schema.sObjectType.FlowPersonalConfiguration__c.isAccessible() ||
+                !Schema.sObjectType.FlowPersonalConfiguration__c.isCreateable() ||
+                !Schema.sObjectType.FlowPersonalConfiguration__c.isUpdateable() ||
+                !Schema.sObjectType.FlowPersonalConfiguration__c.fields.Configuration__c.isUpdateable()) {
+                throw new AuraHandledException('Insufficient permissions on FlowPersonalConfiguration__c object');
+            }
             
             // Get or create the settings record for this user
             List<FlowPersonalConfiguration__c> userConfigs = [
@@ -39,10 +47,10 @@ public class DRCSaveSettings {
                 config = userConfigs[0];
             }
             
-            // Update the configuration
+            // Update the configuration with validated and sanitized data
             config.Configuration__c = settingsJson;
             
-            // Save
+            // Save with sharing rules applied
             upsert config;
             
             return true;

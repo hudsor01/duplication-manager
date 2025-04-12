@@ -1,5 +1,5 @@
 /**
- * Test class for ArchiveOldLogsBatch
+ * @description Test class for ArchiveOldLogsBatch
  *
  * @author GitHub Copilot
  * @since April 2025

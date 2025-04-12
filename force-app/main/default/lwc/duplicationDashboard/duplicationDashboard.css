@@ -220,15 +220,27 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: 3rem;
   text-align: center;
   color: #706e6b;
+  background-color: #fafaf9;
+  border-radius: 0.25rem;
+  border: 1px dashed #dddbda;
+  margin: 1rem;
 }
 
 .empty-state-icon {
   margin-bottom: 1rem;
   width: 3rem;
   height: 3rem;
+  --sds-c-icon-color-foreground-default: #706e6b;
+}
+
+.empty-state p:first-of-type {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #3e3e3c;
+  margin-bottom: 0.5rem;
 }
 
 /* Badge */

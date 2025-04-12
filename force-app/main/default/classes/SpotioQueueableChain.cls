@@ -2,13 +2,13 @@
  * Simplified chain of jobs implementation
  * @description Handles sequential execution of jobs with context passing
  */
-public class SpotioQueueableChain {
+public class DuplicateQueueableChain {
 
     /**
      * @description Interface for queueable step implementation
      */
     public interface QueueableStep {
-        void execute(SpotioQueueableChain chain);
+        void execute(DuplicateQueueableChain chain);
     }
 
     /**
@@ -39,7 +39,7 @@ public class SpotioQueueableChain {
      * @description Constructor with chain name
      * @param name The name of the chain
      */
-    public SpotioQueueableChain(String name) {
+    public DuplicateQueueableChain(String name) {
         this.chainName = name;
         this.steps = new List<Object>();
         this.context = new Map<String, Object>();
@@ -172,9 +172,9 @@ public class SpotioQueueableChain {
                 QueueableStep queueableStep = (QueueableStep)step;
                 queueableStep.execute(this);
             }
-            // If step is a SpotioDataProcessor, call its execute method with context
-            else if (step instanceof SpotioDataProcessor) {
-                SpotioDataProcessor processor = (SpotioDataProcessor)step;
+            // If step is a DuplicateDataProcessor, call its execute method with context
+            else if (step instanceof DuplicateDataProcessor) {
+                DuplicateDataProcessor processor = (DuplicateDataProcessor)step;
                 processor.execute(this.context);
             }
             // Add handling for other step types as needed

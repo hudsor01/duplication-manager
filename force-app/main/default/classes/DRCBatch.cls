@@ -1,11 +1,11 @@
 /**
- * Class for running duplicate finder batch jobs
+ * @description Class for running duplicate finder batch jobs
  * @author Richard Hudson
  * @date 2025-04-11
  */
-public class DRCBatch {
+public with sharing class DRCBatch {
     /**
-     * Static method for running a duplicate finder batch job with the specified configuration
+     * @description Static method for running a duplicate finder batch job with the specified configuration
      * 
      * @param settingDeveloperName Developer name of the configuration setting to use
      * @param isDryRun Whether to run in dry run mode (find but don't merge)

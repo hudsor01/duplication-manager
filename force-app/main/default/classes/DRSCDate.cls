@@ -1,11 +1,11 @@
 /**
- * Class for determining date ranges for statistics queries
+ * @description Class for determining date ranges for statistics queries
  * @author Richard Hudson
  * @date 2025-04-11
  */
 public class DRSCDate {
     /**
-     * Static method for determining the start date based on the time range
+     * @description Static method for determining the start date based on the time range
      * 
      * @param timeRange String identifying the time range (TODAY, YESTERDAY, etc.)
      * @return Date The start date for the range

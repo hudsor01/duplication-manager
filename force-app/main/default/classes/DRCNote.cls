@@ -1,11 +1,11 @@
 /**
- * Class for creating note records
+ * @description Class for creating note records
  * @author Richard Hudson
  * @date 2025-04-11
  */
-public class DRCNote {
+public with sharing class DRCNote {
     /**
-     * Static method for creating a note record
+     * @description Static method for creating a note record
      *
      * @param parentId ID of the parent record
      * @param title Title of the note
@@ -23,12 +23,21 @@ public class DRCNote {
         }
         
         try {
+            // Check CRUD permissions before DML
+            if (!Schema.sObjectType.Note.isCreateable() ||
+                !Schema.sObjectType.Note.fields.Title.isCreateable() ||
+                !Schema.sObjectType.Note.fields.Body.isCreateable() ||
+                !Schema.sObjectType.Note.fields.ParentId.isCreateable()) {
+                throw new AuraHandledException('Insufficient permissions to create Note records');
+            }
+            
             // Create a standard Note instead of ContentNote (which might not be available)
             Note noteRecord = new Note();
             noteRecord.Title = title;
             noteRecord.Body = body;
             noteRecord.ParentId = parentId;
             
+            // Use DML with sharing context respected
             insert noteRecord;
             
             return true;

@@ -1,5 +1,5 @@
 /**
- * Test class for ArchiveOldLogsScheduler
+ * @description Test class for ArchiveOldLogsScheduler
  * 
  * @author GitHub Copilot
  * @since April 2025
@@ -24,8 +24,8 @@ private class ArchiveOldLogsSchedulerTest {
             WHERE Id = :jobId
         ];
         
-        System.assertEquals(cronExp, ct.CronExpression);
-        System.assertEquals(0, ct.TimesTriggered);
+        System.assertEquals(cronExp, ct.CronExpression, 'Cron expression does not match expected value');
+        System.assertEquals(0, ct.TimesTriggered, 'Job should not have triggered yet');
         
         // Execute the job 
         ArchiveOldLogsScheduler scheduler = new ArchiveOldLogsScheduler();
@@ -62,8 +62,8 @@ private class ArchiveOldLogsSchedulerTest {
             WHERE Id = :jobId
         ];
         
-        System.assertEquals(cronExp, ct.CronExpression);
-        System.assertEquals(0, ct.TimesTriggered);
+        System.assertEquals(cronExp, ct.CronExpression, 'Cron expression does not match expected value');
+        System.assertEquals(0, ct.TimesTriggered, 'Job should not have triggered yet');
         
         // Execute the job with custom retention period
         ArchiveOldLogsScheduler scheduler = new ArchiveOldLogsScheduler(customDaysToRetain);
