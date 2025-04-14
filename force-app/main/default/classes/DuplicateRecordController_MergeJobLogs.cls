@@ -21,7 +21,7 @@ public with sharing class DuplicateRecordController_MergeJobLogs {
         return [
             SELECT Id, MasterId__c, MergedIds__c, ObjectApiName__c,
                    MergeTime__c, JobId__c, UserId__c,
-                   FieldMergeDetails__c, ErrorMessages__c
+                   FieldMergeDetails__c, ErrorMessage__c
             FROM DuplicateMergeLog__c
             ORDER BY MergeTime__c DESC
             LIMIT :limitParam
@@ -42,7 +42,7 @@ public with sharing class DuplicateRecordController_MergeJobLogs {
         return [
             SELECT Id, MasterId__c, MergedIds__c, ObjectApiName__c,
                    MergeTime__c, JobId__c, UserId__c,
-                   FieldMergeDetails__c, ErrorMessages__c
+                   FieldMergeDetails__c, ErrorMessage__c
             FROM DuplicateMergeLog__c
             WHERE JobId__c = :jobId
             ORDER BY MergeTime__c DESC
@@ -63,7 +63,7 @@ public with sharing class DuplicateRecordController_MergeJobLogs {
         return [
             SELECT Id, MasterId__c, MergedIds__c, ObjectApiName__c,
                    MergeTime__c, JobId__c, UserId__c,
-                   FieldMergeDetails__c, ErrorMessages__c
+                   FieldMergeDetails__c, ErrorMessage__c
             FROM DuplicateMergeLog__c
             WHERE MasterId__c = :masterId
             ORDER BY MergeTime__c DESC
@@ -88,7 +88,7 @@ public with sharing class DuplicateRecordController_MergeJobLogs {
             DuplicateMergeLog__c log = [
                 SELECT Id, MasterId__c, MergedIds__c, ObjectApiName__c,
                        MergeTime__c, JobId__c, UserId__c,
-                       FieldMergeDetails__c, ErrorMessages__c
+                       FieldMergeDetails__c, ErrorMessage__c
                 FROM DuplicateMergeLog__c
                 WHERE Id = :logId
                 LIMIT 1

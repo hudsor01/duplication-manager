@@ -229,16 +229,16 @@
           size="x-small"
           class="slds-var-m-right_x-small"
         ></lightning-icon>
-        Duplicate Records by Object
+        Duplication Records by Object
       </div>
 
       <template if:true={hasStatistics}>
         <template if:false={showChartError}>
           <div class="chart-container">
             <canvas
-              class="duplicate-chart"
+              class="duplication-chart"
               lwc:dom="manual"
-              aria-label="Bar chart showing duplicate records by object"
+              aria-label="Bar chart showing duplication records by object"
             ></canvas>
           </div>
         </template>
@@ -266,7 +266,7 @@
             alternative-text="No data"
             size="medium"
           ></lightning-icon>
-          <p>No duplicate statistics available yet</p>
+          <p>No duplication statistics available yet</p>
           <p class="slds-var-m-top_small">
             Run duplication finder jobs to collect statistics.
           </p>

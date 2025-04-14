@@ -3,6 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Build/Test Commands
+
 - `sfdx apex:test:run -n ClassName` - Run a specific Apex test class
 - `sfdx apex:test:run -t ClassName.testMethodName` - Run a specific test method
 - `npm run test:unit` - Run LWC unit tests
@@ -11,6 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run prettier` - Format all code with Prettier
 
 ## Code Style Guidelines
+
 - Use PascalCase for class names, camelCase for methods/variables
 - Include class documentation with @author and @date annotations
 - Add descriptive comments for complex logic

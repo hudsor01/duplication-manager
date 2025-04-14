@@ -3,33 +3,57 @@
   border-radius: 0.25rem;
 }
 
-.comparison-header {
-  background: #f3f3f3;
-  border-bottom: 1px solid #dddbda;
-  padding: 0.75rem;
+.comparison-view {
+  animation: fadeIn 0.3s ease-out;
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Fields Comparison */
 .comparison-fields {
   max-height: 600px;
   overflow-y: auto;
 }
 
 .field-group {
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
+  background: #fff;
+  border-radius: 0.25rem;
+  transition: box-shadow 0.2s ease;
+}
+
+.field-group:hover {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 .field-group-header {
   background: #f3f3f3;
   border-bottom: 1px solid #dddbda;
   font-weight: bold;
+  border-radius: 0.25rem 0.25rem 0 0;
 }
 
 .field-row {
   border-bottom: 1px solid #f3f3f3;
+  transition: background-color 0.2s ease;
 }
 
 .field-row:hover {
-  background-color: #f8f8f8;
+  background-color: #fafaf9;
+}
+
+.field-row:last-child {
+  border-bottom: none;
+  border-radius: 0 0 0.25rem 0.25rem;
 }
 
 .field-label {
@@ -39,29 +63,48 @@
 }
 
 .field-value {
-  min-height: 2rem;
+  min-height: 2.5rem;
   display: flex;
   align-items: center;
   position: relative;
 }
 
+.field-text {
+  word-break: break-word;
+  line-height: 1.4;
+}
+
 .field-action {
   visibility: hidden;
-  position: absolute;
-  right: 0.5rem;
+  transition: all 0.2s ease;
+  transform: scale(0.9);
 }
 
 .field-value:hover .field-action {
   visibility: visible;
+  transform: scale(1);
 }
 
 .field-different {
-  color: #6b6d70;
-  font-weight: bold;
+  color: #1589ee;
+  font-weight: 500;
+  position: relative;
+}
+
+.field-different::after {
+  content: '';
+  position: absolute;
+  left: -0.5rem;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background-color: #1589ee;
+  opacity: 0.6;
+  border-radius: 3px;
 }
 
 .field-master {
-  font-weight: bold;
+  font-weight: 500;
 }
 
 .duplicate-column {
@@ -70,11 +113,30 @@
   border-left: 1px solid #f3f3f3;
 }
 
+/* Match Score Badges */
 .match-score {
   background-color: #0176d3;
+  font-weight: 500;
 }
 
-.action-bar {
-  background: #f3f3f3;
-  border-top: 1px solid #dddbda;
+.match-score-master {
+  background-color: #04844b;
+  font-weight: 500;
+}
+
+/* Duplicate Records */
+.duplicate-records-container {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.duplicate-card {
+  transition: all 0.2s ease;
+  border: 1px solid #dddbda;
+}
+
+.duplicate-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-color: #b0adab;
+  transform: translateY(-2px);
 }

@@ -14,14 +14,46 @@ export default class DuplicationMergeConflicts extends LightningElement {
    * @description Master record to keep
    * @type {Object}
    */
-  @api masterRecord;
+  @api 
+  get masterRecord() {
+    return this._masterRecord;
+  }
+  set masterRecord(value) {
+    // Handle both object and string (JSON) inputs
+    if (typeof value === 'string') {
+      try {
+        this._masterRecord = JSON.parse(value);
+      } catch (e) {
+        console.error('Error parsing masterRecord string:', e);
+        this._masterRecord = null;
+      }
+    } else {
+      this._masterRecord = value;
+    }
+  }
 
   /**
    * @api
    * @description Duplicate records to merge
    * @type {Array}
    */
-  @api duplicateRecords = [];
+  @api 
+  get duplicateRecords() {
+    return this._duplicateRecords || [];
+  }
+  set duplicateRecords(value) {
+    // Handle both array and string (JSON) inputs
+    if (typeof value === 'string') {
+      try {
+        this._duplicateRecords = JSON.parse(value);
+      } catch (e) {
+        console.error('Error parsing duplicateRecords string:', e);
+        this._duplicateRecords = [];
+      }
+    } else {
+      this._duplicateRecords = value || [];
+    }
+  }
 
   /**
    * @api

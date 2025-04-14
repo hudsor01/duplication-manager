@@ -11,16 +11,16 @@ public class DataModelMigrationUtil {
      */
     public static void generateMigrationScript() {
         List<DuplicateFinderSetting__mdt> oldSettings = [
-            SELECT Id, DeveloperName, MasterLabel, BatchSize__c, IsActive__c, 
+            SELECT Id, DeveloperName, MasterLabel, BatchSize__c, IsActive__c,
                    MasterRecordStrategy__c, MatchFields__c, SObject_API_Name__c
             FROM DuplicateFinderSetting__mdt
         ];
-        
+
         System.debug('Migration script for DuplicateFinderSetting__mdt to DuplicationConfiguration__mdt:');
         System.debug('======================================================================');
-        
+
         for(DuplicateFinderSetting__mdt setting : oldSettings) {
-            String xmlTemplate = 
+            String xmlTemplate =
                 '<?xml version="1.0" encoding="UTF-8"?>\n' +
                 '<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\n' +
                 '    <label>{0}</label>\n' +
@@ -58,14 +58,14 @@ public class DataModelMigrationUtil {
                 '        <value xsi:type="xsd:string">Migrated from DuplicateFinderSetting</value>\n' +
                 '    </values>\n' +
                 '</CustomMetadata>';
-            
+
             // Get field values, ensuring they're not null
             String matchFields = String.isBlank(setting.MatchFields__c) ? '' : setting.MatchFields__c;
             String objectApiName = String.isBlank(setting.SObject_API_Name__c) ? 'Account' : setting.SObject_API_Name__c;
             Decimal batchSize = setting.BatchSize__c != null ? setting.BatchSize__c : 200;
             String masterStrategy = String.isBlank(setting.MasterRecordStrategy__c) ? 'OldestCreated' : setting.MasterRecordStrategy__c;
             Boolean isActive = setting.IsActive__c != null ? setting.IsActive__c : false;
-            
+
             // Format the XML with actual values
             String formattedXml = String.format(
                 xmlTemplate,
@@ -78,17 +78,17 @@ public class DataModelMigrationUtil {
                     objectApiName
                 }
             );
-            
+
             // Output the formatted XML
             String filename = 'DuplicationConfiguration.' + setting.DeveloperName + '.md-meta.xml';
             System.debug('File: ' + filename);
             System.debug(formattedXml);
             System.debug('----------------------------------------------------------------------');
         }
-        
+
         System.debug('Migration script complete. Create these files in the force-app/main/default/customMetadata directory.');
     }
-    
+
     /**
      * Updates DuplicateConfig class to use consolidated metadata
      */

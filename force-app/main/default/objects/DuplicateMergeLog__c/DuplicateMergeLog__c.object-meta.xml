@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
     <actionOverrides>
         <actionName>Accept</actionName>
@@ -62,13 +62,19 @@
     </nameField>
     <pluralLabel>Duplicate Merge Logs</pluralLabel>
     <searchLayouts>
-        <customTabListAdditionalFields>MasterId__c</customTabListAdditionalFields>
-        <customTabListAdditionalFields>ObjectApiName__c</customTabListAdditionalFields>
-        <customTabListAdditionalFields>MergeTime__c</customTabListAdditionalFields>
+        <customTabListAdditionalFields
+    >MasterId__c</customTabListAdditionalFields>
+        <customTabListAdditionalFields
+    >ObjectApiName__c</customTabListAdditionalFields>
+        <customTabListAdditionalFields
+    >MergeTime__c</customTabListAdditionalFields>
         <customTabListAdditionalFields>UserId__c</customTabListAdditionalFields>
-        <searchResultsAdditionalFields>MasterId__c</searchResultsAdditionalFields>
-        <searchResultsAdditionalFields>ObjectApiName__c</searchResultsAdditionalFields>
-        <searchResultsAdditionalFields>MergeTime__c</searchResultsAdditionalFields>
+        <searchResultsAdditionalFields
+    >MasterId__c</searchResultsAdditionalFields>
+        <searchResultsAdditionalFields
+    >ObjectApiName__c</searchResultsAdditionalFields>
+        <searchResultsAdditionalFields
+    >MergeTime__c</searchResultsAdditionalFields>
         <searchResultsAdditionalFields>UserId__c</searchResultsAdditionalFields>
     </searchLayouts>
     <sharingModel>ReadWrite</sharingModel>

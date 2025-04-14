@@ -1,6 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <PermissionSet xmlns="https://soap.sforce.com/2006/04/metadata">
-    <description>Permissions for administering duplicate record finding and merging</description>
+    <description
+  >Permissions for administering duplicate record finding and merging</description>
     <hasActivationRequired>false</hasActivationRequired>
     <label>Duplicate Manager Admin</label>
     <tabSettings>
@@ -28,7 +29,7 @@
         <apexClass>DuplicateHealthController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
-    
+
     <!-- Core Service Classes -->
     <classAccesses>
         <apexClass>DuplicateDetectionService</apexClass>
@@ -50,7 +51,7 @@
         <apexClass>DuplicateSettingsService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
-    
+
     <!-- Utility Classes -->
     <classAccesses>
         <apexClass>DuplicateRecordUtility</apexClass>
@@ -72,7 +73,7 @@
         <apexClass>SecurityUtility</apexClass>
         <enabled>true</enabled>
     </classAccesses>
-    
+
     <!-- Batch & Scheduler Classes -->
     <classAccesses>
         <apexClass>DuplicateRecordBatch</apexClass>
@@ -98,7 +99,7 @@
         <apexClass>ArchiveOldLogsScheduler</apexClass>
         <enabled>true</enabled>
     </classAccesses>
-    
+
     <!-- Core Matcher Classes -->
     <classAccesses>
         <apexClass>DuplicateMatcherUtility</apexClass>
@@ -140,7 +141,7 @@
         <apexClass>LevenshteinCalculator</apexClass>
         <enabled>true</enabled>
     </classAccesses>
-    
+
     <!-- Data Model & Components -->
     <classAccesses>
         <apexClass>DuplicateGroup</apexClass>
@@ -182,7 +183,7 @@
         <apexClass>DuplicationException</apexClass>
         <enabled>true</enabled>
     </classAccesses>
-    
+
     <!-- Object Permissions -->
     <objectPermissions>
         <allowCreate>true</allowCreate>

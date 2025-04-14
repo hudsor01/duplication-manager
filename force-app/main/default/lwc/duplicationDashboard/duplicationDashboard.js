@@ -3,18 +3,18 @@ import { MessageContext } from "lightning/messageService";
 import {
   subscribeToChannel,
   unsubscribeFromChannel,
-  sendMessage,
-  MESSAGE_TYPES,
+  sendMessage
 } from "c/duplicationMessageService";
+import { MESSAGE_TYPES } from "c/duplicationConstants";
 import { TIME_RANGES } from "c/duplicationConstants";
 import store from "c/duplicationStore";
-import * as DuplicationStore from "c/duplicationStore";
-import getDetailedStatistics from "@salesforce/apex/DRSCDetailed.getDetailedStatistics";
+import * as duplicationStore from "c/duplicationStore";
+import getDetailedStatistics from "@salesforce/apex/DuplicateController.getDetailedStatistics";
 import { loadScript } from "lightning/platformResourceLoader";
 import chartjs from "@salesforce/resourceUrl/chartjs";
 
 /**
- * Enhanced dashboard component displaying duplicate record statistics with modern UI
+ * Enhanced dashboard component displaying duplication record statistics with modern UI
  *
  * @author Richard Hudson
  * @updated May 2025
@@ -58,7 +58,7 @@ export default class DuplicationDashboard extends LightningElement {
 
     // Show loading indicator
     this.isLoading = true;
-    store.dispatch(DuplicationStore.actions.SET_LOADING, true);
+    store.dispatch(duplicationStore.actions.SET_LOADING, true);
 
     // Load statistics from server
     this.loadStatistics();
@@ -186,7 +186,7 @@ export default class DuplicationDashboard extends LightningElement {
     this.showChartError = false;
 
     // Try to get the chart element
-    const canvas = this.template.querySelector("canvas.duplicate-chart");
+    const canvas = this.template.querySelector("canvas.duplication-chart");
     if (!canvas) {
       this.showChartError = true;
       return;
@@ -283,7 +283,7 @@ export default class DuplicationDashboard extends LightningElement {
     getDetailedStatistics({ timeRange: this.timeRange })
       .then((result) => {
         // Update store with statistics
-        store.dispatch(DuplicationStore.actions.UPDATE_STATISTICS, result);
+        store.dispatch(duplicationStore.actions.UPDATE_STATISTICS, result);
         this.lastRefresh = new Date();
 
         // Initialize from store after updating it
@@ -309,7 +309,7 @@ export default class DuplicationDashboard extends LightningElement {
       .finally(() => {
         // Stop loading
         this.isLoading = false;
-        store.dispatch(DuplicationStore.actions.SET_LOADING, false);
+        store.dispatch(duplicationStore.actions.SET_LOADING, false);
       });
   }
 
@@ -354,10 +354,10 @@ export default class DuplicationDashboard extends LightningElement {
     Promise.resolve().then(() => {
       // Set loading state
       this.isLoading = true;
-      store.dispatch(DuplicationStore.actions.SET_LOADING, true);
+      store.dispatch(duplicationStore.actions.SET_LOADING, true);
 
       // Invalidate cache
-      store.dispatch(DuplicationStore.actions.INVALIDATE_CACHE, "statistics");
+      store.dispatch(duplicationStore.actions.INVALIDATE_CACHE, "statistics");
 
       // Notify that refresh is happening via LMS
       sendMessage(MESSAGE_TYPES.REFRESH_STARTED, {
@@ -453,7 +453,7 @@ export default class DuplicationDashboard extends LightningElement {
     };
 
     // Add to store errors with sanitized info
-    store.dispatch(DuplicationStore.actions.ADD_ERROR, {
+    store.dispatch(duplicationStore.actions.ADD_ERROR, {
       message: baseMessage,
       details: errorDetails,
       type: "statistics",

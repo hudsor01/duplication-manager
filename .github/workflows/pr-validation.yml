@@ -1,0 +1,47 @@
+name: Pull Request Validation
+
+on:
+  pull_request:
+    branches: [staging, main]
+    paths:
+      - 'force-app/**'
+
+jobs:
+  sfdx-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Install Salesforce CLI
+        run: |
+          npm install @salesforce/cli --global
+          sf --version
+      
+      - name: Install PMD
+        run: |
+          wget https://github.com/pmd/pmd/releases/download/pmd_releases%2F6.55.0/pmd-bin-6.55.0.zip
+          unzip pmd-bin-6.55.0.zip
+          ./pmd-bin-6.55.0/bin/pmd --version
+      
+      - name: Run Static Code Analysis (PMD)
+        run: |
+          ./pmd-bin-6.55.0/bin/pmd check -d force-app -R rulesets/apex/quickstart.xml -f text
+      
+      - name: Auth to Salesforce
+        env:
+          SALESFORCE_JWT_SECRET_KEY: ${{ secrets.SALESFORCE_JWT_SECRET_KEY }}
+          CONSUMER_KEY: ${{ secrets.CONSUMER_KEY }}
+        run: |
+          echo "$SALESFORCE_JWT_SECRET_KEY" > server.key
+          sf org login jwt --client-id $CONSUMER_KEY --jwt-key-file server.key --username ${{ secrets.SANDBOX_USERNAME }} --alias ciorg
+      
+      - name: Validate Against Sandbox
+        run: |
+          sf project deploy validate --source-dir force-app --target-org ciorg --test-level RunLocalTests

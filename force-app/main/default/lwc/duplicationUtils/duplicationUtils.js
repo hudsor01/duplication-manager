@@ -1,5 +1,5 @@
 /**
- * Utility functions for the Duplication Manager application
+ * Utility functions for the duplicate Manager application
  * Centralizes common operations used across components
  *
  * @author Richard Hudson

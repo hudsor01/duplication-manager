@@ -1,11 +1,11 @@
 import { LightningElement, api, track } from "lwc";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
-import deleteScheduledJob from "@salesforce/apex/DuplicateRecordController.deleteScheduledJob";
+import deleteScheduledJob from "@salesforce/apex/DuplicateRecordJobController.deleteScheduledJob";
 import getDuplicateRunResults from "@salesforce/apex/DuplicateRecordController.getDuplicateRunResults";
-import getScheduledJobs from "@salesforce/apex/DuplicateRecordController.getScheduledJobs";
+import getScheduledJobs from "@salesforce/apex/DuplicateRecordJobController.getScheduledJobs";
 import mergeDuplicateRecords from "@salesforce/apex/DuplicateRecordController.mergeDuplicateRecords";
 import store from "c/duplicationStore";
-import { DuplicationStore } from "c/duplicationStore";
+import { duplicationStore } from "c/duplicationStore";
 
 /**
  * Component for displaying and managing scheduled duplicate finder jobs
@@ -50,7 +50,7 @@ export default class DuplicationManagerJobs extends LightningElement {
    * Lifecycle hook - Called when component is inserted into the DOM
    */
   connectedCallback() {
-    console.log("duplicationManagerJobs component connected to DOM");
+    // Component initialized
 
     // Initialize pagination from store
     const state = store.getState();
@@ -66,7 +66,7 @@ export default class DuplicationManagerJobs extends LightningElement {
    * Lifecycle hook - Called when component is removed from the DOM
    */
   disconnectedCallback() {
-    console.log("duplicationManagerJobs component removed from DOM");
+    // Component cleanup
   }
 
   /**
@@ -81,7 +81,7 @@ export default class DuplicationManagerJobs extends LightningElement {
         this._jobsValue = result;
 
         // Update store
-        store.dispatch(DuplicationStore.actions.UPDATE_SCHEDULED_JOBS, result);
+        store.dispatch(duplicationStore.actions.UPDATE_SCHEDULED_JOBS, result);
 
         // Update pagination
         this.updatePagination(result.length);
@@ -179,7 +179,7 @@ export default class DuplicationManagerJobs extends LightningElement {
     const updatedJobs = jobs.filter((job) => job.Id !== jobId);
 
     // Update store
-    store.dispatch(DuplicationStore.actions.UPDATE_SCHEDULED_JOBS, updatedJobs);
+    store.dispatch(duplicationStore.actions.UPDATE_SCHEDULED_JOBS, updatedJobs);
 
     // Update pagination
     this.updatePagination(updatedJobs.length);
@@ -212,7 +212,7 @@ export default class DuplicationManagerJobs extends LightningElement {
 
     // Update store pagination
     store.dispatch(
-      DuplicationStore.actions.UPDATE_PAGINATION,
+      duplicationStore.actions.UPDATE_PAGINATION,
       this.paginationInfo,
     );
   }
@@ -300,7 +300,7 @@ export default class DuplicationManagerJobs extends LightningElement {
       };
 
       // Update store pagination
-      store.dispatch(DuplicationStore.actions.UPDATE_PAGINATION, {
+      store.dispatch(duplicationStore.actions.UPDATE_PAGINATION, {
         currentPage: page,
       });
 
@@ -350,7 +350,7 @@ export default class DuplicationManagerJobs extends LightningElement {
       errorMessage += ": " + errorDetails;
     }
 
-    console.error(errorMessage);
+    // Error handled
 
     // Update local error state
     this.error = {
@@ -360,7 +360,7 @@ export default class DuplicationManagerJobs extends LightningElement {
     };
 
     // Add to store errors
-    store.dispatch(DuplicationStore.actions.ADD_ERROR, {
+    store.dispatch(duplicationStore.actions.ADD_ERROR, {
       message: errorMessage,
       type: "job",
       timestamp: new Date().toISOString(),
@@ -608,7 +608,7 @@ export default class DuplicationManagerJobs extends LightningElement {
         return this.processMergeGroups(groups, index + 1);
       })
       .catch((error) => {
-        console.error(`Error merging group ${index}:`, error);
+        // Error occurred while merging group, continue to next
         // Continue with next group despite error
         return this.processMergeGroups(groups, index + 1);
       });

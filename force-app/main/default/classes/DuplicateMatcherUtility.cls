@@ -367,13 +367,33 @@ public class DuplicateMatcherUtility {
     }
     
     /**
-     * Normalizes a phone number
+     * Normalizes a phone number for better matching
      * @param phone Phone number to normalize
      * @return Normalized phone number
      */
     private static String normalizePhone(String phone) {
         if (String.isBlank(phone)) return '';
-        return phone.replaceAll('[^0-9]', '');
+        
+        // Remove all non-numeric characters
+        String digitsOnly = phone.replaceAll('[^0-9]', '');
+        
+        // Handle common international prefixes
+        if (digitsOnly.startsWith('00')) {
+            // Convert international prefix 00 to +
+            digitsOnly = digitsOnly.substring(2);
+        }
+        
+        if (digitsOnly.startsWith('011')) {
+            // Convert US international prefix 011 to +
+            digitsOnly = digitsOnly.substring(3);
+        }
+        
+        // Handle US numbers with leading 1
+        if (digitsOnly.length() == 11 && digitsOnly.startsWith('1')) {
+            digitsOnly = digitsOnly.substring(1);
+        }
+        
+        return digitsOnly;
     }
 
     /**
@@ -392,13 +412,14 @@ public class DuplicateMatcherUtility {
             // Default weight is 1.0
             Decimal weight = 1.0;
 
-            // Adjust weight based on field name
-            if (lowerField.contains('name')) {
-                weight = 2.0; // Names are more important
-            } else if (lowerField.contains('email')) {
-                weight = 1.8; // Emails are important
-            } else if (lowerField.contains('phone')) {
-                weight = 1.5; // Phone numbers are important
+            // Adjust weight based on field name - email highest, then phone
+            if (lowerField.contains('email')) {
+                weight = 2.5; // Email has highest priority
+            } else if (lowerField.contains('phone') || lowerField.contains('mobile') || 
+                       lowerField.contains('cell') || lowerField.contains('tel')) {
+                weight = 2.0; // Phone has second highest priority
+            } else if (lowerField.contains('name')) {
+                weight = 1.7; // Names are important but lower than email/phone
             } else if (lowerField.contains('address')) {
                 weight = 1.5; // Addresses are important
             }

@@ -1,17 +1,9 @@
 {
   "packageDirectories": [
-    {
-      "path": "force-app",
-      "default": true
-    }
+    { "path": "force-app", "default": true },
+    { "path": ".", "default": false }
   ],
-  "name": "duplication-manager",
   "namespace": "",
-  "sfdcLoginUrl": "https://login.salesforce.com",
-  "sourceApiVersion": "62.0",
-  "plugins": {
-    "ignoreFiles": [
-      "force-app/main/default/flexipages/**"
-    ]
-  }
+  "sfdcLoginUrl": "https://test.salesforce.com",
+  "sourceApiVersion": "62.0"
 }

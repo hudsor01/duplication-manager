@@ -1,9 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>MergedIds__c</fullName>
-    <description>JSON array of the IDs of records that were merged into the master record</description>
+    <description
+  >JSON array of the IDs of records that were merged into the master record</description>
     <externalId>false</externalId>
-    <inlineHelpText>JSON array of the IDs of records that were merged into the master record</inlineHelpText>
+    <inlineHelpText
+  >JSON array of the IDs of records that were merged into the master record</inlineHelpText>
     <label>Merged Record IDs</label>
     <length>32768</length>
     <trackHistory>false</trackHistory>

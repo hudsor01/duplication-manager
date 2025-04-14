@@ -1,5 +1,5 @@
 /**
- * Constants used throughout the Duplication Manager application
+ * Constants used throughout the duplicate Manager application
  */
 
 // Status values for duplicate records
@@ -27,6 +27,79 @@ export const JOB_STATUS = {
   HOLDING: "Holding",
   PREPARING: "Preparing",
   ABORTED: "Aborted"
+};
+
+// Message types for LMS communication
+export const MESSAGE_TYPES = {
+  // Storage events
+  STORE_UPDATED: "STORE_UPDATED",
+  STORE_SECTION_UPDATED: "STORE_SECTION_UPDATED",
+
+  // Job events
+  JOB_STARTING: "JOB_STARTING",
+  JOB_STARTED: "JOB_STARTED",
+  JOB_COMPLETED: "JOB_COMPLETED",
+  JOB_ERROR: "JOB_ERROR",
+  JOB_STATUS_UPDATED: "JOB_STATUS_UPDATED",
+
+  // Statistics events
+  STATISTICS_LOADING: "STATISTICS_LOADING",
+  STATISTICS_LOADED: "STATISTICS_LOADED",
+  STATISTICS_LOAD_ERROR: "STATISTICS_LOAD_ERROR",
+
+  // Duplicate groups events
+  DUPLICATE_GROUP_SELECTED: "DUPLICATE_GROUP_SELECTED",
+  GROUPS_LOADING: "GROUPS_LOADING",
+  GROUPS_LOADED: "GROUPS_LOADED",
+  DUPLICATE_GROUPS_ERROR: "DUPLICATE_GROUPS_ERROR",
+
+  // Duplicate view events
+  DUPLICATES_FOUND: "DUPLICATES_FOUND",
+  MERGE_PREVIEW: "MERGE_PREVIEW",
+  DUPLICATES_MERGED: "DUPLICATES_MERGED",
+  MERGE_RECORD_SELECTED: "MERGE_RECORD_SELECTED",
+  MASTER_RECORD_CHANGED: "MASTER_RECORD_CHANGED",
+  FIELD_SELECTION_CHANGED: "FIELD_SELECTION_CHANGED",
+
+  // Merge events
+  MERGE_STARTED: "MERGE_STARTED",
+  MERGE_COMPLETED: "MERGE_COMPLETED",
+  MERGE_ERROR: "MERGE_ERROR",
+  MERGE_OPERATION: "MERGE_OPERATION",
+  MERGE_GROUP_REQUEST: "MERGE_GROUP_REQUEST",
+
+  // Merge process events
+  GROUP_MERGE_STARTING: "GROUP_MERGE_STARTING",
+  GROUP_MERGE_COMPLETED: "GROUP_MERGE_COMPLETED",
+  GROUP_MERGE_ERROR: "GROUP_MERGE_ERROR",
+  BULK_MERGE_STARTING: "BULK_MERGE_STARTING",
+  BULK_MERGE_COMPLETED: "BULK_MERGE_COMPLETED",
+
+  // Modal events
+  COMPARISON_MODAL_OPENED: "COMPARISON_MODAL_OPENED",
+  COMPARISON_MODAL_CLOSED: "COMPARISON_MODAL_CLOSED",
+  MASTER_PREVIEW_MODAL_OPENED: "MASTER_PREVIEW_MODAL_OPENED",
+  MASTER_PREVIEW_MODAL_CLOSED: "MASTER_PREVIEW_MODAL_CLOSED",
+  NOTE_PREVIEW_MODAL_OPENED: "NOTE_PREVIEW_MODAL_OPENED",
+  NOTE_PREVIEW_MODAL_CLOSED: "NOTE_PREVIEW_MODAL_CLOSED",
+
+  // UI state events
+  REFRESH_STARTED: "REFRESH_STARTED",
+  REFRESH_STATISTICS: "REFRESH_STATISTICS",
+  TIME_RANGE_CHANGED: "TIME_RANGE_CHANGED",
+  CONFIG_SELECTED: "CONFIG_SELECTED",
+  OBJECT_TYPE_CHANGED: "OBJECT_TYPE_CHANGED",
+  SELECTION_CHANGED: "SELECTION_CHANGED",
+  FIELDS_SELECTED: "FIELDS_SELECTED",
+  CHANGE_TAB: "CHANGE_TAB",
+  VIEW_CHANGE: "VIEW_CHANGE",
+
+  // Notification events
+  TOAST_NOTIFICATION: "TOAST_NOTIFICATION",
+
+  // Error events
+  ERROR_OCCURRED: "ERROR_OCCURRED",
+  ERROR_CLEARED: "ERROR_CLEARED",
 };
 
 // Time range options for filtering
@@ -107,15 +180,14 @@ export const VIEW_MODES = {
   DETAILED: 'detailed'
 };
 
-// Object types commonly processed for duplication
-export const COMMON_OBJECTS = {
-  ACCOUNT: 'Account',
-  CONTACT: 'Contact',
-  LEAD: 'Lead',
-  OPPORTUNITY: 'Opportunity',
-  CASE: 'Case',
-  CUSTOM_OBJECT: 'CustomObject'
-};
+// Object types commonly processed for duplicate
+export const COMMON_OBJECTS = [
+  { label: 'Account', value: 'Account' },
+  { label: 'Contact', value: 'Contact' },
+  { label: 'Lead', value: 'Lead' },
+  { label: 'Opportunity', value: 'Opportunity' },
+  { label: 'Case', value: 'Case' }
+];
 
 // Column definitions for data tables
 export const COLUMN_DEFINITIONS = {

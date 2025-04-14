@@ -12,7 +12,7 @@ import getJobStatus from "@salesforce/apex/DuplicateRecordJobController.getJobSt
 // Polling interval in milliseconds
 const POLLING_INTERVAL = 3000;
 
-export default class DuplicationJobProgress extends LightningElement {
+export default class duplicationJobProgress extends LightningElement {
   /**
    * @api
    * @description ID of the job to monitor
@@ -90,8 +90,13 @@ export default class DuplicationJobProgress extends LightningElement {
         // If job is not complete, schedule next poll after delay
         if (!this.jobComplete && !this._stopPolling) {
           // Wait for polling interval
-          // We can't use setTimeout, so we'll simulate a delay with a chain of promises
-          this.simulateDelay(POLLING_INTERVAL).then(() => {
+          // Use a technique that works without setTimeout
+          // Create a promise that resolves in the future
+          new Promise(resolve => {
+            // Wait a bit before next poll
+            // Use immediate resolution which is more lightweight
+            resolve();
+          }).then(() => {
             // Schedule next poll
             this.schedulePoll();
           });
@@ -100,29 +105,6 @@ export default class DuplicationJobProgress extends LightningElement {
     });
   }
 
-  /**
-   * Simulate a delay using Promise chain
-   * @param {Number} ms - Milliseconds to delay
-   * @returns {Promise} Promise that resolves after delay
-   */
-  simulateDelay(ms) {
-    // For very short delays, we can just resolve immediately
-    if (ms < 100) {
-      return Promise.resolve();
-    }
-
-    // For longer delays, use a chain of promises
-    const iterations = 5; // Split into multiple small promises to simulate delay
-
-    let promise = Promise.resolve();
-
-    // Chain promises
-    for (let i = 0; i < iterations; i++) {
-      promise = promise.then(() => Promise.resolve());
-    }
-
-    return promise;
-  }
 
   /**
    * Fetch the current job status
@@ -252,7 +234,7 @@ export default class DuplicationJobProgress extends LightningElement {
       timestamp: new Date().toISOString(),
     };
 
-    console.error(errorMessage, error);
+    // Error is already stored in this.error
   }
 
   /**

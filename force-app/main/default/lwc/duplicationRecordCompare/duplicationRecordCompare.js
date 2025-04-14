@@ -10,7 +10,7 @@ export default class DuplicationRecordCompare extends LightningElement {
     @api recordId2;
     @api objectApiName;
     @api group;
-    
+
     @track isLoading = false;
     @track record1 = {};
     @track record2 = {};
@@ -23,7 +23,7 @@ export default class DuplicationRecordCompare extends LightningElement {
             this.loadRecords();
         }
     }
-    
+
     renderedCallback() {
         this.applyDifferenceHighlighting();
     }
@@ -36,16 +36,16 @@ export default class DuplicationRecordCompare extends LightningElement {
             this.loadRecords();
         }
     }
-    
+
     /**
      * Getter to determine if we have records to compare
      */
     get hasRecords() {
         return this.recordId1 && this.recordId2;
     }
-    
+
     // Using pre-processed data in fieldData to avoid computed property access in templates
-    
+
     /**
      * Apply highlighting to fields with differences
      * This applies CSS classes programmatically instead of using template expressions
@@ -54,13 +54,13 @@ export default class DuplicationRecordCompare extends LightningElement {
         if (!this.fieldData || this.fieldData.length === 0) {
             return;
         }
-        
+
         // Apply styling to field values
         var fieldValues = this.template.querySelectorAll('.field-value');
         for (var i = 0; i < fieldValues.length; i++) {
             var element = fieldValues[i];
             var fieldId = element.dataset.id;
-            
+
             // Find the field in fieldData
             var field = null;
             for (var j = 0; j < this.fieldData.length; j++) {
@@ -69,21 +69,21 @@ export default class DuplicationRecordCompare extends LightningElement {
                     break;
                 }
             }
-            
+
             if (field && field.isDifferent) {
                 element.classList.add('slds-text-color_error');
             }
-            
+
             // Add standard classes
             element.classList.add('slds-item_detail', 'slds-truncate');
         }
-        
+
         // Apply styling to table rows
         var fieldRows = this.template.querySelectorAll('.field-row');
         for (var k = 0; k < fieldRows.length; k++) {
             var rowElement = fieldRows[k];
             var rowFieldId = rowElement.dataset.id;
-            
+
             // Find the field in fieldData
             var rowField = null;
             for (var m = 0; m < this.fieldData.length; m++) {
@@ -92,7 +92,7 @@ export default class DuplicationRecordCompare extends LightningElement {
                     break;
                 }
             }
-            
+
             if (rowField && rowField.isDifferent) {
                 rowElement.classList.add('slds-is-selected');
             }
@@ -113,13 +113,13 @@ export default class DuplicationRecordCompare extends LightningElement {
                 }
             }
         }
-        
+
         if (!this.hasRecords) {
             return;
         }
-        
+
         this.isLoading = true;
-        
+
         // Fetch record data from Apex controller
         // This will be implemented with actual production data
         this.fetchRecordData(this.recordId1, this.recordId2)
@@ -147,19 +147,19 @@ export default class DuplicationRecordCompare extends LightningElement {
     fetchRecordData(recordId1, recordId2) {
         // DRCCompare.getRecordsForComparison takes a list of record IDs
         var recordIds = [recordId1, recordId2];
-        
+
         const params = {
             recordIds: recordIds,
             objectApiName: this.objectApiName
         };
-        
+
         return getRecordsForComparison(params)
             .then(result => {
                 // Process the response from the Apex controller
                 return this.processRecordsResponse(result, recordId1, recordId2);
             });
     }
-    
+
     /**
      * Process records response from Apex
      * @param {Object} result - Result from Apex call
@@ -171,12 +171,12 @@ export default class DuplicationRecordCompare extends LightningElement {
         if (!result || !result.records) {
             return null;
         }
-        
+
         // Extract records from the result
         var records = result.records;
         var record1 = null;
         var record2 = null;
-        
+
         // Find each record by ID
         for (var i = 0; i < records.length; i++) {
             if (records[i].Id === recordId1) {
@@ -185,35 +185,35 @@ export default class DuplicationRecordCompare extends LightningElement {
                 record2 = records[i];
             }
         }
-        
+
         if (!record1 || !record2) {
             return null;
         }
-        
+
         // Process fields and create formatted data for display
         var fields = result.fields || [];
         var fieldDifferences = [];
-        
+
         for (var j = 0; j < fields.length; j++) {
             var fieldName = fields[j];
             var value1 = record1[fieldName];
             var value2 = record2[fieldName];
             var isDifferent = false;
-            
+
             // Handle null values
             if (value1 === null) value1 = '';
             if (value2 === null) value2 = '';
-            
+
             // Convert to string for comparison
             value1 = String(value1);
             value2 = String(value2);
-            
+
             // Check if values are different
             isDifferent = value1 !== value2;
-            
+
             // Get a more user-friendly field label
             var fieldLabel = this.formatFieldName(fieldName);
-            
+
             fieldDifferences.push({
                 field: fieldName,
                 label: fieldLabel,
@@ -222,14 +222,14 @@ export default class DuplicationRecordCompare extends LightningElement {
                 isDifferent: isDifferent
             });
         }
-        
+
         return {
             record1: record1,
             record2: record2,
             fieldDifferences: fieldDifferences
         };
     }
-    
+
     /**
      * Format field API name to a more user-friendly label
      * @param {String} fieldName - API name of the field
@@ -237,17 +237,17 @@ export default class DuplicationRecordCompare extends LightningElement {
      */
     formatFieldName(fieldName) {
         if (!fieldName) return '';
-        
+
         // Split by underscore or camel case
         var words = fieldName.replace(/_/g, ' ').split(/(?=[A-Z])/);
-        
+
         // Capitalize first letter of each word
         for (var i = 0; i < words.length; i++) {
             if (words[i].length > 0) {
                 words[i] = words[i].charAt(0).toUpperCase() + words[i].slice(1);
             }
         }
-        
+
         return words.join(' ').replace('__c', '');
     }
 

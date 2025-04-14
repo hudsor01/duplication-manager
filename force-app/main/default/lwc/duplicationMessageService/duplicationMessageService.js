@@ -1,6 +1,6 @@
 /**
- * Enhanced utility service for Lightning Message Service communication
- * Includes additional features for correlation, filtering, and middleware
+ * Centralized messaging service for duplicate Manager
+ * Provides standardized communication between components with advanced features
  *
  * @author Richard Hudson
  * @created April 2025
@@ -8,7 +8,8 @@
  */
 
 import { createMessageContext, releaseMessageContext, publish, subscribe, unsubscribe } from 'lightning/messageService';
-import DUPLICATION_CHANNEL from '@salesforce/messageChannel/DuplicationChannel_c__c';
+import duplication_CHANNEL from '@salesforce/messageChannel/DuplicationChannel_c__c';
+import { MESSAGE_TYPES } from 'c/duplicationConstants';
 
 // Unique ID for this component instance
 const INSTANCE_ID = generateUuid();
@@ -27,7 +28,7 @@ const messageContext = createMessageContext();
  */
 export function subscribeToChannel(messageHandler, options = {}) {
   if (!messageHandler) {
-    console.error("Message handler function is required");
+    // Error: Message handler function is required
     return null;
   }
 
@@ -40,7 +41,7 @@ export function subscribeToChannel(messageHandler, options = {}) {
       // Stop processing if middleware returns null
       if (!processedMessage) return;
     }
-    
+
     // Call the original handler with the processed message
     messageHandler(processedMessage);
   };
@@ -48,7 +49,7 @@ export function subscribeToChannel(messageHandler, options = {}) {
   // Subscribe to the Lightning Message Channel
   const subscription = subscribe(
     messageContext,
-    DUPLICATION_CHANNEL,
+    duplication_CHANNEL,
     wrappedHandler,
     options
   );
@@ -103,7 +104,7 @@ export function sendMessage(type, data, options = {}) {
   }
 
   // Publish to the Lightning Message Channel
-  publish(messageContext, DUPLICATION_CHANNEL, message);
+  publish(messageContext, duplication_CHANNEL, message);
 
   // Return the correlation ID for tracking
   return message.correlationId;
@@ -137,78 +138,32 @@ export function sendRequest(type, data, timeout = 5000) {
   return new Promise((resolve, reject) => {
     // Generate correlation ID for this request
     const correlationId = generateUuid();
-    
+
     // Create a one-time subscription to listen for the response
     const subscription = subscribeToChannel((message) => {
       // Only process responses with matching correlation ID
       if (message.correlationId === correlationId) {
         // Unsubscribe from the channel since we got our response
         unsubscribeFromChannel(subscription);
-        
+
         // Clear the timeout
         clearTimeout(timeoutId);
-        
+
         // Resolve the promise with the response payload
         resolve(message.payload);
       }
     });
-    
+
     // Set a timeout to reject the promise if no response is received
     const timeoutId = setTimeout(() => {
       unsubscribeFromChannel(subscription);
       reject(new Error(`Request timed out after ${timeout}ms`));
     }, timeout);
-    
+
     // Send the request message with the correlation ID
     sendMessage(type, data, { correlationId });
   });
 }
-
-/**
- * Standard message types for the application
- */
-export const MESSAGE_TYPES = {
-  // Job management
-  JOB_STARTED: "job.started",
-  JOB_COMPLETED: "job.completed",
-  JOB_PROGRESS: "job.progress",
-  JOB_ERROR: "job.error",
-  JOB_CANCELLED: "job.cancelled",
-
-  // Duplication management
-  DUPLICATES_FOUND: "duplicates.found",
-  DUPLICATES_MERGED: "duplicates.merged",
-  MERGE_PREVIEW: "merge.preview",
-  MERGE_CONFLICT: "merge.conflict",
-  MERGE_RESOLUTION: "merge.resolution",
-
-  // Configuration
-  CONFIG_SELECTED: "config.selected",
-  CONFIG_CHANGED: "config.changed",
-  CONFIG_VALIDATED: "config.validated",
-  SETTINGS_UPDATED: "settings.updated",
-
-  // Navigation
-  VIEW_CHANGE: "view.change",
-  MODAL_OPEN: "modal.open",
-  MODAL_CLOSE: "modal.close",
-
-  // Dry run
-  DRY_RUN_START: "dryRun.start",
-  DRY_RUN_COMPLETE: "dryRun.complete",
-  DRY_RUN_RESULTS: "dryRun.results",
-
-  // Store updates
-  STORE_UPDATED: "store.updated",
-  STORE_SECTION_UPDATED: "store.section.updated",
-  STORE_RESET: "store.reset",
-
-  // Requests and responses
-  CONFIG_REQUEST: "config.request",
-  CONFIG_RESPONSE: "config.response",
-  JOB_STATUS_REQUEST: "job.status.request",
-  JOB_STATUS_RESPONSE: "job.status.response",
-};
 
 /**
  * Generate a UUID for correlation IDs
@@ -224,110 +179,19 @@ function generateUuid() {
 }
 
 /**
- * Simple publish-subscribe mechanism for component communication
- * Handles communication between different components in the duplication manager app
- *
- * @author Richard Hudson
- * @since April 2025
+ * Utility function to create a filtered message handler
+ * @param {function} callback - Function to call with filtered messages
+ * @param {string|string[]} types - Type or array of types to filter for
+ * @returns {function} Handler function that only calls callback for specified types
  */
+export function createFilteredHandler(callback, types) {
+  // Convert to array if necessary
+  const typeArray = Array.isArray(types) ? types : [types];
 
-// Message types for standardized communication (for pub-sub)
-export const SUBSCRIBE_MESSAGE_TYPES = {
-    // Store and state updates
-    STORE_UPDATED: 'store_updated',
-    STORE_SECTION_UPDATED: 'store_section_updated',
-    INVALIDATE_CACHE: 'invalidate_cache',
-
-    // Dashboard and statistics
-    STATISTICS_LOADING: 'statistics_loading',
-    STATISTICS_LOADED: 'statistics_loaded',
-    STATISTICS_LOAD_ERROR: 'statistics_load_error',
-    REFRESH_STATISTICS: 'refresh_statistics',
-    REFRESH_STARTED: 'refresh_started',
-
-    // Job related
-    JOB_STARTED: 'job_started',
-    JOB_COMPLETED: 'job_completed',
-    JOB_FAILED: 'job_failed',
-    JOB_STATUS_UPDATED: 'job_status_updated',
-
-    // Filter and display options
-    TIME_RANGE_CHANGED: 'time_range_changed',
-    OBJECT_FILTER_CHANGED: 'object_filter_changed',
-    VIEW_MODE_CHANGED: 'view_mode_changed',
-
-    // Errors and notifications
-    ERROR_OCCURRED: 'error_occurred',
-    NOTIFICATION: 'notification'
-};
-
-// Subscriber registry
-const subscribers = [];
-
-/**
- * Subscribe to channel messages
- * @param {Function} callback Function to call when message is received
- * @return {Object} Subscription object for unsubscribing
- */
-export function subscribeToPubSubChannel(callback) {
-    if (!callback || typeof callback !== 'function') {
-        console.error('Subscription requires a valid callback function');
-        return {};
+  // Return a handler that filters messages
+  return (message) => {
+    if (typeArray.includes(message.type)) {
+      callback(message);
     }
-
-    const subscription = { callback, active: true };
-    subscribers.push(subscription);
-    return subscription;
-}
-
-/**
- * Unsubscribe from pub-sub channel
- * @param {Object} subscription Subscription to cancel
- */
-export function unsubscribeFromPubSubChannel(subscription) {
-    if (!subscription) return;
-
-    const index = subscribers.indexOf(subscription);
-    if (index !== -1) {
-        subscribers.splice(index, 1);
-    } else {
-        // If not found by reference, mark as inactive
-        subscription.active = false;
-    }
-}
-
-/**
- * Publish a message to all subscribers
- * @param {String} type Message type from MESSAGE_TYPES
- * @param {Object} payload Data payload for the message
- */
-export function publishMessage(type, payload) {
-    if (!type) {
-        console.error('Message type is required');
-        return;
-    }
-
-    const message = {
-        type,
-        payload,
-        timestamp: new Date().getTime()
-    };
-
-    // Clean up inactive subscribers
-    for (let i = subscribers.length - 1; i >= 0; i--) {
-        if (!subscribers[i].active) {
-            subscribers.splice(i, 1);
-        }
-    }
-
-    // Notify active subscribers
-    subscribers.forEach(subscription => {
-        if (subscription.active && typeof subscription.callback === 'function') {
-            try {
-                subscription.callback(message);
-            } catch (error) {
-                console.error('Error in message subscriber callback:', error);
-            }
-        }
-    });
+  };
 }

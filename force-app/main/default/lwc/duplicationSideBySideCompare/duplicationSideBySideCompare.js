@@ -40,7 +40,7 @@ export default class DuplicationSideBySideCompare extends LightningElement {
     // Temporarily use hardcoded fields instead of fetching metadata
     // First, get object metadata to know what fields to display
     // getObjectInfo({ objectApiName: this.objectApiName })
-    
+
     // Use mock object info for now
     Promise.resolve(this.getMockObjectInfo(this.objectApiName))
       .then((result) => {
@@ -495,7 +495,7 @@ export default class DuplicationSideBySideCompare extends LightningElement {
     console.log('Would create note on record:', targetId);
     console.log('Title: Data preserved from merged records');
     console.log('Content:', noteContent);
-    
+
     // Return a mock success response
     return Promise.resolve({ success: true });
   }

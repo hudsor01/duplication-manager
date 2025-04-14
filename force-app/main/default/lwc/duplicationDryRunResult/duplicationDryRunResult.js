@@ -1,7 +1,7 @@
 import { LightningElement, api, track } from "lwc";
 import getDuplicateRunResults from "@salesforce/apex/DuplicateRecordController.getDuplicateRunResults";
 
-export default class DuplicationDryRunResult extends LightningElement {
+export default class duplicationDryRunResult extends LightningElement {
   @api batchJobId;
   @api objectApiName;
   @api recordId;

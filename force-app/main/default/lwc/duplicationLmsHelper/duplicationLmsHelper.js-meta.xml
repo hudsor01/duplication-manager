@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
-    <apiVersion>63.0</apiVersion>
+    <apiVersion>58.0</apiVersion>
     <isExposed>false</isExposed>
-    <description>Helper utility for migrating from duplicationPubSub to Lightning Message Service</description>
+    <description>Helper utility for migrating from duplicatePubSub to Lightning Message Service</description>
 </LightningComponentBundle>

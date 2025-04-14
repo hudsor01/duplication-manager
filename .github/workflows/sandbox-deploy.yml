@@ -1,0 +1,35 @@
+name: Deploy to Duplication Sandbox
+
+on:
+  push:
+    branches: [feature/devops-center-init]
+    paths:
+      - 'force-app/**'
+  # Add manual trigger
+  workflow_dispatch:
+
+jobs:
+  deploy-to-sandbox:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Salesforce CLI
+        run: |
+          npm install @salesforce/cli --global
+          sf --version
+
+      # Use SFDX Auth URL approach
+      - name: Authenticate to Salesforce
+        run: |
+          echo "${{ secrets.SFDX_AUTH_URL }}" > ./SFDX_AUTH_URL.txt
+          sf org login sfdx-url --sfdx-url-file ./SFDX_AUTH_URL.txt -a dupesandbox
+
+      - name: Deploy to Sandbox
+        run: |
+          sf project deploy start --source-dir force-app --target-org dupesandbox --test-level RunLocalTests

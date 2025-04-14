@@ -1,5 +1,5 @@
 import { createElement } from "lwc";
-import DuplicationDashboard from "c/duplicationDashboard";
+import duplicateDashboard from "c/duplicationDashboard";
 import { registerApexTestWireAdapter } from "@salesforce/sfdx-lwc-jest";
 import getDetailedStatistics from "@salesforce/apex/DRSCDetailed.getDetailedStatistics";
 
@@ -50,7 +50,7 @@ jest.mock("c/duplicationStore", () => {
       dispatch: jest.fn(),
       subscribe: jest.fn(() => jest.fn()),
     },
-    DuplicationStore: {
+    duplicationStore: {
       actions: {
         SET_LOADING: "SET_LOADING",
         UPDATE_STATISTICS: "UPDATE_STATISTICS",
@@ -117,13 +117,13 @@ const MOCK_STATISTICS = {
   timeRange: "LAST_30_DAYS",
 };
 
-describe("c-duplication-dashboard", () => {
+describe("c-duplicate-dashboard", () => {
   let element;
 
   // Helper function that creates the dashboard component
   const createDashboard = () => {
-    element = createElement("c-duplication-dashboard", {
-      is: DuplicationDashboard,
+    element = createElement("c-duplicate-dashboard", {
+      is: duplicateDashboard,
     });
     document.body.appendChild(element);
 

@@ -1,6 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <LightningMessageChannel xmlns="http://soap.sforce.com/2006/04/metadata">
-    <description>Enhanced message channel for Duplication Manager application</description>
+    <description
+  >Enhanced message channel for duplicate Manager application</description>
     <isExposed>true</isExposed>
     <lightningMessageFields>
         <description>Type of message being sent</description>
@@ -31,7 +32,8 @@
         <fieldName>priority</fieldName>
     </lightningMessageFields>
     <lightningMessageFields>
-        <description>Message correlation ID for request/response tracking</description>
+        <description
+    >Message correlation ID for request/response tracking</description>
         <fieldName>correlationId</fieldName>
     </lightningMessageFields>
     <masterLabel>Duplication Channel</masterLabel>

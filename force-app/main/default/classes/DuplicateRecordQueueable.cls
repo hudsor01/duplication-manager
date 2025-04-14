@@ -213,10 +213,8 @@ public class DuplicateRecordQueueable implements Queueable, Database.Stateful {
                         configId, isDryRun, lastProcessedId, metrics, jobId
                     );
                     
-                    // Enqueue next batch
-                    if (!Test.isRunningTest()) {
-                        System.enqueueJob(continuation);
-                    }
+                    // Enqueue next batch for processing
+                    System.enqueueJob(continuation);
                 } else {
                     // Complete processing
                     Long endTime = System.now().getTime();
@@ -561,7 +559,7 @@ public class DuplicateRecordQueueable implements Queueable, Database.Stateful {
                 UserId__c = UserInfo.getUserId(),
                 // MatchScore__c field doesn't exist
                 FieldMergeDetails__c = conflicts != null ? JSON.serialize(conflicts) : null,
-                ErrorMessages__c = errorMessage // Use ErrorMessages__c instead
+                ErrorMessage__c = errorMessage
             );
             
             insert log;
@@ -624,7 +622,7 @@ public class DuplicateRecordQueueable implements Queueable, Database.Stateful {
                 if (status == 'Completed' || status == 'Failed') {
                     stats.JobCompletionTime__c = System.now();
                     stats.ProcessingTimeMs__c = processingTimeMs;
-                    stats.ErrorMessages__c = errors.isEmpty() ? null : String.join(errors, '\n');
+                    stats.ErrorMessage__c = errors.isEmpty() ? null : String.join(errors, '\n');
                 }
                 
                 update stats;
@@ -641,7 +639,7 @@ public class DuplicateRecordQueueable implements Queueable, Database.Stateful {
                     Status__c = status, // Status field
                     JobCompletionTime__c = status == 'Completed' || status == 'Failed' ? System.now() : null,
                     ProcessingTimeMs__c = processingTimeMs,
-                    ErrorMessages__c = errors.isEmpty() ? null : String.join(errors, '\n')
+                    ErrorMessage__c = errors.isEmpty() ? null : String.join(errors, '\n')
                 );
                 
                 insert stats;

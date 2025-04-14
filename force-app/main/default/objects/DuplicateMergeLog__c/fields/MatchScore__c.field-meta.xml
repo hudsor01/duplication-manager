@@ -1,9 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>MatchScore__c</fullName>
     <description>Matching score for the duplicate records (0-100)</description>
     <externalId>false</externalId>
-    <inlineHelpText>Indicates the matching score between the duplicate records</inlineHelpText>
+    <inlineHelpText
+  >Indicates the matching score between the duplicate records</inlineHelpText>
     <label>Match Score</label>
     <precision>3</precision>
     <required>false</required>

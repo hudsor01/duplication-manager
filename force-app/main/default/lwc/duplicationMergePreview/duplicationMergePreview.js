@@ -3,14 +3,14 @@ import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import {
   subscribeToChannel,
   unsubscribeFromChannel,
-  sendMessage,
-  MESSAGE_TYPES,
+  sendMessage
 } from "c/duplicationMessageService";
+import { MESSAGE_TYPES } from "c/duplicationConstants";
 import {
   handleError,
   ERROR_LEVELS,
   ERROR_CATEGORIES,
-} from "c/duplicationErrorHandler";
+} from "c/duplicationErrorService";
 import mergeDuplicateRecords from "@salesforce/apex/DuplicateRecordController.mergeDuplicateRecords";
 import createNote from "@salesforce/apex/DRCNote.createNote";
 
@@ -119,7 +119,7 @@ export default class DuplicationMergePreview extends LightningElement {
       .catch((error) => {
         // Handle error
         this.error = handleError(
-          "duplicationMergePreview",
+          "duplicateMergePreview",
           "confirmMerge",
           error,
           {
@@ -228,48 +228,48 @@ export default class DuplicationMergePreview extends LightningElement {
       ? "slds-tabs_default__content slds-show"
       : "slds-tabs_default__content slds-hide";
   }
-  
+
   /**
    * Tab class getters for specific tabs
    */
   get tabClassPreview() {
     return this.getTabClass("preview");
   }
-  
+
   get tabClassConflicts() {
     return this.getTabClass("conflicts");
   }
-  
+
   get tabClassNonMergeable() {
     return this.getTabClass("non-mergeable");
   }
-  
+
   /**
    * Tab selection getters for specific tabs
    */
   get tabSelectedPreview() {
     return this.getTabSelected("preview");
   }
-  
+
   get tabSelectedConflicts() {
     return this.getTabSelected("conflicts");
   }
-  
+
   get tabSelectedNonMergeable() {
     return this.getTabSelected("non-mergeable");
   }
-  
+
   /**
    * Content class getters for specific tabs
    */
   get contentClassPreview() {
     return this.getContentClass("preview");
   }
-  
+
   get contentClassConflicts() {
     return this.getContentClass("conflicts");
   }
-  
+
   get contentClassNonMergeable() {
     return this.getContentClass("non-mergeable");
   }

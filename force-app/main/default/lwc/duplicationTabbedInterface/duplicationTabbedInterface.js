@@ -5,9 +5,14 @@ import { MessageContext } from "lightning/messageService";
 import {
   sendMessage,
   subscribeToChannel,
-  unsubscribeFromChannel,
-  MESSAGE_TYPES,
+  unsubscribeFromChannel
 } from "c/duplicationMessageService";
+import { MESSAGE_TYPES } from "c/duplicationConstants";
+import {
+  handleError,
+  ERROR_LEVELS,
+  ERROR_CATEGORIES,
+} from "c/duplicationErrorService";
 
 export default class DuplicationTabbedInterface extends LightningElement {
   @api recordId;
@@ -18,6 +23,16 @@ export default class DuplicationTabbedInterface extends LightningElement {
   @track currentTab = "dashboard";
   @track jobId;
   @track selectedFields = [];
+
+  // State for the comparison view
+  @track hideCompareTab = true;
+  @track hideMergePreviewTab = true;
+  @track compareRecordIds = [];
+  @track masterRecordId;
+  @track selectedGroupId;
+
+  // Active tab value
+  @track activeTab = 'dashboard';
 
   // Get the message context for LMS
   @wire(MessageContext)
@@ -70,6 +85,46 @@ export default class DuplicationTabbedInterface extends LightningElement {
       }
     });
     this.subscriptions.push(tabSubscription);
+
+    // Subscribe to duplicate group selection
+    const groupSubscription = subscribeToChannel((message) => {
+      if (message.type === MESSAGE_TYPES.DUPLICATE_GROUP_SELECTED) {
+        this.handleGroupSelected(message.payload);
+      }
+    });
+    this.subscriptions.push(groupSubscription);
+
+    // Subscribe to duplicates found message
+    const duplicatesFoundSubscription = subscribeToChannel((message) => {
+      if (message.type === MESSAGE_TYPES.DUPLICATES_FOUND) {
+        this.handleDuplicatesFound(message.payload);
+      }
+    });
+    this.subscriptions.push(duplicatesFoundSubscription);
+
+    // Subscribe to merge preview message
+    const mergePreviewSubscription = subscribeToChannel((message) => {
+      if (message.type === MESSAGE_TYPES.MERGE_PREVIEW) {
+        this.handleMergePreview(message.payload);
+      }
+    });
+    this.subscriptions.push(mergePreviewSubscription);
+
+    // Subscribe to view change message
+    const viewChangeSubscription = subscribeToChannel((message) => {
+      if (message.type === MESSAGE_TYPES.VIEW_CHANGE) {
+        this.handleViewChange(message.payload);
+      }
+    });
+    this.subscriptions.push(viewChangeSubscription);
+
+    // Subscribe to duplicates merged message
+    const duplicatesMergedSubscription = subscribeToChannel((message) => {
+      if (message.type === MESSAGE_TYPES.DUPLICATES_MERGED) {
+        this.handleDuplicatesMerged(message.payload);
+      }
+    });
+    this.subscriptions.push(duplicatesMergedSubscription);
   }
 
   // Unsubscribe from all messages
@@ -89,6 +144,14 @@ export default class DuplicationTabbedInterface extends LightningElement {
         "success",
       );
       this.refreshJobProgress();
+
+      // Update the job ID
+      if (payload.jobId) {
+        this.jobId = payload.jobId;
+      }
+
+      // Navigate to duplicate groups tab
+      this.activateTab('duplicate-groups');
     } else {
       this.showToast(
         "Error",
@@ -102,13 +165,103 @@ export default class DuplicationTabbedInterface extends LightningElement {
   // Handle tab change request
   handleTabChangeRequest(payload) {
     if (payload && payload.tabName) {
-      this.currentTab = payload.tabName;
+      this.activateTab(payload.tabName);
+    }
+  }
 
-      // Find and activate the correct tab
-      const tabset = this.template.querySelector("lightning-tabset");
-      if (tabset) {
-        // Implementation depends on how the tabset is structured
-        // May need to use custom events or imperative APIs
+  // Handle group selection
+  handleGroupSelected(payload) {
+    if (payload) {
+      this.selectedGroupId = payload.groupId;
+    }
+  }
+
+  // Handle duplicates found event
+  handleDuplicatesFound(payload) {
+    if (payload && payload.recordIds && payload.recordIds.length > 0) {
+      this.compareRecordIds = payload.recordIds;
+      this.selectedGroupId = payload.groupId;
+      this.hideCompareTab = false;
+      this.activateTab('compare');
+    }
+  }
+
+  // Handle merge preview event
+  handleMergePreview(payload) {
+    if (payload && payload.previewData) {
+      this.masterRecordId = payload.request.masterId;
+      this.hideMergePreviewTab = false;
+      this.activateTab('preview');
+    }
+  }
+
+  // Handle view change event
+  handleViewChange(payload) {
+    if (payload && payload.view) {
+      switch (payload.view) {
+        case 'list':
+          this.activateTab('duplication-groups');
+          break;
+        case 'compare':
+          if (!this.hideCompareTab) {
+            this.activateTab('compare');
+          }
+          break;
+        case 'preview':
+          if (!this.hideMergePreviewTab) {
+            this.activateTab('preview');
+          }
+          break;
+        default:
+          // Use the requested view as tab name
+          this.activateTab(payload.view);
+      }
+    }
+  }
+
+  // Handle duplicates merged event
+  handleDuplicatesMerged(payload) {
+    if (payload) {
+      // Reset states after merge
+      this.hideMergePreviewTab = true;
+
+      // Navigate back to duplicate groups
+      this.activateTab('duplication-groups');
+
+      // Show success message
+      this.showToast(
+        "Success",
+        "Records merged successfully",
+        "success"
+      );
+
+      // Refresh duplicate groups component
+      const groupsComponent = this.template.querySelector('c-duplication-merge-groups');
+      if (groupsComponent) {
+        groupsComponent.refreshGroups();
+      }
+    }
+  }
+
+  // Activate a specific tab
+  activateTab(tabName) {
+    this.currentTab = tabName;
+    this.activeTab = tabName;
+
+    // Find the tabset and activate the tab
+    const tabset = this.template.querySelector('lightning-tabset');
+    if (tabset) {
+      // NOTE: This may need to be adjusted based on the structure of lightning-tabset
+      // Some implementations may require additional handling
+      const tabs = tabset.querySelectorAll('lightning-tab');
+      if (tabs) {
+        tabs.forEach(tab => {
+          if (tab.value === tabName || tab.label.toLowerCase().replace(/\s+/g, '-') === tabName) {
+            tab.classList.add('slds-is-active');
+          } else {
+            tab.classList.remove('slds-is-active');
+          }
+        });
       }
     }
   }
@@ -116,6 +269,12 @@ export default class DuplicationTabbedInterface extends LightningElement {
   handleObjectTypeChange(event) {
     this.selectedObjectType = event.detail.value;
     this.selectedConfigId = null;
+
+    // Reset comparison states
+    this.hideCompareTab = true;
+    this.hideMergePreviewTab = true;
+    this.compareRecordIds = [];
+    this.masterRecordId = null;
 
     // Notify child components via custom event
     this.dispatchEvent(
@@ -176,12 +335,14 @@ export default class DuplicationTabbedInterface extends LightningElement {
         });
 
         // Navigate to job progress tab
-        this.currentTab = "progress";
+        this.activateTab('dashboard');
 
-        // Request tab change for other components
-        sendMessage(MESSAGE_TYPES.CHANGE_TAB, {
-          tabName: "progress",
-        });
+        // Show toast notification
+        this.showToast(
+          "Success",
+          "Duplicate detection job started successfully",
+          "success"
+        );
       })
       .catch((error) => {
         this.handleError(error);
@@ -198,18 +359,22 @@ export default class DuplicationTabbedInterface extends LightningElement {
   }
 
   handleError(error) {
-    console.error("Error in duplication process:", error);
-    let errorMessage = "Unknown error";
+    // Error in duplicate process
 
-    if (typeof error === "string") {
-      errorMessage = error;
-    } else if (error.message) {
-      errorMessage = error.message;
-    } else if (error.body && error.body.message) {
-      errorMessage = error.body.message;
-    }
+    // Use the error handler utility
+    const handledError = handleError(
+      "duplicationTabbedInterface",
+      "handleRunDuplicateDetection",
+      error,
+      {
+        level: ERROR_LEVELS.ERROR,
+        category: ERROR_CATEGORIES.OPERATION,
+        notify: true
+      }
+    );
 
-    this.showToast("Error", errorMessage, "error");
+    // Show toast notification
+    this.showToast("Error", handledError.message, "error");
   }
 
   refreshJobProgress() {

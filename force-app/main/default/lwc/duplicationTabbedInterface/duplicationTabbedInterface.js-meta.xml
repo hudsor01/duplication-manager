@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
-	<apiVersion>62.0</apiVersion>
+	<apiVersion>58.0</apiVersion>
 	<isExposed>true</isExposed>
 	<masterLabel>Duplication Tabbed Interface</masterLabel>
-	<description>Tabbed interface for the duplication manager application</description>
+	<description>Tabbed interface for the duplicate manager application</description>
 	<targets>
 		<target>lightning__AppPage</target>
 		<target>lightning__HomePage</target>
@@ -11,7 +11,7 @@
     </targets>
 	<targetConfigs>
 		<targetConfig targets="lightning__AppPage,lightning__HomePage,lightning__RecordPage">
-<property name="tabsetName" type="String" label="Tabset Name" default="Duplication Tools" />
+<property name="tabsetName" type="String" label="Tabset Name" default="duplicate Tools" />
 		</targetConfig>
 	</targetConfigs>
 </LightningComponentBundle>

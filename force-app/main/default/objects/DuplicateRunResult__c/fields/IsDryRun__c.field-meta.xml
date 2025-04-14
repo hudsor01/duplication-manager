@@ -1,8 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>IsDryRun__c</fullName>
     <defaultValue>false</defaultValue>
-    <description>Indicates whether this was a dry run (no actual merges)</description>
+    <description
+  >Indicates whether this was a dry run (no actual merges)</description>
     <externalId>false</externalId>
     <label>Is Dry Run</label>
     <trackHistory>false</trackHistory>

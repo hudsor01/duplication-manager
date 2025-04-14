@@ -170,7 +170,7 @@ public with sharing class DuplicateRecordStatisticsController {
                 SELECT Id, ObjectApiName__c, ConfigurationName__c, DuplicatesFound__c,
                        RecordsMerged__c, RecordsProcessed__c, IsDryRun__c,
                        JobCompletionTime__c, ProcessingTimeMs__c,
-                       BatchJobId__c, ErrorMessages__c
+                       BatchJobId__c, ErrorMessage__c
                 FROM DuplicateJobStatistic__c
                 ORDER BY JobCompletionTime__c DESC
                 LIMIT :pageSize
@@ -192,7 +192,7 @@ public with sharing class DuplicateRecordStatisticsController {
                 jobMap.put('completionTime', job.JobCompletionTime__c);
                 jobMap.put('processingTimeMs', job.ProcessingTimeMs__c);
                 jobMap.put('batchJobId', job.BatchJobId__c);
-                jobMap.put('hasErrors', String.isNotBlank(job.ErrorMessages__c));
+                jobMap.put('hasErrors', String.isNotBlank(job.ErrorMessage__c));
 
                 // Calculate processing time in seconds
                 if (job.ProcessingTimeMs__c != null) {

@@ -1,17 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
-        <members>DuplicateRecordController.createNote</members>
-        <members>DuplicateRecordController.getFieldsForObject</members>
-        <members>DuplicateRecordController.getRecordsForComparison</members>
-        <members>DuplicateRecordController.getUserSettings</members>
-        <members>DuplicateRecordController.runDuplicateFinderBatch</members>
-        <members>DuplicateRecordController.saveUserSettings</members>
-        <members>DuplicateRecordStatisticsController.getDetailedStatistics</members>
-        <members>DuplicateRecordStatisticsController.getDuplicateStatistics</members>
-        <members>DuplicateRecordStatisticsController.getStartDateForRange</members>
-        <members>DuplicateMergeUtility.previewMergeResults</members>
+        <members>SpotioBatchProcessor</members>
+        <members>SpotioDataProcessor</members>
+        <members>SpotioQueueableChain</members>
         <name>ApexClass</name>
     </types>
-    <version>59.0</version>
+    <version>58.0</version>
 </Package>

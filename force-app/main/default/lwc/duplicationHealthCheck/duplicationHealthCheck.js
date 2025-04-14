@@ -3,10 +3,10 @@ import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import checkDuplicateHealth from "@salesforce/apex/DuplicateHealthController.checkHealth";
 
 /**
- * Component for checking the health of duplication settings and objects
+ * Component for checking the health of duplicate settings and objects
  * Supported targets: lightning__AppPage, lightning__RecordPage, lightning__HomePage, lightningCommunity__Page
  */
-export default class DuplicationHealthCheck extends LightningElement {
+export default class duplicationHealthCheck extends LightningElement {
   @api recordId;
   @track isLoading = false;
   @track healthResults;

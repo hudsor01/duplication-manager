@@ -1,6 +1,6 @@
 import { LightningElement, api } from "lwc";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
-import scheduleJob from "@salesforce/apex/DuplicateRecordScheduler.scheduleJob";
+import scheduleTestJob from "@salesforce/apex/DuplicateRecordScheduler.scheduleTestJob";
 
 export default class ScheduleJobModal extends LightningElement {
   @api configId; // This should be the setting DeveloperName string
@@ -24,12 +24,6 @@ export default class ScheduleJobModal extends LightningElement {
   }
 
   async handleSubmit() {
-    console.log(
-      "handleSubmit called, jobName:",
-      this.jobName,
-      "configId:",
-      this.configId,
-    );
 
     // Validate each field individually to provide more specific error messages
     if (!this.jobName && !this.configId) {
@@ -65,26 +59,21 @@ export default class ScheduleJobModal extends LightningElement {
       }
 
       const cronExp = `0 0 ${hour} * * ?`; // CRON expression to run daily at the specified hour
-      console.log("Generated cron expression:", cronExp);
 
-      // Pass a single object containing all parameters to the Apex method
-      const params = {
-        jobName: this.jobName,
-        cronExp: cronExp,
-        settingDeveloperName: this.configId,
+      // Pass parameters to match the Apex method signature
+
+      await scheduleTestJob({
+        configId: this.configId, 
+        cronExpression: cronExp, 
+        jobName: this.jobName, 
         isDryRun: this.isDryRun,
-      };
+        batchSize: 200
+      });
 
-      console.log("Calling scheduleJob with params:", params);
-
-      await scheduleJob(params);
-
-      console.log("Job scheduled successfully");
       this.showToast("Success", "Scheduled job created.", "success");
       this.dispatchEvent(new CustomEvent("jobscheduled"));
       this.close();
     } catch (error) {
-      console.error("Error scheduling job:", error);
       let errorMessage = "An error occurred while scheduling the job";
 
       if (error.body?.message) {
@@ -93,7 +82,6 @@ export default class ScheduleJobModal extends LightningElement {
         errorMessage = error.message;
       }
 
-      console.error("Error details:", errorMessage);
       this.showToast("Error", errorMessage, "error");
     }
   }

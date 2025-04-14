@@ -1,5 +1,35 @@
 import { LightningElement, api } from "lwc";
-import { formatNumber, formatPercentage } from "c/duplicationEnhancedUI";
+
+/**
+ * Format a number with commas and decimal places
+ * @param {number} value - Number to format
+ * @param {number} decimals - Number of decimal places
+ * @returns {string} Formatted number
+ */
+function formatNumber(value, decimals = 0) {
+  if (value === undefined || value === null) return "";
+
+  return Number(value).toLocaleString("en-US", {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  });
+}
+
+/**
+ * Format percentage values
+ * @param {number} value - Value to format as percentage
+ * @param {number} decimals - Number of decimal places
+ * @returns {string} Formatted percentage
+ */
+function formatPercentage(value, decimals = 1) {
+  if (value === undefined || value === null) return "";
+
+  return Number(value).toLocaleString("en-US", {
+    style: "percent",
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  });
+}
 import { loadScript } from "lightning/platformResourceLoader";
 import chartjs from "@salesforce/resourceUrl/chartjs";
 

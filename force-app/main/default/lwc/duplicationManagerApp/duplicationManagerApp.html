@@ -1,5 +1,5 @@
 <template>
-  <lightning-card title="Duplication Record Manager" icon-name="standard:merge">
+  <lightning-card title="Duplicate Record Manager" icon-name="standard:merge">
     <!-- Loading Spinner -->
     <template if:true={isLoading}>
       <lightning-spinner
@@ -9,6 +9,25 @@
     </template>
 
     <div class="slds-var-p-around_medium">
+      <!-- Introduction Card -->
+      <div class="slds-box slds-theme_shade slds-var-m-bottom_medium">
+        <div class="slds-grid slds-grid_vertical-align-center">
+          <div class="slds-col slds-size_1-of-1">
+            <h2 class="slds-text-heading_small slds-var-m-bottom_x-small">Welcome to the Duplicate Record Manager</h2>
+            <p class="slds-text-body_small">
+              This tool helps you find and merge duplicate records across your Salesforce organization. Supported objects include Accounts, Contacts, Leads, and more.
+            </p>
+            <p class="slds-text-body_small slds-var-m-top_x-small">
+              <strong>Key Features:</strong> 
+              <span class="slds-var-m-left_x-small">✓ Find duplicates based on configurable matching fields</span>
+              <span class="slds-var-m-left_x-small">✓ Merge records with conflict resolution</span>
+              <span class="slds-var-m-left_x-small">✓ Schedule regular deduplication jobs</span>
+              <span class="slds-var-m-left_x-small">✓ Verify results with Dry Run mode</span>
+            </p>
+          </div>
+        </div>
+      </div>
+      
       <!-- Error Display -->
       <template if:true={hasError}>
         <div class="slds-text-color_error slds-var-p-around_small">
@@ -58,7 +77,7 @@
         aria-labelledby="settings-heading"
       >
         <h2 id="settings-heading" class="slds-assistive-text">
-          Duplication Detection Settings
+          Duplicate Detection Settings
         </h2>
         <div class="slds-form-element">
           <div class="slds-form-element__control">
@@ -109,39 +128,79 @@
         </div>
       </div>
 
-      <!-- Action Buttons -->
-      <lightning-layout class="slds-var-m-top_medium">
-        <lightning-layout-item padding="around-small">
-          <lightning-button
-            label="Run Dry Run (Find Only)"
-            variant="brand"
-            onclick={handleDryRun}
-            disabled={isButtonDisabled}
-            access-key="d"
-          >
-          </lightning-button>
-        </lightning-layout-item>
-        <lightning-layout-item padding="around-small">
-          <lightning-button
-            label="Run Merge"
-            variant="destructive"
-            onclick={handleRunMerge}
-            disabled={isButtonDisabled}
-            access-key="m"
-          >
-          </lightning-button>
-        </lightning-layout-item>
-        <lightning-layout-item padding="around-small">
-          <lightning-button
-            label="Schedule Job"
-            variant="success"
-            onclick={openScheduleModal}
-            disabled={isButtonDisabled}
-            access-key="s"
-          >
-          </lightning-button>
-        </lightning-layout-item>
-      </lightning-layout>
+      <!-- Action Buttons with Help Text -->
+      <div class="slds-box slds-var-m-top_medium">
+        <div class="slds-grid slds-grid_vertical">
+          <div class="slds-col slds-var-m-bottom_medium">
+            <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+              <div class="slds-col slds-size_2-of-3">
+                <h3 class="slds-text-heading_small">Find Duplicates (Dry Run)</h3>
+                <p class="slds-text-body_small slds-var-m-top_xx-small">
+                  Identifies potential duplicate records without performing any merges. 
+                  Use this first to review what would be merged.
+                </p>
+              </div>
+              <div class="slds-col slds-size_1-of-3 slds-text-align_right">
+                <lightning-button
+                  label="Run Dry Run"
+                  variant="brand"
+                  icon-name="utility:search"
+                  onclick={handleDryRun}
+                  disabled={isButtonDisabled}
+                  access-key="d"
+                >
+                </lightning-button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="slds-col slds-var-m-bottom_medium">
+            <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+              <div class="slds-col slds-size_2-of-3">
+                <h3 class="slds-text-heading_small">Merge Duplicates (Live Run)</h3>
+                <p class="slds-text-body_small slds-var-m-top_xx-small">
+                  Identifies and merges duplicate records. This is a permanent action that 
+                  will combine matched records across your entire organization.
+                </p>
+              </div>
+              <div class="slds-col slds-size_1-of-3 slds-text-align_right">
+                <lightning-button
+                  label="Run Merge"
+                  variant="destructive"
+                  icon-name="utility:merge"
+                  onclick={handleRunMerge}
+                  disabled={isButtonDisabled}
+                  access-key="m"
+                >
+                </lightning-button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="slds-col">
+            <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+              <div class="slds-col slds-size_2-of-3">
+                <h3 class="slds-text-heading_small">Schedule Regular Cleanup</h3>
+                <p class="slds-text-body_small slds-var-m-top_xx-small">
+                  Set up recurring deduplication jobs to keep your data clean. 
+                  You can schedule dry runs or live merges at specific times.
+                </p>
+              </div>
+              <div class="slds-col slds-size_1-of-3 slds-text-align_right">
+                <lightning-button
+                  label="Schedule Job"
+                  variant="success"
+                  icon-name="utility:clock"
+                  onclick={openScheduleModal}
+                  disabled={isButtonDisabled}
+                  access-key="s"
+                >
+                </lightning-button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- Dry Run Results Component -->
       <div class="slds-var-m-top_medium">

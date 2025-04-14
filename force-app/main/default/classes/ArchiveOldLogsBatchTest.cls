@@ -1,7 +1,7 @@
 /**
  * @description Test class for ArchiveOldLogsBatch
  *
- * @author GitHub Copilot
+ * @author Richard Hudson
  * @since April 2025
  */
 @isTest
@@ -15,7 +15,7 @@ private class ArchiveOldLogsBatchTest {
         for (Integer i = 0; i < 10; i++) {
             DuplicateMergeLog__c log = new DuplicateMergeLog__c();
             // Removed setting Name field as it's likely an auto-number field
-            log.ErrorMessages__c = 'Test Error Message ' + i;
+            log.ErrorMessage__c = 'Test Error Message ' + i;
             log.UserId__c = UserInfo.getUserId();
             log.ObjectApiName__c = 'Account';
             log.JobId__c = '123456789' + i;
@@ -23,7 +23,7 @@ private class ArchiveOldLogsBatchTest {
             log.MergedIds__c = 'ID1,ID2,ID3';
             log.MasterId__c = '001XXXXXXXXXXXXXXX';
             log.FieldMergeDetails__c = 'Field1:Value1,Field2:Value2';
-            // ErrorMessage__c field doesn't exist, using ErrorMessages__c instead
+            // Using ErrorMessage__c field
             log.MatchScore__c = 85.5;
 
             testLogs.add(log);
@@ -59,7 +59,7 @@ private class ArchiveOldLogsBatchTest {
         // Verify archive fields were properly populated
         List<DuplicateMergeLogArchive__c> archives = [
             SELECT Id, Name, OriginalCreatedDate__c, ArchiveDate__c, ArchivedDate__c,
-                   ErrorMessages__c, UserId__c, ObjectApiName__c, JobId__c, MergeTime__c,
+                   ErrorMessage__c, UserId__c, ObjectApiName__c, JobId__c, MergeTime__c,
                    MergedIds__c, MasterId__c, FieldMergeDetails__c
             FROM DuplicateMergeLogArchive__c
         ];

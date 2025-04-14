@@ -27,7 +27,7 @@
           <span class="slds-assistive-text">Close</span>
         </button>
         <h2 id="modal-heading-01" class="slds-modal__title slds-hyphenate">
-          Schedule Duplication Job
+          Schedule duplicate Job
         </h2>
       </header>
 
@@ -60,7 +60,7 @@
             id="jobNameHelp"
             class="slds-form-element__help slds-assistive-text"
           >
-            Enter a name for this duplication job
+            Enter a name for this duplicate job
           </div>
 
           <!-- Schedule Type -->
@@ -157,7 +157,7 @@
           <div class="slds-var-m-top_medium">
             <lightning-input
               type="checkbox"
-              label="Dry Run (Find Duplications but don't merge)"
+              label="Dry Run (Find duplicates but don't merge)"
               checked={scheduleForm.isDryRun}
               onchange={handleDryRunChange}
               aria-describedby="dryRunHelp"
@@ -184,7 +184,7 @@
           variant="brand"
           label="Schedule"
           onclick={handleSchedule}
-          aria-label="Schedule the duplication job with the specified settings"
+          aria-label="Schedule the duplicate job with the specified settings"
         >
         </lightning-button>
       </footer>

@@ -83,4 +83,15 @@ public class LevenshteinCalculator {
     public static void clearCache() {
         distanceCache.clear();
     }
+    
+    /**
+     * Alternative name for distance method for backwards compatibility
+     * 
+     * @param s1 First string
+     * @param s2 Second string
+     * @return Levenshtein distance
+     */
+    public static Integer calculateDistance(String s1, String s2) {
+        return distance(s1, s2);
+    }
 }

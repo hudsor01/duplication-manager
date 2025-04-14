@@ -9,6 +9,7 @@
         <type>Background</type>
     </flexiPageRegions>
     <masterLabel>Duplication Manager UtilityBar</masterLabel>
+    <description>Utility bar for the Duplication Manager application</description>
     <template>
         <name>one:utilityBarTemplateDesktop</name>
     </template>

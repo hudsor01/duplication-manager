@@ -1,0 +1,46 @@
+name: Deploy to Integration Sandbox
+
+on:
+  push:
+    branches: [staging]
+    paths:
+      - 'force-app/**'
+
+jobs:
+  deploy-to-sandbox:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Salesforce CLI
+        run: |
+          npm install @salesforce/cli --global
+          sf --version
+
+      - name: Auth to Salesforce Sandbox
+        env:
+          SALESFORCE_JWT_SECRET_KEY: ${{ secrets.SALESFORCE_JWT_SECRET_KEY }}
+          CONSUMER_KEY: ${{ secrets.CONSUMER_KEY }}
+        run: |
+          echo "$SALESFORCE_JWT_SECRET_KEY" > server.key
+          sf org login jwt --client-id $CONSUMER_KEY --jwt-key-file server.key --username ${{ secrets.INTEGRATION_SANDBOX_USERNAME }} --alias integrationorg
+
+      - name: Deploy to Integration Sandbox
+        run: |
+          sf project deploy start --source-dir force-app --target-org integrationorg --test-level RunLocalTests
+
+      - name: Run Apex Tests
+        run: |
+          mkdir -p test-results
+          sf apex run test --target-org integrationorg --code-coverage --result-format junit --output-dir ./test-results
+
+      - name: Store Test Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: ./test-results

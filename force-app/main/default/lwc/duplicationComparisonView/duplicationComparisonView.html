@@ -1,5 +1,6 @@
 <template>
   <div class="comparison-container">
+    <!-- Loading Spinner -->
     <div if:true={isLoading} class="slds-is-relative slds-var-p-around_large">
       <lightning-spinner
         alternative-text="Loading"
@@ -8,147 +9,287 @@
     </div>
 
     <template if:false={isLoading}>
+      <!-- Records Found View -->
       <div if:true={hasRecords} class="comparison-view">
-        <!-- Header Section -->
-        <div
-          class="slds-grid slds-wrap slds-grid_vertical-align-end comparison-header"
-        >
-          <div class="slds-col slds-size_1-of-3 slds-var-p-horizontal_x-small">
-            <div class="slds-text-heading_medium slds-var-p-bottom_small">
-              Master Record
-            </div>
+        <!-- Records Overview Card -->
+        <div class="slds-card slds-var-m-bottom_medium">
+          <div class="slds-card__header slds-grid">
+            <header class="slds-media slds-media_center slds-has-flexi-truncate">
+              <div class="slds-media__figure">
+                <lightning-icon icon-name="standard:merge" size="small"></lightning-icon>
+              </div>
+              <div class="slds-media__body">
+                <h2 class="slds-card__header-title">
+                  <span>Records Overview</span>
+                </h2>
+              </div>
+            </header>
           </div>
-          <div class="slds-col slds-size_2-of-3">
-            <div class="slds-grid slds-wrap">
-              <template
-                for:each={duplicateRecords}
-                for:item="record"
-                for:index="index"
-              >
-                <div key={record.id} class="slds-col duplicate-column">
+          <div class="slds-card__body slds-card__body_inner">
+            <!-- Master Record Summary -->
+            <div class="slds-grid slds-gutters slds-wrap slds-grid_vertical-align-center">
+              <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                <div class="slds-box slds-box_x-small slds-theme_shade">
                   <div class="slds-grid slds-grid_vertical-align-center">
-                    <div class="slds-text-heading_medium slds-truncate">
-                      Duplicate {index}
+                    <div class="slds-col">
+                      <div class="slds-text-title_caps slds-text-color_weak">Master Record</div>
+                      <div class="slds-text-heading_small">{masterRecordName}</div>
                     </div>
-                    <div class="slds-var-m-left_x-small">
-                      <lightning-button-icon
-                        icon-name="utility:anchor"
-                        variant="border-filled"
-                        alternative-text="Set as Master"
-                        title="Set as Master"
-                        data-id={record.id}
-                        onclick={handleSetAsMaster}
-                      >
-                      </lightning-button-icon>
-                    </div>
-                    <div class="slds-var-m-left_xx-small">
-                      <lightning-badge
-                        label={record.matchScore}
-                        class="match-score"
-                      ></lightning-badge>
+                    <div class="slds-col slds-text-align_right">
+                      <lightning-badge label={masterRecordMatchScore} class="match-score-master"></lightning-badge>
                     </div>
                   </div>
                 </div>
-              </template>
+              </div>
+              
+              <!-- Quick Action Buttons -->
+              <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-3">
+                <lightning-button
+                  label="Select All Non-Empty Values"
+                  icon-name="utility:check"
+                  variant="neutral"
+                  onclick={handleSelectNonEmpty}
+                  class="slds-var-m-right_x-small"
+                ></lightning-button>
+                <lightning-button
+                  label="Preview Merge"
+                  icon-name="utility:preview"
+                  variant="brand"
+                  onclick={handlePreviewMerge}
+                  class="slds-var-m-right_x-small"
+                ></lightning-button>
+              </div>
+            </div>
+            
+            <!-- Duplicate Records -->
+            <div class="slds-var-m-top_medium">
+              <div class="slds-grid slds-wrap slds-grid_vertical-align-end">
+                <div class="slds-col slds-size_1-of-1">
+                  <div class="slds-text-title_caps slds-var-p-bottom_x-small">Duplicate Records</div>
+                </div>
+              </div>
+              <div class="slds-grid slds-wrap duplicate-records-container">
+                <template for:each={duplicateRecords} for:item="record">
+                  <div key={record.id} class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-var-p-around_xx-small">
+                    <div class="slds-box slds-box_small duplicate-card">
+                      <div class="slds-grid slds-grid_vertical-align-center">
+                        <div class="slds-col">
+                          <div class="slds-text-body_regular slds-truncate" title={record.name}>
+                            {record.name}
+                          </div>
+                        </div>
+                        <div class="slds-col slds-text-align_right">
+                          <lightning-badge label={record.matchScore} class="match-score"></lightning-badge>
+                        </div>
+                      </div>
+                      <div class="slds-grid slds-grid_vertical-align-center slds-var-m-top_small">
+                        <div class="slds-col">
+                          <lightning-button
+                            label="Set as Master"
+                            icon-name="utility:anchor"
+                            variant="neutral"
+                            data-id={record.id}
+                            onclick={handleSetAsMaster}
+                          ></lightning-button>
+                        </div>
+                        <div class="slds-col slds-text-align_right">
+                          <lightning-button
+                            label="Use All Values"
+                            icon-name="utility:choice"
+                            variant="neutral"
+                            data-id={record.id}
+                            onclick={handleSelectAllFromRecord}
+                          ></lightning-button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Fields Section -->
-        <div class="slds-grid slds-wrap comparison-fields">
-          <template for:each={fieldGroups} for:item="group">
-            <div
-              key={group.label}
-              class="slds-col slds-size_12-of-12 field-group"
-            >
-              <div class="slds-grid slds-wrap">
-                <div
-                  class="slds-col slds-size_12-of-12 field-group-header slds-var-p-vertical_x-small slds-var-p-horizontal_small"
-                >
-                  <div class="slds-text-title_caps">{group.label}</div>
-                </div>
+        <!-- Field Comparison Section -->
+        <div class="slds-card">
+          <div class="slds-card__header slds-grid">
+            <header class="slds-media slds-media_center slds-has-flexi-truncate">
+              <div class="slds-media__figure">
+                <lightning-icon icon-name="standard:field_sales" size="small"></lightning-icon>
               </div>
-
-              <template for:each={group.fields} for:item="field">
+              <div class="slds-media__body">
+                <h2 class="slds-card__header-title">
+                  <span>Field Comparison</span>
+                </h2>
+              </div>
+              <div>
+                <span class="slds-badge slds-badge_lightest">{differencesCount} differences found</span>
+              </div>
+            </header>
+          </div>
+          <div class="slds-card__body">
+            <!-- Fields Section -->
+            <div class="slds-grid slds-wrap comparison-fields">
+              <template for:each={fieldGroups} for:item="group">
                 <div
-                  key={field.apiName}
-                  class="slds-grid slds-wrap field-row"
+                  key={group.label}
+                  class="slds-col slds-size_12-of-12 field-group"
                 >
-                  <!-- Field Label -->
-                  <div
-                    class="slds-col slds-size_1-of-3 field-label slds-var-p-horizontal_small slds-var-p-vertical_x-small"
-                  >
-                    <div class="slds-form-element__label">{field.label}</div>
-                  </div>
-
-                  <!-- Master Record Value -->
-                  <div
-                    class="slds-col slds-size_1-of-3 field-value slds-var-p-horizontal_small slds-var-p-vertical_x-small"
-                  >
-                    <div class={field.masterClass}>{field.masterValue}</div>
-                  </div>
-
-                  <!-- Duplicate Record Values -->
-                  <div class="slds-col slds-size_2-of-3 slds-grid">
-                    <template
-                      for:each={field.duplicateValues}
-                      for:item="dupValue"
+                  <!-- Group Header -->
+                  <div class="slds-grid slds-wrap">
+                    <div
+                      class="slds-col slds-size_12-of-12 field-group-header slds-var-p-vertical_x-small slds-var-p-horizontal_small"
                     >
+                      <div class="slds-text-title_caps">{group.label}</div>
+                    </div>
+                  </div>
+
+                  <!-- Field Rows -->
+                  <template for:each={group.fields} for:item="field">
+                    <div
+                      key={field.apiName}
+                      class="slds-grid slds-wrap field-row"
+                    >
+                      <!-- Field Label -->
                       <div
-                        key={dupValue.id}
-                        class="slds-col duplicate-column field-value slds-var-p-horizontal_small slds-var-p-vertical_x-small"
+                        class="slds-col slds-size_1-of-1 slds-large-size_1-of-4 field-label slds-var-p-horizontal_small slds-var-p-vertical_x-small"
                       >
-                        <div class={dupValue.class}>
-                          {dupValue.value}
-                          <template if:true={dupValue.isSelected}>
-                            <lightning-icon
-                              icon-name="utility:check"
-                              class="slds-icon slds-icon_xx-small slds-icon-text-success slds-var-m-left_xx-small"
-                            ></lightning-icon>
+                        <div class="slds-form-element__label">
+                          {field.label}
+                          <template if:true={field.isRequired}>
+                            <abbr class="slds-required" title="Required">*</abbr>
                           </template>
-                          <template if:true={dupValue.isDifferent}>
-                            <lightning-button-icon
-                              icon-name="utility:replace"
-                              class="slds-var-m-left_xx-small field-action"
-                              alternative-text="Use This Value"
-                              title="Use This Value"
-                              data-field={field.apiName}
-                              data-record={dupValue.id}
-                              onclick={handleSelectValue}
-                            >
-                            </lightning-button-icon>
+                          <template if:true={field.isReadOnly}>
+                            <lightning-icon icon-name="utility:lock" 
+                              size="xx-small" 
+                              class="slds-icon_container slds-icon-text-default slds-var-m-left_xx-small"
+                              alternative-text="Read Only">
+                            </lightning-icon>
                           </template>
                         </div>
                       </div>
-                    </template>
-                  </div>
+
+                      <!-- Master Record Value -->
+                      <div
+                        class="slds-col slds-size_1-of-2 slds-large-size_1-of-4 field-value slds-var-p-horizontal_small slds-var-p-vertical_x-small"
+                      >
+                        <div class={field.masterClass}>
+                          <div class="slds-text-title_caps slds-text-color_weak slds-var-p-bottom_xx-small slds-truncate">Master</div>
+                          <div class="field-text">{field.masterValue}</div>
+                        </div>
+                      </div>
+
+                      <!-- Duplicate Record Values -->
+                      <div class="slds-col slds-size_1-of-2 slds-large-size_2-of-4 slds-grid slds-wrap">
+                        <template
+                          for:each={field.duplicateValues}
+                          for:item="dupValue"
+                        >
+                          <div
+                            key={dupValue.id}
+                            class="slds-col duplicate-column field-value slds-var-p-horizontal_small slds-var-p-vertical_x-small"
+                          >
+                            <div class={dupValue.class}>
+                              <div class="slds-grid slds-grid_vertical-align-start">
+                                <div class="slds-col">
+                                  <div class="slds-text-title_caps slds-text-color_weak slds-var-p-bottom_xx-small slds-truncate">Duplicate</div>
+                                  <div class="field-text">
+                                    {dupValue.value}
+                                    <template if:true={dupValue.isSelected}>
+                                      <lightning-icon
+                                        icon-name="utility:check"
+                                        class="slds-icon slds-icon_xx-small slds-icon-text-success slds-var-m-left_xx-small"
+                                      ></lightning-icon>
+                                    </template>
+                                  </div>
+                                </div>
+                                
+                                <div class="slds-col slds-text-align_right" if:true={dupValue.isDifferent}>
+                                  <lightning-button-icon
+                                    icon-name="utility:replace"
+                                    variant="border-filled"
+                                    class="field-action"
+                                    alternative-text="Use This Value"
+                                    title="Use This Value"
+                                    data-field={field.apiName}
+                                    data-record={dupValue.id}
+                                    onclick={handleSelectValue}
+                                  ></lightning-button-icon>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </template>
+                      </div>
+                    </div>
+                  </template>
                 </div>
               </template>
             </div>
-          </template>
-        </div>
-
-        <!-- Actions Section -->
-        <div
-          class="slds-grid slds-wrap slds-grid_align-center slds-var-p-around_medium action-bar"
-        >
-          <div class="slds-col">
-            <lightning-button
-              label="Cancel"
-              onclick={handleCancel}
-              class="slds-var-m-right_small"
-            >
-            </lightning-button>
-            <lightning-button
-              label="Preview Merge"
-              variant="brand"
-              onclick={handlePreviewMerge}
-            >
-            </lightning-button>
+          </div>
+          
+          <!-- Actions Footer -->
+          <div class="slds-card__footer">
+            <div class="slds-grid slds-grid_align-center">
+              <lightning-button
+                label="Cancel"
+                icon-name="utility:back"
+                onclick={handleCancel}
+                class="slds-var-m-right_small"
+              ></lightning-button>
+              <lightning-button
+                label="Preview Merge"
+                icon-name="utility:merge"
+                variant="brand"
+                onclick={handlePreviewMerge}
+              ></lightning-button>
+            </div>
           </div>
         </div>
+        
+        <!-- Non-Mergeable Data Section (if applicable) -->
+        <template if:true={hasNonMergeableData}>
+          <div class="slds-card slds-var-m-top_medium">
+            <div class="slds-card__header slds-grid">
+              <header class="slds-media slds-media_center slds-has-flexi-truncate">
+                <div class="slds-media__figure">
+                  <lightning-icon icon-name="standard:information" size="small"></lightning-icon>
+                </div>
+                <div class="slds-media__body">
+                  <h2 class="slds-card__header-title">
+                    <span>Non-Mergeable Data</span>
+                  </h2>
+                </div>
+              </header>
+            </div>
+            <div class="slds-card__body slds-card__body_inner">
+              <div class="slds-box slds-theme_info slds-text-color_default">
+                <lightning-icon icon-name="utility:info" class="slds-var-m-right_small" size="small"></lightning-icon>
+                <span>The following data cannot be merged automatically and will be preserved in a note attached to the master record.</span>
+              </div>
+              
+              <div class="slds-var-m-top_small">
+                <ul class="slds-has-dividers_bottom-space">
+                  <template for:each={nonMergeableData} for:item="item">
+                    <li key={item.apiName} class="slds-item slds-var-p-vertical_x-small">
+                      <div class="slds-grid">
+                        <div class="slds-col slds-size_1-of-3">
+                          <div class="slds-text-heading_small">{item.label}</div>
+                        </div>
+                        <div class="slds-col slds-size_2-of-3">
+                          <div class="slds-text-body_regular">{item.reason}</div>
+                        </div>
+                      </div>
+                    </li>
+                  </template>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </template>
       </div>
 
+      <!-- No Records Found View -->
       <div
         if:false={hasRecords}
         class="slds-text-align_center slds-var-p-around_large"

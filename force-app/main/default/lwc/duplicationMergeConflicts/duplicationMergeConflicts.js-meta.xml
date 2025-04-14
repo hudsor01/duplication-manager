@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
-    <apiVersion>62.0</apiVersion>
+    <apiVersion>58.0</apiVersion>
     <isExposed>true</isExposed>
     <masterLabel>Duplication Merge Conflicts</masterLabel>
     <description>Displays and manages field-level conflicts during record merging</description>
@@ -11,8 +11,8 @@
     </targets>
     <targetConfigs>
         <targetConfig targets="lightning__FlowScreen">
-            <property name="masterRecord" type="Object" label="Master Record" description="The master record to keep" required="true" />
-            <property name="duplicateRecords" type="Object[]" label="Duplicate Records" description="The duplicate records to merge" required="true" />
+            <property name="masterRecord" type="String" label="Master Record" description="The master record to keep (JSON string)" required="true" />
+            <property name="duplicateRecords" type="String" label="Duplicate Records" description="The duplicate records to merge (JSON string)" required="true" />
             <property name="objectApiName" type="String" label="Object API Name" description="API name of the object" required="true" />
             <property name="fields" type="String[]" label="Fields" description="Fields to display (leave empty for auto-detection)" />
         </targetConfig>

@@ -1,5 +1,5 @@
 /**
- * Enhanced UI components and utilities for Duplication Manager
+ * Enhanced UI components and utilities for duplicate Manager
  */
 import { LightningElement, api } from "lwc";
 

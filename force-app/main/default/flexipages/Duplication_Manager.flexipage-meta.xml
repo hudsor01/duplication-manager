@@ -3,14 +3,15 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentName>duplicationContainer</componentName>
-                <identifier>duplicationContainer</identifier>
+                <componentName>duplicationContainerWrapper</componentName>
+                <identifier>duplicationContainerWrapper</identifier>
             </componentInstance>
         </itemInstances>
         <name>main</name>
         <type>Region</type>
     </flexiPageRegions>
     <masterLabel>Duplication Manager</masterLabel>
+    <description>Main page for the Duplication Manager application</description>
     <template>
         <name>flexipage:defaultAppHomeTemplate</name>
     </template>

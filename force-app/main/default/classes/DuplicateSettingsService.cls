@@ -43,7 +43,7 @@ public with sharing class DuplicateSettingsService {
             Schema.getGlobalDescribe().get('DuplicateFinderSetting__mdt');
         } catch (Exception e) {
             System.debug('ERROR: DuplicateFinderSetting__mdt custom metadata type not found: ' + e.getMessage());
-            throw new DuplicationException('DuplicateFinderSetting__mdt custom metadata type not found. Please deploy it to your org.');
+            throw new duplicateException('DuplicateFinderSetting__mdt custom metadata type not found. Please deploy it to your org.');
         }
     }
 
@@ -96,6 +96,6 @@ public with sharing class DuplicateSettingsService {
      */
     private void handleError(Exception e) {
         System.debug('Error getting active settings: ' + e.getMessage() + '\n' + e.getStackTraceString());
-        throw new DuplicationException('Error retrieving active settings: ' + e.getMessage());
+        throw new duplicateException('Error retrieving active settings: ' + e.getMessage());
     }
 }

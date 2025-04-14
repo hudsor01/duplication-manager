@@ -57,6 +57,7 @@ public class DuplicateRecordScheduler implements Schedulable {
      * @param batchSize Batch size to use
      * @return ID of the scheduled job
      */
+    @AuraEnabled(cacheable=false)
     public static Id scheduleJob(String configId, String cronExpression, String jobName, Boolean isDryRun, Integer batchSize) {
         if (String.isBlank(configId)) {
             throw new DuplicateException('Configuration ID is required');
@@ -90,6 +91,7 @@ public class DuplicateRecordScheduler implements Schedulable {
      * @param batchSize Batch size to use
      * @return ID of the batch job
      */
+    @AuraEnabled
     public static Id runJobNow(String configId, Boolean isDryRun, Integer batchSize) {
         if (String.isBlank(configId)) {
             throw new DuplicateException('Configuration ID is required');
@@ -174,6 +176,7 @@ public class DuplicateRecordScheduler implements Schedulable {
      * @param dayOfMonth Day of month (1-31)
      * @return Cron expression
      */
+    @AuraEnabled
     public static String buildCronExpression(String frequency, Integer hour, Integer minute, Integer dayOfWeek, Integer dayOfMonth) {
         // Validate inputs
         if (String.isBlank(frequency)) {
@@ -236,27 +239,38 @@ public class DuplicateRecordScheduler implements Schedulable {
      * @param batchSize Batch size to use
      * @return ID of the batch job
      */
+    @AuraEnabled
     public static Id runDuplicateFinderBatch(String objectApiName, Boolean isDryRun, Integer batchSize) {
         if (String.isBlank(objectApiName)) {
             throw new DuplicateException('Object API name is required');
         }
         
         try {
-            // Default fields for matching if not specified
-            List<String> defaultFields = new List<String>{'Name'};
+            // Create a dummy config ID that includes the object name
+            String configId = 'default_' + objectApiName;
             
-            // Default master record strategy
-            String masterStrategy = 'mostRecent';
-            
-            // Create and execute batch job
-            DuplicateRecordBatch batchJob = new DuplicateRecordBatch(
-                objectApiName, defaultFields, masterStrategy, batchSize, isDryRun
-            );
+            // Create and execute batch job using the simplified constructor
+            DuplicateRecordBatch batchJob = new DuplicateRecordBatch(configId, isDryRun);
             
             Id batchId = Database.executeBatch(batchJob, batchSize > 0 ? batchSize : 200);
             return batchId;
         } catch (Exception e) {
             throw new DuplicateException('Failed to run duplicate finder: ' + e.getMessage());
         }
+    }
+    
+    /**
+     * Simple wrapper method for LWC component testing
+     * This simplified method matches the exact parameter structure from the LWC
+     */
+    @AuraEnabled(cacheable=false)
+    public static Id scheduleTestJob(Map<String, Object> params) {
+        String configId = (String)params.get('configId');
+        String cronExpression = (String)params.get('cronExpression');
+        String jobName = (String)params.get('jobName');
+        Boolean isDryRun = (Boolean)params.get('isDryRun');
+        Integer batchSize = (Integer)params.get('batchSize');
+        
+        return scheduleJob(configId, cronExpression, jobName, isDryRun, batchSize);
     }
 }

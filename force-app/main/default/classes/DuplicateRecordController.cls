@@ -1,14 +1,41 @@
 public with sharing class DuplicateRecordController {
 
     /**
-     * Gets user-specific settings for the Duplication Manager
+     * Gets user-specific settings for the duplicate Manager
      *
      * @return Map containing user settings or default settings
      */
     @AuraEnabled(cacheable=true)
     public static Map<String, Object> getUserSettings() {
         try {
-            // Return default settings
+            // Try to get user-specific settings from custom settings or custom object
+            Map<String, Object> settings = new Map<String, Object>();
+            
+            // Create user preference name
+            String prefName = 'UserPreference_' + UserInfo.getUserId();
+            
+            // Query user-specific settings based on current user
+            List<DuplicateFinderSettings__c> userSettings = [
+                SELECT Name, ObjectAPIName__c, IsActive__c, MatchFields__c
+                FROM DuplicateFinderSettings__c 
+                WHERE Name = :prefName
+                LIMIT 1
+            ];
+            
+            if (!userSettings.isEmpty() && String.isNotBlank(userSettings[0].MatchFields__c)) {
+                try {
+                    // Parse settings from stored fields
+                    settings.put('matchFields', userSettings[0].MatchFields__c);
+                    settings.put('objectApiName', userSettings[0].ObjectAPIName__c);
+                    settings.put('isActive', userSettings[0].IsActive__c);
+                    return settings;
+                } catch (Exception parseEx) {
+                    System.debug(LoggingLevel.ERROR, 'Error parsing user settings: ' + parseEx.getMessage());
+                    // Continue to return default settings instead
+                }
+            }
+            
+            // Return default settings if no user settings found or couldn't parse
             Map<String, Object> defaultSettings = new Map<String, Object>();
             defaultSettings.put('showAllFields', false);
             defaultSettings.put('autoRefresh', true);
@@ -24,7 +51,7 @@ public with sharing class DuplicateRecordController {
     }
 
     /**
-     * Saves user-specific settings for the Duplication Manager
+     * Saves user-specific settings for the duplicate Manager
      *
      * @param settings Map of settings to save
      * @return Boolean indicating success
@@ -32,8 +59,52 @@ public with sharing class DuplicateRecordController {
     @AuraEnabled
     public static Boolean saveUserSettings(Map<String, Object> settings) {
         try {
-            // In a real implementation, this would save to a custom object
-            // For now, just return success
+            if (settings == null) {
+                throw new AuraHandledException('Settings cannot be null');
+            }
+            
+            // Convert settings to JSON string
+            String settingsJson = JSON.serialize(settings);
+            
+            // User-specific setting name
+            String settingName = 'UserPreference_' + UserInfo.getUserId();
+            
+            // Query for existing settings
+            List<DuplicateFinderSettings__c> existingSettings = [
+                SELECT Id 
+                FROM DuplicateFinderSettings__c 
+                WHERE Name = :settingName
+                LIMIT 1
+            ];
+            
+            if (existingSettings.isEmpty()) {
+                // Extract data from settings
+                String objectApiName = (String)settings.get('objectApiName');
+                String matchFields = (String)settings.get('matchFields');
+                Boolean isActive = settings.containsKey('isActive') ? (Boolean)settings.get('isActive') : true;
+                
+                // Create new settings record
+                DuplicateFinderSettings__c newSetting = new DuplicateFinderSettings__c(
+                    Name = settingName,
+                    ObjectAPIName__c = objectApiName,
+                    MatchFields__c = matchFields,
+                    IsActive__c = isActive
+                );
+                insert newSetting;
+            } else {
+                // Extract data from settings
+                String objectApiName = (String)settings.get('objectApiName');
+                String matchFields = (String)settings.get('matchFields');
+                Boolean isActive = settings.containsKey('isActive') ? (Boolean)settings.get('isActive') : true;
+                
+                // Update existing settings
+                DuplicateFinderSettings__c existingSetting = existingSettings[0];
+                existingSetting.ObjectAPIName__c = objectApiName;
+                existingSetting.MatchFields__c = matchFields;
+                existingSetting.IsActive__c = isActive;
+                update existingSetting;
+            }
+            
             return true;
         } catch (Exception e) {
             throw new AuraHandledException('Error saving settings: ' + e.getMessage());
@@ -213,8 +284,19 @@ public with sharing class DuplicateRecordController {
         }
 
         try {
-            // This is just a stub implementation that always returns success
-            // In a real implementation, this would create a ContentNote
+            // Create standard note
+            Note note = new Note(
+                Title = title,
+                Body = body,
+                ParentId = parentId
+            );
+            
+            // Check permissions before inserting
+            if (!Schema.sObjectType.Note.isCreateable()) {
+                throw new AuraHandledException('Insufficient permissions to create notes');
+            }
+            
+            insert note;
             return true;
         } catch (Exception e) {
             throw new AuraHandledException('Error creating note: ' + e.getMessage());
@@ -258,8 +340,9 @@ public with sharing class DuplicateRecordController {
             throw new AuraHandledException('Configuration ID is required');
         }
 
-        // This is just a stub implementation that returns a fake job ID
-        return UserInfo.getUserId(); // Return user ID as a placeholder
+        // Call the DuplicateJobService to run the batch job
+        DuplicateJobService jobService = new DuplicateJobService();
+        return jobService.runDuplicateFinderBatch(configId, isDryRun, batchSize);
     }
 
     /**
@@ -272,18 +355,59 @@ public with sharing class DuplicateRecordController {
         List<Map<String, Object>> result = new List<Map<String, Object>>();
 
         try {
-            // Create a sample configuration
-            Map<String, Object> sampleConfig = new Map<String, Object>();
-            sampleConfig.put('MasterLabel', 'Account Duplicates');
-            sampleConfig.put('DeveloperName', 'Account_Duplicates');
-            sampleConfig.put('ObjectApiName', 'Account');
-            sampleConfig.put('MatchFields', '["Name", "BillingCity", "Phone"]');
-            sampleConfig.put('MasterRecordStrategy', 'MostRecent');
-            sampleConfig.put('BatchSize', 200);
-
-            result.add(sampleConfig);
+            // Query all active settings from custom metadata
+            List<DuplicationConfiguration__mdt> configurations = [
+                SELECT Id, MasterLabel, DeveloperName, ObjectApiName__c, 
+                       MatchFields__c, MasterRecordStrategy__c, BatchSize__c,
+                       MatchThreshold__c, IsActive__c, Description__c
+                FROM DuplicationConfiguration__mdt
+                WHERE IsActive__c = true
+                ORDER BY MasterLabel
+            ];
+            
+            // Convert to list of maps for UI
+            for (DuplicationConfiguration__mdt config : configurations) {
+                Map<String, Object> configMap = new Map<String, Object>();
+                configMap.put('Id', config.Id);
+                configMap.put('MasterLabel', config.MasterLabel);
+                configMap.put('DeveloperName', config.DeveloperName);
+                configMap.put('ObjectApiName', config.ObjectApiName__c);
+                configMap.put('MatchFields', config.MatchFields__c);
+                configMap.put('MasterRecordStrategy', config.MasterRecordStrategy__c);
+                configMap.put('BatchSize', config.BatchSize__c);
+                configMap.put('MatchThreshold', config.MatchThreshold__c);
+                configMap.put('Description', config.Description__c);
+                
+                result.add(configMap);
+            }
+            
+            // If no configurations found, check for default settings in old metadata type
+            if (result.isEmpty()) {
+                List<DuplicateFinderSetting__mdt> legacySettings = [
+                    SELECT Id, MasterLabel, DeveloperName, SObject_API_Name__c,
+                           MatchFields__c, MasterRecordStrategy__c, BatchSize__c
+                    FROM DuplicateFinderSetting__mdt
+                    WHERE IsActive__c = true
+                    ORDER BY MasterLabel
+                ];
+                
+                // Convert legacy settings
+                for (DuplicateFinderSetting__mdt setting : legacySettings) {
+                    Map<String, Object> configMap = new Map<String, Object>();
+                    configMap.put('Id', setting.Id);
+                    configMap.put('MasterLabel', setting.MasterLabel);
+                    configMap.put('DeveloperName', setting.DeveloperName);
+                    configMap.put('ObjectApiName', setting.SObject_API_Name__c);
+                    configMap.put('MatchFields', setting.MatchFields__c);
+                    configMap.put('MasterRecordStrategy', setting.MasterRecordStrategy__c);
+                    configMap.put('BatchSize', setting.BatchSize__c);
+                    
+                    result.add(configMap);
+                }
+            }
         } catch (Exception e) {
-            System.debug('Error getting active settings: ' + e.getMessage());
+            System.debug(LoggingLevel.ERROR, 'Error getting active settings: ' + e.getMessage());
+            throw new AuraHandledException('Error retrieving duplicate configurations: ' + e.getMessage());
         }
 
         return result;
@@ -583,11 +707,10 @@ public with sharing class DuplicateRecordController {
             }
 
             // Sort by match score (highest first)
-            duplicatesList.sort((Map<String, Object> a, Map<String, Object> b) -> {
-                Double scoreA = (Double)a.get('matchScore');
-                Double scoreB = (Double)b.get('matchScore');
-                return scoreB.compareTo(scoreA);
-            });
+            duplicatesList.sort();
+            
+            // We have already found duplicates
+            Map<String, Object> resultMap = new Map<String, Object>();
 
             // Build result
             result.put('duplicatesFound', duplicatesList.size());

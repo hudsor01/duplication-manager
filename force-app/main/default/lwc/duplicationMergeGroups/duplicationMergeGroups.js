@@ -1,5 +1,6 @@
 import { LightningElement, api, track, wire } from "lwc";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
+// Import for merging duplicate records
 import mergeDuplicateRecords from "@salesforce/apex/DuplicateRecordController.mergeDuplicateRecords";
 import { MessageContext } from "lightning/messageService";
 import {
@@ -9,7 +10,7 @@ import {
   MESSAGE_TYPES,
 } from "c/duplicationMessageService";
 
-export default class DuplicationMergeGroups extends LightningElement {
+export default class duplicationMergeGroups extends LightningElement {
   @api
   get groups() {
     return this._groupsValue || [];
@@ -186,17 +187,15 @@ export default class DuplicationMergeGroups extends LightningElement {
       configId: this.configId,
     });
 
-    // Use Promise-based approach for delay instead of setTimeout
-    // This would be replaced with actual group loading logic
-    this.simulateDelay(1000).then(() => {
-      this.isLoading = false;
-
-      // Notify that groups are loaded
-      sendMessage(MESSAGE_TYPES.GROUPS_LOADED, {
-        objectType: this.objectApiName,
-        configId: this.configId,
-        groupCount: this.groups ? this.groups.length : 0,
-      });
+    // Real implementation would load groups from an Apex method
+    // For now, we'll immediately mark as loaded
+    this.isLoading = false;
+    
+    // Notify that groups are loaded
+    sendMessage(MESSAGE_TYPES.GROUPS_LOADED, {
+      objectType: this.objectApiName,
+      configId: this.configId,
+      groupCount: this.groups ? this.groups.length : 0,
     });
   }
 
@@ -589,30 +588,6 @@ export default class DuplicationMergeGroups extends LightningElement {
                 <p>Match Score: ${group.matchScore}%</p>`;
   }
 
-  /**
-   * Simulate a delay using Promises instead of setTimeout
-   * @param {Number} ms - Number of milliseconds to delay
-   * @returns {Promise} A promise that resolves after the specified delay
-   */
-  simulateDelay(ms) {
-    const startTime = Date.now();
-
-    return new Promise((resolve) => {
-      // Function to check if enough time has elapsed
-      const checkElapsed = () => {
-        const elapsed = Date.now() - startTime;
-        if (elapsed >= ms) {
-          resolve();
-        } else {
-          // Not enough time has passed, check again in the next microtask
-          Promise.resolve().then(checkElapsed);
-        }
-      };
-
-      // Start checking
-      Promise.resolve().then(checkElapsed);
-    });
-  }
 
   /**
    * Show toast notification

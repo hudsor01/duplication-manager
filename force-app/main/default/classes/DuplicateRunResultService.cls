@@ -25,7 +25,7 @@ public with sharing class DuplicateRunResultService {
         ];
 
         if (runResults.isEmpty()) {
-            throw new DuplicationException('No duplicate run results found for job ID: ' + batchJobId);
+            throw new duplicateException('No duplicate run results found for job ID: ' + batchJobId);
         }
 
         return runResults[0];
@@ -105,7 +105,7 @@ public with sharing class DuplicateRunResultService {
      */
     private void validateAccess() {
         if(!Schema.sObjectType.DuplicateRunResult__c.isAccessible()){
-            throw new DuplicationException('Access denied for DuplicateRunResult__c');
+            throw new duplicateException('Access denied for DuplicateRunResult__c');
         }
     }
 
@@ -114,7 +114,7 @@ public with sharing class DuplicateRunResultService {
      */
     private void validateGroupAccess() {
         if(!Schema.sObjectType.DuplicateGroupDetail__c.isAccessible()){
-            throw new DuplicationException('Access denied for DuplicateGroupDetail__c');
+            throw new duplicateException('Access denied for DuplicateGroupDetail__c');
         }
     }
 }

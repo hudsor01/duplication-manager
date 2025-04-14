@@ -1,7 +1,7 @@
 /**
  * DuplicateConfig
  * Configuration class for the duplicate finder framework
- * @author Richard Hudson - April 2025
+ * @author Richard Hudson
  * @updated Richard Hudson - April 2025
  */
 public class DuplicateConfig {

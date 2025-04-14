@@ -7,7 +7,7 @@
 import { LightningElement, api, track } from "lwc";
 import getDuplicateStatistics from "@salesforce/apex/DRSCStats.getDuplicateStatistics";
 import store from "c/duplicationStore";
-import { DuplicationStore } from "c/duplicationStore";
+import { duplicationStore } from "c/duplicationStore";
 
 export default class DuplicationStatsSummary extends LightningElement {
   /**
@@ -111,13 +111,13 @@ export default class DuplicationStatsSummary extends LightningElement {
   loadStatistics() {
     // Set loading state
     this.isLoading = true;
-    store.dispatch(DuplicationStore.actions.SET_LOADING, true);
+    store.dispatch(duplicationStore.actions.SET_LOADING, true);
 
     // Call Apex controller method
     getDuplicateStatistics()
       .then((result) => {
         // Update store with statistics
-        store.dispatch(DuplicationStore.actions.UPDATE_STATISTICS, result);
+        store.dispatch(duplicationStore.actions.UPDATE_STATISTICS, result);
 
         // Update local component state
         this.processStatisticsResult(result);
@@ -129,11 +129,11 @@ export default class DuplicationStatsSummary extends LightningElement {
         this.dispatchRefreshedEvent(result);
       })
       .catch((error) => {
-        this.handleError("Error loading duplication statistics", error);
+        this.handleError("Error loading duplicate statistics", error);
       })
       .finally(() => {
         this.isLoading = false;
-        store.dispatch(DuplicationStore.actions.SET_LOADING, false);
+        store.dispatch(duplicationStore.actions.SET_LOADING, false);
       });
   }
 
@@ -230,7 +230,7 @@ export default class DuplicationStatsSummary extends LightningElement {
     this.error = errorObj;
 
     // Add to store
-    store.dispatch(DuplicationStore.actions.ADD_ERROR, errorObj);
+    store.dispatch(duplicationStore.actions.ADD_ERROR, errorObj);
   }
 
   /**

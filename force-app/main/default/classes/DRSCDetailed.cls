@@ -1,5 +1,5 @@
 /**
- * @description Class for retrieving detailed statistics for the duplication manager dashboard
+ * @description Class for retrieving detailed statistics for the duplicate manager dashboard
  * @author Richard Hudson
  * @date 2025-04-11
  */
@@ -36,7 +36,7 @@ public with sharing class DRSCDetailed {
                 !Schema.sObjectType.DuplicateJobStatistic__c.fields.JobCompletionTime__c.isAccessible()) {
                 throw new AuraHandledException('Insufficient access to DuplicateJobStatistic__c object or fields');
             }
-            
+
             // Build query with parameters using bind variables for security
             String dupQuery = 'SELECT ObjectApiName__c, SUM(DuplicatesFound__c) totalDuplicates ' +
                              'FROM DuplicateJobStatistic__c';
@@ -58,7 +58,7 @@ public with sharing class DRSCDetailed {
                 !Schema.sObjectType.DuplicateMergeLog__c.fields.MergeTime__c.isAccessible()) {
                 throw new AuraHandledException('Insufficient access to DuplicateMergeLog__c object or fields');
             }
-            
+
             String mergeQuery = 'SELECT ObjectApiName__c, COUNT() totalMerged ' +
                                'FROM DuplicateMergeLog__c';
 
@@ -84,8 +84,8 @@ public with sharing class DRSCDetailed {
                 totalDuplicates += dupsInt;
 
                 if (String.isNotBlank(objectName)) {
-                    Map<String, Object> objStats = byObject.containsKey(objectName) 
-                        ? byObject.get(objectName) 
+                    Map<String, Object> objStats = byObject.containsKey(objectName)
+                        ? byObject.get(objectName)
                         : new Map<String, Object>();
 
                     objStats.put('totalDuplicates', dupsInt);
@@ -101,8 +101,8 @@ public with sharing class DRSCDetailed {
                 totalMerged += merged;
 
                 if (String.isNotBlank(objectName)) {
-                    Map<String, Object> objStats = byObject.containsKey(objectName) 
-                        ? byObject.get(objectName) 
+                    Map<String, Object> objStats = byObject.containsKey(objectName)
+                        ? byObject.get(objectName)
                         : new Map<String, Object>();
 
                     objStats.put('totalMerged', merged);
@@ -119,7 +119,7 @@ public with sharing class DRSCDetailed {
                 !Schema.sObjectType.DuplicateMergeLog__c.fields.JobId__c.isAccessible()) {
                 throw new AuraHandledException('Insufficient access to required DuplicateMergeLog__c fields');
             }
-            
+
             String recentMergesQuery = 'SELECT Id, ObjectApiName__c, ' +
                                       'MergeTime__c, MergedIds__c, JobId__c ' +
                                       'FROM DuplicateMergeLog__c';
@@ -139,7 +139,7 @@ public with sharing class DRSCDetailed {
                 mergeInfo.put('id', log.Id);
                 mergeInfo.put('objectApiName', log.ObjectApiName__c);
                 // ConfigurationName__c field doesn't exist on DuplicateMergeLog__c
-                mergeInfo.put('configName', ''); 
+                mergeInfo.put('configName', '');
 
                 // Use MergedIds__c field to determine count of merged records
                 // If it's a text field containing comma-separated IDs, calculate the count
@@ -166,7 +166,7 @@ public with sharing class DRSCDetailed {
                 !Schema.sObjectType.DuplicateJobStatistic__c.fields.BatchJobId__c.isAccessible()) {
                 throw new AuraHandledException('Insufficient access to required DuplicateJobStatistic__c fields');
             }
-            
+
             String dryRunsQuery = 'SELECT Id, ObjectApiName__c, ConfigurationName__c, ' +
                                  'JobCompletionTime__c, DuplicatesFound__c, IsDryRun__c, BatchJobId__c ' +
                                  'FROM DuplicateJobStatistic__c ' +
@@ -202,7 +202,7 @@ public with sharing class DRSCDetailed {
                     for(Integer j = i + 1; j < recentMerges.size(); j++) {
                         Datetime timeI = (Datetime)recentMerges[i].get('timestamp');
                         Datetime timeJ = (Datetime)recentMerges[j].get('timestamp');
-                        
+
                         // If timeJ is newer than timeI, swap them (descending sort)
                         if(timeJ != null && (timeI == null || timeJ > timeI)) {
                             Map<String, Object> temp = recentMerges[i];
@@ -212,7 +212,7 @@ public with sharing class DRSCDetailed {
                     }
                 }
             }
-            
+
             // Limit to 10 most recent (already sorted)
             if (recentMerges.size() > 10) {
                 List<Map<String, Object>> limitedList = new List<Map<String, Object>>();

@@ -8,9 +8,9 @@ import {
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import getUserSettings from "@salesforce/apex/DuplicateRecordController.getUserSettings";
 import saveUserSettings from "@salesforce/apex/DuplicateRecordController.saveUserSettings";
-import getDuplicateStatistics from "@salesforce/apex/DuplicateRecordStatisticsController.getDuplicateStatistics.getDuplicateStatistics";
+import getDuplicateStatistics from "@salesforce/apex/DuplicateRecordStatisticsController.getDuplicateStatistics";
 
-export default class DuplicationContainer extends LightningElement {
+export default class duplicationContainer extends LightningElement {
   @track tabs = [
     {
       name: "dashboard",
@@ -140,7 +140,7 @@ export default class DuplicationContainer extends LightningElement {
       this.userSettings = { ...this.userSettings, ...data };
       this.applyInitialSettings();
     } else if (error) {
-      console.error("Error loading user settings:", error);
+      // Error loading user settings
       this.showToast(
         "Error",
         "Could not load user settings: " +
@@ -161,7 +161,7 @@ export default class DuplicationContainer extends LightningElement {
    * Handle messages from the message channel
    */
   handleMessage(message) {
-    console.log("Message received in container:", message.type);
+    // Message received in container
 
     if (message.type === MESSAGE_TYPES.DUPLICATES_FOUND && message.payload) {
       // Set selected record data for comparison
@@ -342,7 +342,7 @@ export default class DuplicationContainer extends LightningElement {
    * Handle help button click
    */
   handleHelp() {
-    window.open("/apex/DuplicationHelp", "_blank");
+    window.open("/apex/duplicateHelp", "_blank");
   }
 
   /**

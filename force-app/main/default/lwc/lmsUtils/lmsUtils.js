@@ -7,10 +7,10 @@ import {
 } from "lightning/messageService";
 // Using mock implementation to avoid deployment issues with message channel
 // This will be replaced with actual import when the channel is properly configured
-// import DUPLICATION_CHANNEL from "@salesforce/messageChannel/DuplicationChannel_c";
+// import duplication_CHANNEL from "@salesforce/messageChannel/DuplicationChannel_c";
 
 // Mock channel for deployment
-const DUPLICATION_CHANNEL = {
+const duplication_CHANNEL = {
   type: "lightning:messageChannel",
   channelId: "DuplicationChannel_c",
   isPublishable: true,
@@ -62,9 +62,9 @@ export default class LmsUtils {
     };
 
     this.log(`Publishing message: ${messageType}`);
-    
+
     try {
-      publish(this.context, DUPLICATION_CHANNEL, message);
+      publish(this.context, duplication_CHANNEL, message);
     } catch (error) {
       console.log(`[LMSUtils] Mock publish: ${messageType}`, payload);
       // Continue execution even if publish fails
@@ -88,10 +88,10 @@ export default class LmsUtils {
     this.log(`Subscribing to message: ${messageType}`);
 
     let subscription;
-    
+
     try {
       // Create subscription with filtering by message type
-      subscription = subscribe(this.context, DUPLICATION_CHANNEL, (message) => {
+      subscription = subscribe(this.context, duplication_CHANNEL, (message) => {
         // Add null/undefined check before accessing messageType
         if (message && message.messageType === messageType) {
           this.log(`Received message: ${messageType}`);
@@ -136,7 +136,7 @@ export default class LmsUtils {
     }
 
     this.log("Unsubscribing from message channel");
-    
+
     try {
       // Handle both real and mock subscriptions
       if (subscription.unsubscribe && typeof subscription.unsubscribe === 'function') {
@@ -170,7 +170,7 @@ export default class LmsUtils {
 
     this.log(`Unsubscribing all listeners for message: ${messageType}`);
     const subs = this.subscriptions.get(messageType);
-    
+
     subs.forEach((sub) => {
       try {
         // Handle both real and mock subscriptions
@@ -183,7 +183,7 @@ export default class LmsUtils {
         console.log(`[LMSUtils] Error during unsubscribeAll for ${messageType}, continuing`);
       }
     });
-    
+
     this.subscriptions.delete(messageType);
   }
 

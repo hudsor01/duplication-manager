@@ -1,8 +1,8 @@
 /**
- * Enhanced centralized store for duplication manager application state
+ * Enhanced centralized store for duplicate manager application state
  * Uses Lightning Message Service exclusively for communication
  *
- * @author Original Author
+ *@author Richard Hudson
  * @updated Richard Hudson - May 2025
  */
 // import { MessageContext } from 'lightning/messageService';
@@ -38,7 +38,7 @@ const loadInitialDraftJob = () => {
   }
 
   try {
-    const savedDraft = localStorage.getItem("duplicationDraftJob");
+    const savedDraft = localStorage.getItem("duplicateDraftJob");
 
     // Parse draft job data
     const draft = savedDraft ? JSON.parse(savedDraft) : null;
@@ -106,7 +106,7 @@ const initialState = {
 };
 
 // Store implementation
-class DuplicationStore {
+class duplicationStore {
   _state = { ...initialState };
   _listeners = [];
   _messageContext = null;
@@ -156,7 +156,7 @@ class DuplicationStore {
       { filter: (msg) => msg.type.startsWith("store.") },
     );
 
-    console.log("Store initialized with instance ID:", this._instanceId);
+    // Store initialized
   }
 
   /**
@@ -331,13 +331,13 @@ class DuplicationStore {
    * @param {*} payload - Action payload
    */
   dispatch(actionType, payload) {
-    console.log(`Dispatching action: ${actionType}`, payload);
+    // Action dispatched
 
     const prevState = { ...this._state };
     let stateChanged = false;
 
     switch (actionType) {
-      case DuplicationStore.actions.SET_CONFIGURATIONS:
+      case duplicationStore.actions.SET_CONFIGURATIONS:
         this._state.configurations = Array.isArray(payload) ? payload : [];
         // Update cache timestamp
         this._state.cache.configurations = {
@@ -347,7 +347,7 @@ class DuplicationStore {
         stateChanged = true;
         break;
 
-      case DuplicationStore.actions.SELECT_CONFIGURATION:
+      case duplicationStore.actions.SELECT_CONFIGURATION:
         this._state.selectedConfiguration = payload;
         // Add to recent configurations if not already present
         if (
@@ -364,7 +364,7 @@ class DuplicationStore {
         stateChanged = true;
         break;
 
-      case DuplicationStore.actions.UPDATE_SCHEDULED_JOBS:
+      case duplicationStore.actions.UPDATE_SCHEDULED_JOBS:
         this._state.scheduledJobs = Array.isArray(payload) ? payload : [];
         // Update cache timestamp
         this._state.cache.jobs = {
@@ -374,17 +374,17 @@ class DuplicationStore {
         stateChanged = true;
         break;
 
-      case DuplicationStore.actions.UPDATE_ACTIVE_JOBS:
+      case duplicationStore.actions.UPDATE_ACTIVE_JOBS:
         this._state.activeJobs = Array.isArray(payload) ? payload : [];
         stateChanged = true;
         break;
 
-      case DuplicationStore.actions.SET_LOADING:
+      case duplicationStore.actions.SET_LOADING:
         this._state.isLoading = Boolean(payload);
         stateChanged = true;
         break;
 
-      case DuplicationStore.actions.SET_CACHE_PENDING:
+      case duplicationStore.actions.SET_CACHE_PENDING:
         if (payload && payload.section && this._state.cache[payload.section]) {
           this._state.cache[payload.section].isPending = Boolean(
             payload.status,
@@ -393,7 +393,7 @@ class DuplicationStore {
         }
         break;
 
-      case DuplicationStore.actions.ADD_ERROR: {
+      case duplicationStore.actions.ADD_ERROR: {
         // Add timestamp if not already present
         const errorObj = { ...payload };
         if (!errorObj.timestamp) {
@@ -408,12 +408,12 @@ class DuplicationStore {
         break;
       }
 
-      case DuplicationStore.actions.CLEAR_ERRORS:
+      case duplicationStore.actions.CLEAR_ERRORS:
         this._state.errors = [];
         stateChanged = true;
         break;
 
-      case DuplicationStore.actions.ADD_RECENT_CONFIGURATION:
+      case duplicationStore.actions.ADD_RECENT_CONFIGURATION:
         if (
           payload &&
           !this._state.recentConfigurations.some(
@@ -428,17 +428,17 @@ class DuplicationStore {
         }
         break;
 
-      case DuplicationStore.actions.CLEAR_RECENT_CONFIGURATIONS:
+      case duplicationStore.actions.CLEAR_RECENT_CONFIGURATIONS:
         this._state.recentConfigurations = [];
         stateChanged = true;
         break;
 
-      case DuplicationStore.actions.SET_MERGE_RULES:
+      case duplicationStore.actions.SET_MERGE_RULES:
         this._state.mergeRules = Array.isArray(payload) ? payload : [];
         stateChanged = true;
         break;
 
-      case DuplicationStore.actions.UPDATE_STATISTICS:
+      case duplicationStore.actions.UPDATE_STATISTICS:
         this._state.statistics = { ...this._state.statistics, ...payload };
         // Update cache timestamp
         this._state.cache.statistics = {
@@ -448,7 +448,7 @@ class DuplicationStore {
         stateChanged = true;
         break;
 
-      case DuplicationStore.actions.ADD_MERGE_RESULT:
+      case duplicationStore.actions.ADD_MERGE_RESULT:
         if (payload) {
           // Add to recent merges with timestamp
           const mergeResult = {
@@ -480,12 +480,12 @@ class DuplicationStore {
         }
         break;
 
-      case DuplicationStore.actions.UPDATE_PAGINATION:
+      case duplicationStore.actions.UPDATE_PAGINATION:
         this._state.pagination = { ...this._state.pagination, ...payload };
         stateChanged = true;
         break;
 
-      case DuplicationStore.actions.INVALIDATE_CACHE:
+      case duplicationStore.actions.INVALIDATE_CACHE:
         if (payload && this._state.cache[payload]) {
           // Invalidate specific cache
           this._state.cache[payload].timestamp = null;
@@ -498,7 +498,7 @@ class DuplicationStore {
         stateChanged = true;
         break;
 
-      case DuplicationStore.actions.SAVE_DRAFT_JOB:
+      case duplicationStore.actions.SAVE_DRAFT_JOB:
         if (payload) {
           // Preserve any existing draft data if merging with partial updates
           const existingDraft = this._state.draftJob || {};
@@ -515,7 +515,7 @@ class DuplicationStore {
           // Save to localStorage for persistence
           try {
             localStorage.setItem(
-              "duplicationDraftJob",
+              "duplicateDraftJob",
               JSON.stringify(this._state.draftJob),
             );
           } catch (storageError) {
@@ -529,10 +529,10 @@ class DuplicationStore {
         }
         break;
 
-      case DuplicationStore.actions.LOAD_DRAFT_JOB:
+      case duplicationStore.actions.LOAD_DRAFT_JOB:
         try {
           // Try to load from localStorage first
-          const savedDraft = localStorage.getItem("duplicationDraftJob");
+          const savedDraft = localStorage.getItem("duplicateDraftJob");
           if (savedDraft) {
             this._state.draftJob = JSON.parse(savedDraft);
             stateChanged = true;
@@ -549,13 +549,13 @@ class DuplicationStore {
         }
         break;
 
-      case DuplicationStore.actions.CLEAR_DRAFT_JOB:
+      case duplicationStore.actions.CLEAR_DRAFT_JOB:
         if (this._state.draftJob) {
           this._state.draftJob = null;
 
           // Remove from localStorage
           try {
-            localStorage.removeItem("duplicationDraftJob");
+            localStorage.removeItem("duplicateDraftJob");
           } catch (removeError) {
             console.error(
               "Error removing draft job from localStorage:",
@@ -567,12 +567,12 @@ class DuplicationStore {
         }
         break;
 
-      case DuplicationStore.actions.RESET_STATE:
+      case duplicationStore.actions.RESET_STATE:
         this._state = { ...initialState };
 
         // Clear localStorage
         try {
-          localStorage.removeItem("duplicationDraftJob");
+          localStorage.removeItem("duplicateDraftJob");
         } catch (resetError) {
           console.error(
             "Error removing draft job from localStorage:",
@@ -593,28 +593,28 @@ class DuplicationStore {
 
       // Map action types to state sections
       switch (actionType) {
-        case DuplicationStore.actions.SET_CONFIGURATIONS:
-        case DuplicationStore.actions.SELECT_CONFIGURATION:
+        case duplicationStore.actions.SET_CONFIGURATIONS:
+        case duplicationStore.actions.SELECT_CONFIGURATION:
           updatedSection = "configurations";
           break;
-        case DuplicationStore.actions.UPDATE_SCHEDULED_JOBS:
-        case DuplicationStore.actions.UPDATE_ACTIVE_JOBS:
+        case duplicationStore.actions.UPDATE_SCHEDULED_JOBS:
+        case duplicationStore.actions.UPDATE_ACTIVE_JOBS:
           updatedSection = "jobs";
           break;
-        case DuplicationStore.actions.SAVE_DRAFT_JOB:
-        case DuplicationStore.actions.LOAD_DRAFT_JOB:
-        case DuplicationStore.actions.CLEAR_DRAFT_JOB:
+        case duplicationStore.actions.SAVE_DRAFT_JOB:
+        case duplicationStore.actions.LOAD_DRAFT_JOB:
+        case duplicationStore.actions.CLEAR_DRAFT_JOB:
           updatedSection = "draftJob";
           break;
-        case DuplicationStore.actions.UPDATE_STATISTICS:
-        case DuplicationStore.actions.ADD_MERGE_RESULT:
+        case duplicationStore.actions.UPDATE_STATISTICS:
+        case duplicationStore.actions.ADD_MERGE_RESULT:
           updatedSection = "statistics";
           break;
-        case DuplicationStore.actions.UPDATE_PAGINATION:
+        case duplicationStore.actions.UPDATE_PAGINATION:
           updatedSection = "pagination";
           break;
-        case DuplicationStore.actions.ADD_ERROR:
-        case DuplicationStore.actions.CLEAR_ERRORS:
+        case duplicationStore.actions.ADD_ERROR:
+        case duplicationStore.actions.CLEAR_ERRORS:
           updatedSection = "errors";
           break;
         // Global state updates don't have a specific section
@@ -674,7 +674,7 @@ class DuplicationStore {
 /**
  * Create and export singleton instance
  */
-const store = new DuplicationStore();
+const store = new duplicationStore();
 
 /**
  * Generate a UUID for correlation IDs
@@ -689,5 +689,5 @@ function generateUuid() {
   });
 }
 
-export { DuplicationStore };
+export { duplicationStore };
 export default store;

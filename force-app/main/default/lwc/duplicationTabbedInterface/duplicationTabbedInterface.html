@@ -1,6 +1,6 @@
 <template>
   <div class="slds-tabs_card">
-    <lightning-tabset>
+    <lightning-tabset variant="scoped">
       <!-- Dashboard Tab -->
       <lightning-tab label="Dashboard" icon-name="utility:dashboard">
         <div class="slds-var-p-around_medium">
@@ -66,6 +66,45 @@
                           active-config-id={selectedConfigId}>
             </c-duplication-manager-app>
           </div>
+        </div>
+      </lightning-tab>
+
+      <!-- Duplicate Groups Tab -->
+      <lightning-tab label="Duplicate Groups" icon-name="utility:layers">
+        <div class="slds-var-p-around_medium">
+          <c-duplication-merge-groups
+            object-api-name={selectedObjectType}
+            job-id={jobId}
+            show-filters="true">
+          </c-duplication-merge-groups>
+        </div>
+      </lightning-tab>
+
+      <!-- Compare View Tab (Conditionally Shown) -->
+      <lightning-tab
+        label="Compare Records"
+        icon-name="utility:side_list"
+        value="compare"
+        hidden={hideCompareTab}>
+        <div class="slds-var-p-around_medium">
+          <c-duplication-comparison-view
+            record-ids={compareRecordIds}
+            object-api-name={selectedObjectType}
+            group-id={selectedGroupId}>
+          </c-duplication-comparison-view>
+        </div>
+      </lightning-tab>
+
+      <!-- Merge Preview Tab (Conditionally Shown) -->
+      <lightning-tab
+        label="Merge Preview"
+        icon-name="utility:merge"
+        value="preview"
+        hidden={hideMergePreviewTab}>
+        <div class="slds-var-p-around_medium">
+          <c-duplication-merge-preview
+            record-id={masterRecordId}>
+          </c-duplication-merge-preview>
         </div>
       </lightning-tab>
 

@@ -1,9 +1,11 @@
 import { LightningElement, wire } from "lwc";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
+import { MessageContext } from "lightning/messageService";
 import getActiveSettings from "@salesforce/apex/DuplicateRecordController.getActiveSettings";
 import store from "c/duplicationStore";
-import { DuplicationStore } from "c/duplicationStore";
-import { register as registerListener, unregister as unregisterListener } from "c/duplicationPubSub";
+import { duplicationStore } from "c/duplicationStore";
+import { subscribeToChannel, unsubscribeFromChannel } from "c/duplicationMessageService";
+import { MESSAGE_TYPES } from "c/duplicationConstants";
 
 /**
  * Component for selecting and previewing duplicate detection configurations
@@ -23,17 +25,20 @@ export default class DuplicationConfigSelector extends LightningElement {
   // Holds recently used configurations
   recentConfigurations = [];
 
+  // Get message context for LMS
+  @wire(MessageContext)
+  messageContext;
+
   /**
    * Lifecycle hook - Called when component is inserted into the DOM
    */
   connectedCallback() {
-    console.log("duplicationConfigSelector component connected to DOM");
-
     // Subscribe to store changes
-    registerListener(
-      "duplicationStoreChange",
-      this.handleStoreChange.bind(this),
-    );
+    this.subscription = subscribeToChannel((message) => {
+      if (message.type === MESSAGE_TYPES.STORE_UPDATED) {
+        this.handleStoreChange(message.payload);
+      }
+    });
 
     // Initialize from store
     const state = store.getState();
@@ -48,8 +53,10 @@ export default class DuplicationConfigSelector extends LightningElement {
    * Lifecycle hook - Called when component is removed from the DOM
    */
   disconnectedCallback() {
-    console.log("duplicationConfigSelector component removed from DOM");
-    unregisterListener("duplicationStoreChange", this.handleStoreChange);
+    // Unsubscribe from channel
+    if (this.subscription) {
+      unsubscribeFromChannel(this.subscription);
+    }
   }
 
   /**
@@ -77,7 +84,7 @@ export default class DuplicationConfigSelector extends LightningElement {
         const configs = Array.isArray(data) ? data : [];
 
         // Update store with configurations
-        store.dispatch(DuplicationStore.actions.SET_CONFIGURATIONS, configs);
+        store.dispatch(duplicationStore.actions.SET_CONFIGURATIONS, configs);
 
         // Generate options for dropdown
         this.configOptions = this.generateConfigOptions(configs);
@@ -190,7 +197,7 @@ export default class DuplicationConfigSelector extends LightningElement {
 
           // Update store with selected configuration
           store.dispatch(
-            DuplicationStore.actions.SELECT_CONFIGURATION,
+            duplicationStore.actions.SELECT_CONFIGURATION,
             selectedConfig,
           );
         } else {
@@ -204,7 +211,7 @@ export default class DuplicationConfigSelector extends LightningElement {
       } else {
         // Clear selection
         this.selectedConfigId = "";
-        store.dispatch(DuplicationStore.actions.SELECT_CONFIGURATION, null);
+        store.dispatch(duplicationStore.actions.SELECT_CONFIGURATION, null);
         console.log("Configuration selection cleared");
       }
     } catch (error) {
@@ -228,7 +235,7 @@ export default class DuplicationConfigSelector extends LightningElement {
 
       if (config) {
         this.selectedConfigId = configId;
-        store.dispatch(DuplicationStore.actions.SELECT_CONFIGURATION, config);
+        store.dispatch(duplicationStore.actions.SELECT_CONFIGURATION, config);
       }
     }
   }
@@ -271,7 +278,7 @@ export default class DuplicationConfigSelector extends LightningElement {
     this.error = { message: errorMessage };
 
     // Add to store errors
-    store.dispatch(DuplicationStore.actions.ADD_ERROR, {
+    store.dispatch(duplicationStore.actions.ADD_ERROR, {
       message: errorMessage,
       timestamp: new Date().toISOString(),
     });

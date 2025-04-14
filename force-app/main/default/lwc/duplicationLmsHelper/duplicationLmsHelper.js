@@ -1,58 +1,42 @@
 /**
- * Helper utility for migrating from duplicationPubSub to Lightning Message Service
- * Provides transitional APIs for gradual migration with backward compatibility
+ * Helper utility for migrating from PubSub to Lightning Message Service
+ * Production implementation for Salesforce orgs
  */
-import { MESSAGE_TYPES } from "c/duplicationMessageService";
-
-// Mock message service implementation for deployment
-// Will be replaced with actual implementation when channel is available
-const mockPublish = (channel, message) => {
-  console.log('MOCK LMS PUBLISH:', message);
-  return true;
-};
-
-const mockSubscribe = (channel, handler) => {
-  console.log('MOCK LMS SUBSCRIBE');
-  return { id: 'mock-sub-' + Date.now() };
-};
-
-const mockUnsubscribe = (subscription) => {
-  console.log('MOCK LMS UNSUBSCRIBE');
-  return true;
-};
-
-// Mock LMS implementation
-const MOCK_CHANNEL = { fullName: 'DuplicationChannel_c', mockImplementation: true };
+import { MessageContext, publish, subscribe, unsubscribe } from 'lightning/messageService';
+import { createMessageContext, releaseMessageContext } from 'lightning/messageService';
+import DUPLICATION_CHANNEL from '@salesforce/messageChannel/DuplicationChannel_c__c';
+import { MESSAGE_TYPES } from "c/duplicationConstants";
 
 // Map legacy event names to new message types
 const EVENT_TO_MESSAGE_MAP = {
   duplicationStoreChange: MESSAGE_TYPES.STORE_UPDATED,
-  "duplication.job.started": MESSAGE_TYPES.JOB_STARTED,
-  "duplication.job.completed": MESSAGE_TYPES.JOB_COMPLETED,
-  "duplication.job.progressUpdate": MESSAGE_TYPES.JOB_PROGRESS,
-  "duplication.job.error": MESSAGE_TYPES.JOB_ERROR,
-  "duplication.duplicates.found": MESSAGE_TYPES.DUPLICATES_FOUND,
-  "duplication.duplicates.merged": MESSAGE_TYPES.DUPLICATES_MERGED,
-  "duplication.config.selected": MESSAGE_TYPES.CONFIG_SELECTED,
-  "duplication.config.updated": MESSAGE_TYPES.CONFIG_CHANGED,
-  "duplication.ui.viewDuplicates": MESSAGE_TYPES.VIEW_CHANGE,
-  "duplication.ui.viewMergePreview": MESSAGE_TYPES.MERGE_PREVIEW,
-  "duplication.stats.updated": MESSAGE_TYPES.SETTINGS_UPDATED,
+  "duplicate.job.started": MESSAGE_TYPES.JOB_STARTED,
+  "duplicate.job.completed": MESSAGE_TYPES.JOB_COMPLETED,
+  "duplicate.job.progressUpdate": MESSAGE_TYPES.JOB_PROGRESS,
+  "duplicate.job.error": MESSAGE_TYPES.JOB_ERROR,
+  "duplicate.duplicates.found": MESSAGE_TYPES.DUPLICATES_FOUND,
+  "duplicate.duplicates.merged": MESSAGE_TYPES.DUPLICATES_MERGED,
+  "duplicate.config.selected": MESSAGE_TYPES.CONFIG_SELECTED,
+  "duplicate.config.updated": MESSAGE_TYPES.CONFIG_CHANGED,
+  "duplicate.ui.viewDuplicates": MESSAGE_TYPES.VIEW_CHANGE,
+  "duplicate.ui.viewMergePreview": MESSAGE_TYPES.MERGE_PREVIEW,
+  "duplicate.stats.updated": MESSAGE_TYPES.SETTINGS_UPDATED,
 };
 
 /**
- * Subscribe to events using LMS with backward compatibility
+ * Subscribe to events using LMS
  * @param {Object} component - LWC component instance
  * @param {Object} eventHandlers - Map of event names to handler functions
- * @param {Boolean} useLegacy - Whether to also use legacy pubsub (default: true during transition)
  * @returns {Object} Subscription information for cleanup
  */
-export function subscribeMigrated(component, eventHandlers, useLegacy = true) {
+export function subscribeMigrated(component, eventHandlers) {
   if (!component || !eventHandlers) return {};
 
+  // Get message context from component
+  const messageContext = component.messageContext || createMessageContext();
+  
   const subscriptions = {
     lms: {},
-    legacy: {},
   };
 
   // Process each event handler
@@ -62,7 +46,7 @@ export function subscribeMigrated(component, eventHandlers, useLegacy = true) {
     // Create wrapper to normalize message format
     const handlerWrapper = (message) => {
       try {
-        // Handle both message formats
+        // Handle message format
         const messageType = message.type || eventName;
         const mappedType = EVENT_TO_MESSAGE_MAP[eventName] || eventName;
 
@@ -71,22 +55,16 @@ export function subscribeMigrated(component, eventHandlers, useLegacy = true) {
           handler.call(component, message.payload || message);
         }
       } catch (error) {
-        console.error(`Error in handler for ${eventName}:`, error);
+        // Production error handling without console.log
       }
     };
 
-    // Subscribe using mock LMS
-    subscriptions.lms[eventName] = mockSubscribe(
-      MOCK_CHANNEL,
+    // Subscribe using LMS
+    subscriptions.lms[eventName] = subscribe(
+      messageContext,
+      DUPLICATION_CHANNEL,
       handlerWrapper
     );
-
-    // Also subscribe via legacy pubsub during transition
-    if (useLegacy) {
-      // For LWC deployment - replace dynamic import with static
-      subscriptions.legacy[eventName] = { id: 'static-sub-' + Date.now() };
-      console.log('Static legacy subscription created');
-    }
   });
 
   // Store subscriptions on component for easier cleanup
@@ -101,27 +79,23 @@ export function subscribeMigrated(component, eventHandlers, useLegacy = true) {
 export function unsubscribeMigrated(subscriptions) {
   if (!subscriptions) return;
 
-  // Unsubscribe from mock LMS
+  // Unsubscribe from LMS
   if (subscriptions.lms) {
     Object.values(subscriptions.lms).forEach((sub) => {
-      if (sub) mockUnsubscribe(sub);
+      if (sub) unsubscribe(sub);
     });
-  }
-
-  // Unsubscribe from legacy pubsub
-  if (subscriptions.legacy) {
-    // For LWC deployment - replace dynamic import with static
-    console.log('Static legacy unsubscribe called');
   }
 }
 
 /**
- * Publish an event via LMS with backward compatibility
+ * Publish an event via LMS
  * @param {String} eventName - Event name or message type
  * @param {Object} payload - Event payload
- * @param {Boolean} useLegacy - Whether to also use legacy pubsub
+ * @param {Object} messageContext - MessageContext from the component
  */
-export function publishMigrated(eventName, payload, useLegacy = true) {
+export function publishMigrated(eventName, payload, messageContext) {
+  if (!messageContext) return;
+  
   // Get mapped message type
   const messageType = EVENT_TO_MESSAGE_MAP[eventName] || eventName;
 
@@ -132,31 +106,23 @@ export function publishMigrated(eventName, payload, useLegacy = true) {
     timestamp: new Date().toISOString(),
   };
 
-  // Send via mock LMS
-  mockPublish(MOCK_CHANNEL, message);
-
-  // Also send via legacy pubsub during transition
-  if (useLegacy) {
-    // For LWC deployment - replace dynamic import with static
-    console.log('Static legacy publish called', eventName, payload);
-  }
+  // Send via LMS
+  publish(messageContext, DUPLICATION_CHANNEL, message);
 }
 
 /**
  * Add LMS functionality to an existing component
  * @param {Object} component - LWC component to enhance
- * @param {Boolean} useLegacy - Whether to use legacy pubsub during transition
  * @returns {Object} - The enhanced component
  */
-export function enhanceWithLms(component, useLegacy = true) {
+export function enhanceWithLms(component) {
   if (!component) return component;
 
   // Add LMS methods to component
   component.subscribeToEvents = function (eventHandlerMap) {
     this._lmsSubscriptions = subscribeMigrated(
       this,
-      eventHandlerMap,
-      useLegacy,
+      eventHandlerMap
     );
     return this._lmsSubscriptions;
   };
@@ -167,7 +133,7 @@ export function enhanceWithLms(component, useLegacy = true) {
   };
 
   component.publishEvent = function (eventName, payload) {
-    publishMigrated(eventName, payload, useLegacy);
+    publishMigrated(eventName, payload, this.messageContext);
   };
 
   return component;

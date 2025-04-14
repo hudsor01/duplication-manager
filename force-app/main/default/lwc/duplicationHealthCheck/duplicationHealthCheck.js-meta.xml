@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
-    <apiVersion>62.0</apiVersion>
+    <apiVersion>58.0</apiVersion>
     <isExposed>true</isExposed>
     <targets>
         <target>lightning__AppPage</target>
@@ -9,7 +9,7 @@
     </targets>
     <targetConfigs>
         <targetConfig targets="lightning__AppPage,lightning__HomePage,lightning__RecordPage">
-            <property name="configId" type="String" label="Configuration ID" description="ID of the duplication configuration to analyze" required="false" />
+            <property name="configId" type="String" label="Configuration ID" description="ID of the duplicate configuration to analyze" required="false" />
             <property name="objectApiName" type="String" label="Object API Name" description="API Name of the Salesforce object to analyze" required="false" />
         </targetConfig>
     </targetConfigs>

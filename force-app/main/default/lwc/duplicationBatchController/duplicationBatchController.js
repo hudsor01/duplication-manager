@@ -1,12 +1,14 @@
-import { LightningElement } from "lwc";
+import { LightningElement, wire } from "lwc";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
+import { MessageContext } from "lightning/messageService";
 import runDuplicateFinderBatch from "@salesforce/apex/DuplicateRecordController.runDuplicateFinderBatch";
 import store from "c/duplicationStore";
-import { DuplicationStore } from "c/duplicationStore";
-import { register as registerListener, unregister as unregisterListener } from "c/duplicationPubSub";
+import { duplicationStore } from "c/duplicationStore";
+import { subscribeToChannel, unsubscribeFromChannel } from "c/duplicationMessageService";
+import { MESSAGE_TYPES } from "c/duplicationConstants";
 
 /**
- * Component for controlling batch operations for duplication management
+ * Component for controlling batch operations for duplicate management
  * @component
  */
 export default class DuplicationBatchController extends LightningElement {
@@ -21,25 +23,30 @@ export default class DuplicationBatchController extends LightningElement {
     { label: "1000 Records", value: 1000 },
   ];
 
+  // Get message context for LMS
+  @wire(MessageContext)
+  messageContext;
+  
   /**
    * Lifecycle hook - Called when component is inserted into the DOM
    */
   connectedCallback() {
-    console.log("duplicationBatchController component connected to DOM");
-
     // Subscribe to store changes
-    registerListener(
-      "duplicationStoreChange",
-      this.handleStoreChange.bind(this),
-    );
+    this.subscription = subscribeToChannel((message) => {
+      if (message.type === MESSAGE_TYPES.STORE_UPDATED) {
+        this.handleStoreChange(message.payload);
+      }
+    });
   }
 
   /**
    * Lifecycle hook - Called when component is removed from the DOM
    */
   disconnectedCallback() {
-    console.log("duplicationBatchController component removed from DOM");
-    unregisterListener("duplicationStoreChange", this.handleStoreChange);
+    // Unsubscribe from the message channel
+    if (this.subscription) {
+      unsubscribeFromChannel(this.subscription);
+    }
   }
 
   /**
@@ -132,7 +139,7 @@ export default class DuplicationBatchController extends LightningElement {
 
     // Set loading state
     this.isLoading = true;
-    store.dispatch(DuplicationStore.actions.SET_LOADING, true);
+    store.dispatch(duplicationStore.actions.SET_LOADING, true);
 
     // Call Apex method
     runDuplicateFinderBatch({
@@ -171,7 +178,7 @@ export default class DuplicationBatchController extends LightningElement {
       .finally(() => {
         // Clear loading state
         this.isLoading = false;
-        store.dispatch(DuplicationStore.actions.SET_LOADING, false);
+        store.dispatch(duplicationStore.actions.SET_LOADING, false);
       });
   }
 
@@ -213,7 +220,7 @@ export default class DuplicationBatchController extends LightningElement {
     this.error = { message: errorMessage };
 
     // Add to store errors
-    store.dispatch(DuplicationStore.actions.ADD_ERROR, {
+    store.dispatch(duplicationStore.actions.ADD_ERROR, {
       message: errorMessage,
       timestamp: new Date().toISOString(),
     });

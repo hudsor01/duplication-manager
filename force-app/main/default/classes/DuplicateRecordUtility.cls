@@ -183,6 +183,18 @@ public class DuplicateRecordUtility {
     /**
      * Merges duplicate records into a master record
      *
+     * @param objectApiName API name of the object type
+     * @param masterId ID of the master record
+     * @param duplicateIds List of IDs of duplicate records to merge
+     * @return Number of successfully merged records
+     */
+    public static Integer mergeRecords(String objectApiName, Id masterId, List<Id> duplicateIds) {
+        return mergeRecords(masterId, duplicateIds);
+    }
+    
+    /**
+     * Merges duplicate records into a master record
+     *
      * @param masterId ID of the master record
      * @param duplicateIds List of IDs of duplicate records to merge
      * @return Number of successfully merged records

@@ -1,9 +1,10 @@
 /**
- * Centralized error handling utility for the Duplication Manager application
+ * Centralized error handling utility for the duplicate Manager application
  * Provides standardized error formatting, logging, recovery, and user notification
  */
-import { sendMessage, MESSAGE_TYPES } from "c/duplicationMessageService";
-import store, { DuplicationStore } from "c/duplicationStore";
+import { sendMessage } from "c/duplicationMessageService";
+import { MESSAGE_TYPES } from "c/duplicationConstants";
+import store, { duplicationStore } from "c/duplicationStore";
 
 // Error severity levels
 export const ERROR_LEVELS = {
@@ -139,8 +140,8 @@ function logError(error) {
  * @private
  */
 function storeError(error) {
-  if (store && DuplicationStore && DuplicationStore.actions) {
-    store.dispatch(DuplicationStore.actions.ADD_ERROR, error);
+  if (store && duplicationStore && duplicationStore.actions) {
+    store.dispatch(duplicationStore.actions.ADD_ERROR, error);
   }
 }
 
@@ -228,7 +229,7 @@ export const RECOVERY_ACTIONS = {
   resetState() {
     return () => {
       // Reset store state
-      store.dispatch(DuplicationStore.actions.RESET_STATE);
+      store.dispatch(duplicationStore.actions.RESET_STATE);
       return Promise.resolve({
         success: true,
         message: "Application state reset",

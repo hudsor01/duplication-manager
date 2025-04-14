@@ -1,7 +1,7 @@
 /**
  * Test class for StringNormalizer
  *
- * @author Your Name
+ *@author Richard Hudson
  * @date April 11, 2025
  */
 @isTest

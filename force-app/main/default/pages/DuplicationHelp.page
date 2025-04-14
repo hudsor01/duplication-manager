@@ -1,89 +1,118 @@
-<apex:page sidebar="false" showHeader="false" standardStylesheets="false" docType="html-5.0">
-    <apex:slds />
-    <div class="slds-scope">
-        <div class="slds-grid slds-gutters slds-var-p-around_medium">
-            <div class="slds-col">
-                <div class="slds-text-heading_large slds-var-p-bottom_medium">Duplication Manager Help</div>
-
-                <div class="slds-text-heading_medium slds-var-p-bottom_small">Overview</div>
-                <p class="slds-var-p-bottom_medium">
-                    The Duplication Manager is a tool for identifying, analyzing, and merging duplicate records in Salesforce.
-                    It provides advanced capabilities beyond Salesforce's native duplicate management features.
-                </p>
-
-                <div class="slds-text-heading_medium slds-var-p-bottom_small">Key Features</div>
-                <ul class="slds-list_dotted slds-var-p-bottom_medium">
-                    <li>Configuration-based duplicate identification across objects</li>
-                    <li>Batch processing for large volume of records</li>
-                    <li>Interactive side-by-side record comparison</li>
-                    <li>Field-level merge decisions</li>
-                    <li>Scheduled job management</li>
-                    <li>Detailed statistics and reporting</li>
-                </ul>
-
-                <div class="slds-text-heading_medium slds-var-p-bottom_small">Using the Duplication Manager</div>
-
-                <div class="slds-text-heading_small slds-var-p-vertical_small">Dashboard</div>
-                <p class="slds-var-p-bottom_medium">
-                    The Dashboard provides an overview of duplicate statistics, including duplicates found and records merged.
-                    It offers filtering by object type and time range.
-                </p>
-
-                <div class="slds-text-heading_small slds-var-p-vertical_small">Batch Jobs</div>
-                <p class="slds-var-p-bottom_medium">
-                    Use the Batch Jobs tab to:
-                </p>
-                <ul class="slds-list_dotted slds-var-p-bottom_medium">
-                    <li>Run "dry run" analyses to find duplicates without merging</li>
-                    <li>Execute merge operations</li>
-                    <li>View job progress</li>
-                </ul>
-
-                <div class="slds-text-heading_small slds-var-p-vertical_small">Compare</div>
-                <p class="slds-var-p-bottom_medium">
-                    The Compare tab shows a side-by-side view of potential duplicates, allowing you to:
-                </p>
-                <ul class="slds-list_dotted slds-var-p-bottom_medium">
-                    <li>Select the master record</li>
-                    <li>Choose field values from specific records</li>
-                    <li>Preview the merge result</li>
-                    <li>Confirm the merge operation</li>
-                </ul>
-
-                <div class="slds-text-heading_small slds-var-p-vertical_small">Scheduled Jobs</div>
-                <p class="slds-var-p-bottom_medium">
-                    Manage scheduled duplicate detection and merge jobs:
-                </p>
-                <ul class="slds-list_dotted slds-var-p-bottom_medium">
-                    <li>Create recurring jobs</li>
-                    <li>View scheduled job status</li>
-                    <li>Modify or delete scheduled jobs</li>
-                </ul>
-
-                <div class="slds-text-heading_small slds-var-p-vertical_small">Audit Logs</div>
-                <p class="slds-var-p-bottom_medium">
-                    Review historical merge operations with detailed logs showing:
-                </p>
-                <ul class="slds-list_dotted slds-var-p-bottom_medium">
-                    <li>Master record information</li>
-                    <li>Merged record IDs</li>
-                    <li>Field-level merge decisions</li>
-                    <li>User who performed the merge</li>
-                </ul>
-
-                <div class="slds-text-heading_medium slds-var-p-vertical_small">Best Practices</div>
-                <ul class="slds-list_dotted slds-var-p-bottom_medium">
-                    <li>Always run a dry run analysis before merging records</li>
-                    <li>Schedule large merge jobs during off-peak hours</li>
-                    <li>Regularly review audit logs to verify merge operations</li>
-                    <li>Use field-level merge decisions for critical data</li>
-                </ul>
-
-                <div class="slds-text-heading_medium slds-var-p-vertical_small">Need More Help?</div>
-                <p>
-                    Contact your system administrator for additional support or configuration assistance.
-                </p>
-            </div>
+<apex:page
+  sidebar="false"
+  showHeader="false"
+  standardStylesheets="false"
+  docType="html-5.0"
+>
+  <apex:slds />
+  <div class="slds-scope">
+    <div class="slds-grid slds-gutters slds-var-p-around_medium">
+      <div class="slds-col">
+        <div class="slds-text-heading_large slds-var-p-bottom_medium">
+          duplicate Manager Help
         </div>
+
+        <div class="slds-text-heading_medium slds-var-p-bottom_small">
+          Overview
+        </div>
+        <p class="slds-var-p-bottom_medium">
+          The duplicate Manager is a tool for identifying, analyzing, and
+          merging duplicate records in Salesforce. It provides advanced
+          capabilities beyond Salesforce's native duplicate management features.
+        </p>
+
+        <div class="slds-text-heading_medium slds-var-p-bottom_small">
+          Key Features
+        </div>
+        <ul class="slds-list_dotted slds-var-p-bottom_medium">
+          <li>Configuration-based duplicate identification across objects</li>
+          <li>Batch processing for large volume of records</li>
+          <li>Interactive side-by-side record comparison</li>
+          <li>Field-level merge decisions</li>
+          <li>Scheduled job management</li>
+          <li>Detailed statistics and reporting</li>
+        </ul>
+
+        <div class="slds-text-heading_medium slds-var-p-bottom_small">
+          Using the duplicate Manager
+        </div>
+
+        <div class="slds-text-heading_small slds-var-p-vertical_small">
+          Dashboard
+        </div>
+        <p class="slds-var-p-bottom_medium">
+          The Dashboard provides an overview of duplicate statistics, including
+          duplicates found and records merged. It offers filtering by object
+          type and time range.
+        </p>
+
+        <div class="slds-text-heading_small slds-var-p-vertical_small">
+          Batch Jobs
+        </div>
+        <p class="slds-var-p-bottom_medium">Use the Batch Jobs tab to:</p>
+        <ul class="slds-list_dotted slds-var-p-bottom_medium">
+          <li>Run "dry run" analyses to find duplicates without merging</li>
+          <li>Execute merge operations</li>
+          <li>View job progress</li>
+        </ul>
+
+        <div class="slds-text-heading_small slds-var-p-vertical_small">
+          Compare
+        </div>
+        <p class="slds-var-p-bottom_medium">
+          The Compare tab shows a side-by-side view of potential duplicates,
+          allowing you to:
+        </p>
+        <ul class="slds-list_dotted slds-var-p-bottom_medium">
+          <li>Select the master record</li>
+          <li>Choose field values from specific records</li>
+          <li>Preview the merge result</li>
+          <li>Confirm the merge operation</li>
+        </ul>
+
+        <div class="slds-text-heading_small slds-var-p-vertical_small">
+          Scheduled Jobs
+        </div>
+        <p class="slds-var-p-bottom_medium">
+          Manage scheduled duplicate detection and merge jobs:
+        </p>
+        <ul class="slds-list_dotted slds-var-p-bottom_medium">
+          <li>Create recurring jobs</li>
+          <li>View scheduled job status</li>
+          <li>Modify or delete scheduled jobs</li>
+        </ul>
+
+        <div class="slds-text-heading_small slds-var-p-vertical_small">
+          Audit Logs
+        </div>
+        <p class="slds-var-p-bottom_medium">
+          Review historical merge operations with detailed logs showing:
+        </p>
+        <ul class="slds-list_dotted slds-var-p-bottom_medium">
+          <li>Master record information</li>
+          <li>Merged record IDs</li>
+          <li>Field-level merge decisions</li>
+          <li>User who performed the merge</li>
+        </ul>
+
+        <div class="slds-text-heading_medium slds-var-p-vertical_small">
+          Best Practices
+        </div>
+        <ul class="slds-list_dotted slds-var-p-bottom_medium">
+          <li>Always run a dry run analysis before merging records</li>
+          <li>Schedule large merge jobs during off-peak hours</li>
+          <li>Regularly review audit logs to verify merge operations</li>
+          <li>Use field-level merge decisions for critical data</li>
+        </ul>
+
+        <div class="slds-text-heading_medium slds-var-p-vertical_small">
+          Need More Help?
+        </div>
+        <p>
+          Contact your system administrator for additional support or
+          configuration assistance.
+        </p>
+      </div>
     </div>
+  </div>
 </apex:page>

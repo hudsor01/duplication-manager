@@ -1,12 +1,12 @@
 import { LightningElement, api } from "lwc";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
-import scheduleDuplicateFinderBatch from "@salesforce/apex/DuplicateRecordController.scheduleDuplicateFinderBatch";
+import scheduleDuplicateFinderBatch from "@salesforce/apex/DuplicateRecordJobController.scheduleJob";
 
 /**
  * Component for scheduling duplicate finder jobs
  * @component
  */
-export default class duplicationManagerScheduler extends LightningElement {
+export default class DuplicationManagerScheduler extends LightningElement {
   @api setting;
   isLoading = false;
 
@@ -38,7 +38,7 @@ export default class duplicationManagerScheduler extends LightningElement {
   ];
 
   connectedCallback() {
-    console.log("duplicationManagerScheduler component connected to DOM");
+    console.log("duplicateManagerScheduler component connected to DOM");
     if (this.setting) {
       this.scheduleForm.jobName = `${this.setting.ObjectApiName} Duplicate Finder`;
     }
@@ -114,10 +114,7 @@ export default class duplicationManagerScheduler extends LightningElement {
       return;
     }
 
-    console.log(
-      "Scheduling job with cron expression:",
-      this.scheduleForm.cronExpression,
-    );
+    // Scheduling job with cron expression
 
     this.isLoading = true;
     try {
@@ -128,11 +125,11 @@ export default class duplicationManagerScheduler extends LightningElement {
         isDryRun: this.scheduleForm.isDryRun,
       };
 
-      console.log("Calling scheduleDuplicateFinderBatch with params:", params);
+      // Schedule job with Apex
 
       scheduleDuplicateFinderBatch(params)
         .then((result) => {
-          console.log("Schedule job success, result:", result);
+          // Job scheduled successfully
           this.dispatchEvent(
             new CustomEvent("schedule", {
               detail: { jobId: result },
@@ -140,14 +137,14 @@ export default class duplicationManagerScheduler extends LightningElement {
           );
         })
         .catch((error) => {
-          console.error("Error in scheduling job:", error);
+          // Error occurred during scheduling
           this.handleError("Error scheduling job", error);
         })
         .finally(() => {
           this.isLoading = false;
         });
     } catch (error) {
-      console.error("Exception in schedule execution:", error);
+      // Exception occurred during scheduling
       this.handleError("Error in schedule execution", error);
       this.isLoading = false;
     }

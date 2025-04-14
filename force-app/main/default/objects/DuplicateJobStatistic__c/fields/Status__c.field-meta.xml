@@ -1,9 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Status__c</fullName>
     <description>Status of the duplicate job</description>
     <externalId>false</externalId>
-    <inlineHelpText>Indicates the current status of the duplicate detection job</inlineHelpText>
+    <inlineHelpText
+  >Indicates the current status of the duplicate detection job</inlineHelpText>
     <label>Status</label>
     <required>false</required>
     <trackTrending>false</trackTrending>
