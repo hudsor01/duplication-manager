@@ -10,9 +10,6 @@ import { TIME_RANGES } from "c/duplicationConstants";
 import store from "c/duplicationStore";
 import * as duplicationStore from "c/duplicationStore";
 import getDetailedStatistics from "@salesforce/apex/DuplicateController.getDetailedStatistics";
-import { loadScript } from "lightning/platformResourceLoader";
-import chartjs from "@salesforce/resourceUrl/chartjs";
-
 /**
  * Enhanced dashboard component displaying duplication record statistics with modern UI
  *
@@ -28,7 +25,7 @@ export default class DuplicationDashboard extends LightningElement {
     recentMerges: [],
   };
 
-  // Chart data and display state
+  // Data and display state
   @track chartData = [];
   @track isLoading = true;
   @track error = null;
@@ -37,10 +34,8 @@ export default class DuplicationDashboard extends LightningElement {
   @track lastPeriodStats = null; // For trend calculation
 
   // UI state
-  @track chartInitialized = false;
-  @track chartInstance = null;
-  @track showChartError = false;
   @track debounceTimeout = null;
+  @track showTableView = true; // Always show table view instead of chart
 
   // Store subscriptions
   subscriptions = [];
@@ -65,28 +60,9 @@ export default class DuplicationDashboard extends LightningElement {
   }
 
   /**
-   * Lifecycle hook - Component rendered
-   * Used to initialize Chart.js after DOM is ready
-   */
-  renderedCallback() {
-    if (this.hasStatistics && !this.chartInitialized) {
-      this.initializeChart();
-    }
-  }
-
-  /**
    * Lifecycle hook - Component disconnected from DOM
    */
   disconnectedCallback() {
-    // Cleanup chart if it exists
-    if (this.chartInstance) {
-      this.chartInstance.destroy();
-      this.chartInstance = null;
-    }
-
-    // Remove event listeners
-    window.removeEventListener("resize", this.debounceChartResize.bind(this));
-
     // Clear any pending timeouts
     if (this.debounceTimeout) {
       window.clearTimeout(this.debounceTimeout);
@@ -174,86 +150,9 @@ export default class DuplicationDashboard extends LightningElement {
     if (state.statistics) {
       this.statistics = { ...state.statistics };
       this.prepareChartData();
-      this.updateChartIfNeeded();
     }
   }
 
-  /**
-   * Initialize Chart.js chart
-   */
-  initializeChart() {
-    // Reset error state
-    this.showChartError = false;
-
-    // Try to get the chart element
-    const canvas = this.template.querySelector("canvas.duplication-chart");
-    if (!canvas) {
-      this.showChartError = true;
-      return;
-    }
-
-    // Prevent multiple initialization attempts
-    if (this.chartInitialized && this.chartInstance) {
-      this.updateChartIfNeeded();
-      return;
-    }
-
-    // Load Chart.js from static resource
-    loadScript(this, chartjs)
-      .then(() => {
-        // Check if Chart.js was properly loaded
-        if (!window.Chart) {
-          throw new Error("Chart.js failed to load properly");
-        }
-
-        // Mark as initialized to prevent multiple initialization
-        this.chartInitialized = true;
-
-        // Create chart with current data
-        const ctx = canvas.getContext("2d");
-        this.chartInstance = new window.Chart(ctx, this.chartConfig);
-
-        // Make chart responsive to container resizing
-        window.addEventListener("resize", this.debounceChartResize.bind(this));
-      })
-      .catch((error) => {
-        // Handle error gracefully
-        console.error("Error initializing chart:", error);
-        this.chartInitialized = false;
-        this.chartInstance = null;
-
-        // Don't show error to user, just show fallback table
-        this.showChartError = true;
-      });
-  }
-
-  /**
-   * Debounce chart resize to avoid too many redraws
-   */
-  debounceChartResize() {
-    // Clear existing timeout
-    window.clearTimeout(this.debounceTimeout);
-
-    // Set new timeout
-    // Use Promise to avoid restricted async operation
-    Promise.resolve().then(() => {
-      if (this.chartInstance) {
-        this.chartInstance.resize();
-      }
-    });
-  }
-
-  /**
-   * Update chart if it exists and data has changed
-   */
-  updateChartIfNeeded() {
-    if (this.chartInstance && this.chartInitialized) {
-      // Update chart data
-      this.chartInstance.data = this.chartConfig.data;
-      // Trigger chart update
-      this.chartInstance.update();
-    }
-  }
 
   /**
    * Load statistics from server
@@ -820,117 +719,6 @@ export default class DuplicationDashboard extends LightningElement {
     return this.error !== null;
   }
 
-  /**
-   * Get enhanced chart configuration with modern styling
-   * @returns {Object} Chart configuration
-   */
-  get chartConfig() {
-    return {
-      type: "bar",
-      data: {
-        labels: this.chartData.map((item) => item.name),
-        datasets: [
-          {
-            label: "Total Duplicates",
-            data: this.chartData.map((item) => item.value),
-            backgroundColor: "rgba(21, 137, 238, 0.7)",
-            borderColor: "rgb(21, 137, 238)",
-            borderWidth: 1,
-            borderRadius: 4,
-            barPercentage: 0.7,
-            categoryPercentage: 0.8,
-          },
-          {
-            label: "Merged",
-            data: this.chartData.map((item) => item.merged),
-            backgroundColor: "rgba(4, 132, 75, 0.7)",
-            borderColor: "rgb(4, 132, 75)",
-            borderWidth: 1,
-            borderRadius: 4,
-            barPercentage: 0.7,
-            categoryPercentage: 0.8,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: "top",
-            labels: {
-              usePointStyle: true,
-              padding: 20,
-              font: {
-                family: "'Salesforce Sans', Arial, sans-serif",
-                size: 12,
-              },
-            },
-          },
-          tooltip: {
-            backgroundColor: "rgba(0, 0, 0, 0.7)",
-            padding: 10,
-            bodyFont: {
-              family: "'Salesforce Sans', Arial, sans-serif",
-            },
-            titleFont: {
-              family: "'Salesforce Sans', Arial, sans-serif",
-            },
-            callbacks: {
-              label: function (context) {
-                const label = context.dataset.label || "";
-                const value = context.raw || 0;
-                return `${label}: ${value}`;
-              },
-            },
-          },
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            grid: {
-              color: "rgba(0, 0, 0, 0.05)",
-            },
-            ticks: {
-              font: {
-                family: "'Salesforce Sans', Arial, sans-serif",
-              },
-            },
-            title: {
-              display: true,
-              text: "Record Count",
-              font: {
-                family: "'Salesforce Sans', Arial, sans-serif",
-                size: 12,
-                weight: "bold",
-              },
-            },
-          },
-          x: {
-            grid: {
-              display: false,
-            },
-            ticks: {
-              font: {
-                family: "'Salesforce Sans', Arial, sans-serif",
-              },
-              maxRotation: 45,
-              minRotation: 45,
-            },
-            title: {
-              display: true,
-              text: "Object Name",
-              font: {
-                family: "'Salesforce Sans', Arial, sans-serif",
-                size: 12,
-                weight: "bold",
-              },
-            },
-          },
-        },
-      },
-    };
-  }
 
   /**
    * Get CSS class for dashboard container

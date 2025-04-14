@@ -221,11 +221,11 @@
       </div>
     </div>
 
-    <!-- Chart Section -->
+    <!-- Statistics by Object Section -->
     <div class="chart-section">
       <div class="chart-section-header">
         <lightning-icon
-          icon-name="utility:chart"
+          icon-name="utility:table"
           size="x-small"
           class="slds-var-m-right_x-small"
         ></lightning-icon>
@@ -233,29 +233,50 @@
       </div>
 
       <template if:true={hasStatistics}>
-        <template if:false={showChartError}>
-          <div class="chart-container">
-            <canvas
-              class="duplication-chart"
-              lwc:dom="manual"
-              aria-label="Bar chart showing duplication records by object"
-            ></canvas>
-          </div>
-        </template>
-        <template if:true={showChartError}>
-          <div class="empty-state">
-            <lightning-icon
-              class="empty-state-icon"
-              icon-name="utility:warning"
-              alternative-text="Chart Error"
-              size="medium"
-            ></lightning-icon>
-            <p>Unable to load chart visualization</p>
-            <p class="slds-var-m-top_small">
-              Displaying data in tabular format below
-            </p>
-          </div>
-        </template>
+        <div class="data-table-container slds-var-p-around_medium">
+          <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped">
+            <thead>
+              <tr class="slds-line-height_reset">
+                <th scope="col">
+                  <div class="slds-truncate" title="Object">Object</div>
+                </th>
+                <th scope="col">
+                  <div class="slds-truncate" title="Duplicates Found">Duplicates Found</div>
+                </th>
+                <th scope="col">
+                  <div class="slds-truncate" title="Records Merged">Records Merged</div>
+                </th>
+                <th scope="col">
+                  <div class="slds-truncate" title="Merge Rate">Merge Rate</div>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <template for:each={objectStatsList} for:item="stat">
+                <tr key={stat.name}>
+                  <th scope="row">
+                    <div class="slds-truncate" title={stat.name}>{stat.name}</div>
+                  </th>
+                  <td>
+                    <div class="slds-truncate">
+                      <lightning-formatted-number value={stat.totalDuplicates}></lightning-formatted-number>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="slds-truncate">
+                      <lightning-formatted-number value={stat.totalMerged}></lightning-formatted-number>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="slds-truncate">
+                      <lightning-formatted-number value={stat.mergeRate} format-style="percent" maximum-fraction-digits="1"></lightning-formatted-number>
+                    </div>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
       </template>
 
       <template if:false={hasStatistics}>
