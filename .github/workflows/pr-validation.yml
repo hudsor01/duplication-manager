@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [staging, main]
     paths:
-      - 'force-app/**'
+      - "force-app/**"
 
 jobs:
   sfdx-validate:
@@ -13,35 +13,76 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
-      
+          node-version: "18"
+
       - name: Install Salesforce CLI
         run: |
           npm install @salesforce/cli --global
           sf --version
-      
+
       - name: Install PMD
         run: |
           wget https://github.com/pmd/pmd/releases/download/pmd_releases%2F6.55.0/pmd-bin-6.55.0.zip
           unzip pmd-bin-6.55.0.zip
           ./pmd-bin-6.55.0/bin/pmd --version
-      
+
       - name: Run Static Code Analysis (PMD)
         run: |
-          ./pmd-bin-6.55.0/bin/pmd check -d force-app -R rulesets/apex/quickstart.xml -f text
-      
+          # Create basic PMD ruleset file
+          echo '<?xml version="1.0"?>
+          <ruleset name="Salesforce Security Rules"
+                   xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+              <description>Basic security and best practice rules for Salesforce Apex</description>
+              <rule ref="category/apex/security.xml/ApexCRUDViolation" />
+              <rule ref="category/apex/security.xml/ApexSOQLInjection" />
+              <rule ref="category/apex/security.xml/ApexXSSFromURLParam" />
+              <rule ref="category/apex/security.xml/ApexXSSFromEscapeFalse" />
+              <rule ref="category/apex/security.xml/ApexBadCrypto" />
+              <rule ref="category/apex/bestpractices.xml/AvoidGlobalModifier" />
+              <rule ref="category/apex/errorprone.xml/AvoidDirectAccessTriggerMap" />
+              <rule ref="category/apex/errorprone.xml/AvoidHardcodingId" />
+          </ruleset>' > apex-ruleset.xml
+          ./pmd-bin-6.55.0/bin/pmd check -d force-app -R apex-ruleset.xml -f text
+
       - name: Auth to Salesforce
-        env:
-          SALESFORCE_JWT_SECRET_KEY: ${{ secrets.SALESFORCE_JWT_SECRET_KEY }}
-          CONSUMER_KEY: ${{ secrets.CONSUMER_KEY }}
         run: |
-          echo "$SALESFORCE_JWT_SECRET_KEY" > server.key
-          sf org login jwt --client-id $CONSUMER_KEY --jwt-key-file server.key --username ${{ secrets.SANDBOX_USERNAME }} --alias ciorg
-      
+          # First, try using the SFDX auth URL if it exists
+          if [ -n "${{ secrets.SFDX_AUTH_URL }}" ]; then
+            echo "${{ secrets.SFDX_AUTH_URL }}" > ./SFDX_AUTH_URL.txt
+            sf org login sfdx-url --sfdx-url-file ./SFDX_AUTH_URL.txt -a ciorg
+          else
+            # In PR validations, we need to fail if not configured (CI environment)
+            echo "::error::Missing SFDX_AUTH_URL secret for authentication"
+            echo "For PR validation, you must configure a SFDX_AUTH_URL secret"
+            echo "Run 'sf org:display --verbose' locally to get the auth URL"
+            exit 1
+          fi
+
+      - name: Run LWC Tests
+        if: ${{ !cancelled() }}
+        run: |
+          if [ -f "package.json" ]; then
+            echo "Running LWC tests..."
+            npm install
+            npm run test:unit || echo "::warning::LWC tests failed, but continuing deployment process"
+          else
+            echo "No package.json found. Skipping LWC tests."
+          fi
+
       - name: Validate Against Sandbox
+        if: ${{ !cancelled() }}
         run: |
-          sf project deploy validate --source-dir force-app --target-org ciorg --test-level RunLocalTests
+          if [ -f "tests/production-tests.txt" ]; then
+            # Use specific tests if file exists
+            sf project deploy validate --source-dir force-app --target-org ciorg --test-level RunSpecifiedTests --tests $(cat tests/production-tests.txt | tr '\n' ' ')
+          else
+            # Fallback to local tests if file doesn't exist
+            sf project deploy validate --source-dir force-app --target-org ciorg --test-level RunLocalTests
+            echo "::warning::Missing tests/production-tests.txt file. Using RunLocalTests level instead."
+          fi

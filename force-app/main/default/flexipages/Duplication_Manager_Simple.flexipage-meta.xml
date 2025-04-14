@@ -10,7 +10,9 @@
             </componentInstance>
         </itemInstances>
     </flexiPageRegions>
-    <masterLabel>Duplication Manager</masterLabel>
+    <masterLabel>Duplication Manager Simple</masterLabel>
+    <description
+  >Simple page for the Duplication Manager application</description>
     <template>
         <name>flexipage:defaultAppHomeTemplate</name>
     </template>

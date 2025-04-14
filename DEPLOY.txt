@@ -1,0 +1,76 @@
+# Duplication Manager Deployment Guide
+
+This document provides instructions on how to deploy the Duplication Manager application to different Salesforce environments using GitHub Actions workflows.
+
+## GitHub Secrets Setup
+
+For CI/CD automation, you need to set up the following secrets in your GitHub repository:
+
+1. **SFDX_AUTH_URL**: Auth URL for development sandbox
+2. **INTEGRATION_SFDX_AUTH_URL**: Auth URL for integration/staging sandbox
+3. **PROD_SFDX_AUTH_URL**: Auth URL for production org
+
+### How to generate an Auth URL:
+
+1. Authenticate to your Salesforce org locally:
+   ```
+   sf org login web -a orgalias -r https://test.salesforce.com
+   ```
+   
+2. Generate the auth URL:
+   ```
+   sf org display --verbose -o orgalias
+   ```
+   
+3. Copy the "Sfdx Auth Url" value.
+
+4. In your GitHub repository:
+   - Go to Settings > Secrets and variables > Actions
+   - Click "New repository secret"
+   - Enter the name (e.g., SFDX_AUTH_URL) and paste the auth URL as the value
+   - Click "Add secret"
+
+## GitHub Environments
+
+This repository uses GitHub Environments for deployment control:
+
+1. **development**: For dev sandboxes
+2. **integration**: For integration/staging sandbox 
+3. **production**: For production org
+
+For manual approval requirements:
+1. Go to Settings > Environments
+2. Create environments that match the names above
+3. Configure "Required reviewers" for production environment
+
+## Deployment Workflows
+
+### 1. Development Sandbox Deployment
+- Triggered by pushes to `develop` or `feature/devops-center-init` branches
+- Can be manually triggered from the Actions tab
+
+### 2. Integration Sandbox Deployment
+- Triggered by pushes to `staging` branch
+- Can be manually triggered from the Actions tab
+
+### 3. Production Deployment
+- Triggered by pushes to `main` branch
+- Can be manually triggered from the Actions tab
+- Requires manual approval
+
+### 4. Pull Request Validation
+- Triggered by pull requests to `staging` or `main` branches
+- Runs PMD code analysis
+- Validates the deployment against a sandbox
+
+## Specified Test Classes
+
+The file `tests/production-tests.txt` contains the list of test classes that will be run during production deployments. Update this file when adding or removing test classes.
+
+## Best Practices
+
+1. Always create pull requests to staging before merging to main
+2. Verify all tests pass in the PR validation workflow
+3. Use separate sandbox environments for development and testing
+4. Keep test classes up to date in the production-tests.txt file
+5. Monitor deployment logs in the GitHub Actions tab

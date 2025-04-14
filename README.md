@@ -18,7 +18,25 @@ Duplication Manager is a robust Salesforce application for detecting, comparing,
 
 ## Getting Started
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
+See [DEPLOY.txt](./DEPLOY.txt) for detailed deployment instructions.
+
+### Deployment Options
+
+1. **GitHub Actions CI/CD Pipeline**:
+
+   - Code is automatically deployed through the CI/CD pipeline
+   - See [DEPLOY.txt](./DEPLOY.txt) for GitHub Actions workflow setup
+   - Workflows handle deployment to development, integration, and production orgs
+
+2. **Manual Deployment**:
+
+   ```bash
+   # Deploy to sandbox
+   sf project deploy start --source-dir force-app --target-org your-sandbox-alias --test-level RunLocalTests
+
+   # Deploy to production
+   sf project deploy start --source-dir force-app --target-org your-prod-alias --test-level RunSpecifiedTests --tests $(cat tests/production-tests.txt | tr '\n' ' ')
+   ```
 
 ### Quick Start
 
@@ -27,6 +45,46 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
 3. Navigate to the "Duplication Manager" app in the App Launcher
 4. Configure duplicate detection rules using the setup screen
 5. Run your first duplicate detection job
+
+## Technical Architecture
+
+The application follows a modular design with these key components:
+
+### Batch Processing Framework
+
+The batch processing framework is built on a base class (`DuplicateBaseBatch`) that provides common functionality for all duplicate detection and merging batch jobs. Key batch classes include:
+
+- `DuplicateRecordBatch` - Main batch processor for finding duplicates using custom matching rules
+- `DuplicateRuleFinderBatch` - Batch processor that uses Salesforce standard duplicate rules
+- `ArchiveOldLogsBatch` - Batch processor for archiving old duplicate merge logs
+
+### Matcher Framework
+
+A flexible matcher framework allows customization of how fields are compared:
+
+- `FieldMatcherInterface` - Common interface for all matchers
+- `NameMatcher` - Specialized for matching name fields
+- `EmailMatcher` - Specialized for matching email fields
+- `AddressMatcher` - Specialized for matching address fields
+- `TextMatcher` - General purpose text matching
+
+### Service Layer
+
+Service classes provide the business logic:
+
+- `DuplicateDetectionService` - Core duplicate finding functionality
+- `DuplicateMergeService` - Record merging functionality
+- `DuplicateSettingsService` - Configuration management
+- `DuplicateStatisticsService` - Reporting and analytics
+
+### UI Components
+
+The UI is built with Lightning Web Components (LWC):
+
+- Dashboard for viewing duplicate statistics
+- Configuration interface for setting up rules
+- Comparison view for reviewing duplicates
+- Merge interface for resolving duplicates
 
 ## Configuration
 
@@ -48,9 +106,9 @@ Configure which fields to use for duplicate detection and their relative importa
 
 Choose how to determine which record becomes the master during merges:
 
-- **Most Recent**: Use the most recently created or modified record
-- **Oldest**: Use the record that was created first
-- **Most Complete**: Use the record with the most populated fields
+- **MostComplete**: Use the record with the most populated fields
+- **OldestCreated**: Use the record that was created first
+- **NewestModified**: Use the most recently modified record
 
 ## User Guide
 
@@ -75,14 +133,6 @@ Choose how to determine which record becomes the master during merges:
 3. Click "Merge" to combine the records
 4. Review the merge log for confirmation
 
-## Maintenance
-
-For optimal performance:
-
-- Schedule regular archiving of old logs
-- Monitor job statistics for performance trends
-- Periodically review and refine matching rules
-
 ## Best Practices
 
 - Start with small batch sizes (100-200 records) and adjust based on performance
@@ -90,17 +140,6 @@ For optimal performance:
 - Use field weights that emphasize unique identifiers (email, phone, etc.)
 - Always test on a sandbox org before deploying to production
 
-## Technical Documentation
-
-- **Development Model**: Source-based development with Salesforce DX
-- **Lightning Web Components**: Modern UI built with LWC framework
-- **Apex Classes**: Enterprise-pattern services and batch processing
-- **Custom Objects**: Specialized metadata for duplicate management
-
 ## License
 
-This package is proprietary and licensed for use according to the agreement with the vendor.
-
-## Support
-
-For technical support, please contact your Salesforce administrator.
+Copyright © 2025. All rights reserved.

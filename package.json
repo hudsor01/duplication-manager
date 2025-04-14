@@ -16,14 +16,13 @@
     "lwc:dev": "sf lightning lwc start"
   },
   "devDependencies": {
-    "@lwc/eslint-plugin-lwc": "2.1.0",
+    "@lwc/eslint-plugin-lwc": "3.0.0",
     "@prettier/plugin-xml": "3.4.1",
-    "@salesforce/eslint-config-lwc": "3.7.1",
-    "@salesforce/eslint-plugin-aura": "2.1.0",
+    "@salesforce/eslint-config-lwc": "4.0.0",
     "@salesforce/eslint-plugin-lightning": "2.0.0",
     "@salesforce/lwc-dev-server": "2.11.0",
     "@salesforce/sfdx-lwc-jest": "7.1.0",
-    "eslint": "8.57.0",
+    "eslint": "9.24.0",
     "eslint-plugin-import": "2.31.0",
     "eslint-plugin-jest": "28.11.0",
     "husky": "9.1.7",
@@ -39,5 +38,19 @@
       "eslint"
     ]
   },
-  "packageManager": "npm@10.9.2"
+  "packageManager": "npm@10.9.2",
+  "main": "package.json",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hudsor01/duplication-manager.git"
+  },
+  "keywords": [
+    "salesforce"
+  ],
+  "author": "richard hudson",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hudsor01/duplication-manager/issues"
+  },
+  "homepage": "https://github.com/hudsor01/duplication-manager#readme"
 }

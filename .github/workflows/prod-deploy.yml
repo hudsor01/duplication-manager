@@ -4,13 +4,13 @@ on:
   push:
     branches: [main]
     paths:
-      - 'force-app/**'
+      - "force-app/**"
   workflow_dispatch:
     inputs:
       comments:
-        description: 'Deployment comments'
+        description: "Deployment comments"
         required: true
-        default: 'Manual production deployment'
+        default: "Manual production deployment"
 
 jobs:
   deploy-to-production:
@@ -22,7 +22,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: "18"
 
       - name: Install Salesforce CLI
         run: |
@@ -30,24 +30,117 @@ jobs:
           sf --version
 
       - name: Auth to Salesforce Production
-        env:
-          SALESFORCE_JWT_SECRET_KEY: ${{ secrets.SALESFORCE_JWT_SECRET_KEY }}
-          CONSUMER_KEY: ${{ secrets.CONSUMER_KEY }}
         run: |
-          echo "$SALESFORCE_JWT_SECRET_KEY" > server.key
-          sf org login jwt --client-id $CONSUMER_KEY --jwt-key-file server.key --username ${{ secrets.PROD_USERNAME }} --alias prodorg
+          # First, try using the SFDX auth URL if it exists
+          if [ -n "${{ secrets.PROD_SFDX_AUTH_URL }}" ]; then
+            echo "${{ secrets.PROD_SFDX_AUTH_URL }}" > ./PROD_SFDX_AUTH_URL.txt
+            sf org login sfdx-url --sfdx-url-file ./PROD_SFDX_AUTH_URL.txt -a prodorg
+          else
+            # Fall back to web login (requires manual approval in GitHub Actions)
+            sf org login web -a prodorg -r https://login.salesforce.com
+            echo "Manual authentication required in browser"
+            echo "::warning::Using web-based authentication. For CI automation, add PROD_SFDX_AUTH_URL secret!"
+          fi
 
       # First validate the deployment
       - name: Validate Production Deployment
         run: |
-          sf project deploy validate --source-dir force-app --target-org prodorg --test-level RunSpecifiedTests --tests $(cat tests/production-tests.txt | tr '\n' ' ')
+          if [ -f "tests/production-tests.txt" ]; then
+            # Use specific tests if file exists
+            sf project deploy validate --source-dir force-app --target-org prodorg --test-level RunSpecifiedTests --tests $(cat tests/production-tests.txt | tr '\n' ' ')
+          else
+            # Fallback to local tests if file doesn't exist
+            sf project deploy validate --source-dir force-app --target-org prodorg --test-level RunLocalTests
+            echo "::warning::Missing tests/production-tests.txt file. Using RunLocalTests level instead."
+          fi
 
       # Manual approval step is enforced by the environment protection rules
 
       # Then do the actual deployment
       - name: Deploy to Production
         run: |
-          sf project deploy start --source-dir force-app --target-org prodorg --test-level RunSpecifiedTests --tests $(cat tests/production-tests.txt | tr '\n' ' ')
+          if [ -f "tests/production-tests.txt" ]; then
+            # Use specific tests if file exists
+            sf project deploy start --source-dir force-app --target-org prodorg --test-level RunSpecifiedTests --tests $(cat tests/production-tests.txt | tr '\n' ' ')
+          else
+            # Fallback to local tests if file doesn't exist
+            sf project deploy start --source-dir force-app --target-org prodorg --test-level RunLocalTests
+            echo "::warning::Missing tests/production-tests.txt file. Using RunLocalTests level instead."
+          fi
+
+      - name: Run Apex Tests with Coverage
+        id: run_tests
+        run: |
+          mkdir -p test-results
+          echo "Running Apex tests with code coverage in production..."
+          sf apex run test --target-org prodorg --code-coverage --result-format junit --output-dir ./test-results
+          echo "Test execution completed."
+
+          # Calculate test summary
+          if [ -f "./test-results/test-result.json" ]; then
+            TOTAL=$(jq '.summary.testsRan' ./test-results/test-result.json)
+            PASSED=$(jq '.summary.passing' ./test-results/test-result.json)
+            FAILED=$(jq '.summary.failing' ./test-results/test-result.json)
+            COVERAGE=$(jq '.summary.orgWideCoverage' ./test-results/test-result.json | tr -d '"' | tr -d '%')
+            
+            echo "Tests Run: $TOTAL"
+            echo "Tests Passed: $PASSED"
+            echo "Tests Failed: $FAILED"
+            echo "Code Coverage: $COVERAGE%"
+            
+            # Set outputs for use in summary
+            echo "total=$TOTAL" >> $GITHUB_OUTPUT
+            echo "passed=$PASSED" >> $GITHUB_OUTPUT
+            echo "failed=$FAILED" >> $GITHUB_OUTPUT
+            echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
+          else
+            echo "::warning::Test result JSON not found!"
+          fi
+
+      - name: Store Test Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: production-test-results
+          path: ./test-results
+
+      - name: Generate Test Report
+        if: always()
+        run: |
+          echo "## Production Test Results" > test-report.md
+
+          if [ -f "./test-results/test-result.json" ]; then
+            # Parse test results
+            TOTAL=$(jq '.summary.testsRan' ./test-results/test-result.json)
+            PASSED=$(jq '.summary.passing' ./test-results/test-result.json)
+            FAILED=$(jq '.summary.failing' ./test-results/test-result.json)
+            COVERAGE=$(jq '.summary.orgWideCoverage' ./test-results/test-result.json | tr -d '"' | tr -d '%')
+            
+            echo "### Summary" >> test-report.md
+            echo "- **Tests Run**: $TOTAL" >> test-report.md
+            echo "- **Tests Passed**: $PASSED" >> test-report.md
+            echo "- **Tests Failed**: $FAILED" >> test-report.md
+            echo "- **Code Coverage**: $COVERAGE%" >> test-report.md
+            
+            # List failing tests if any
+            if [ "$FAILED" -gt 0 ]; then
+              echo "### Failed Tests" >> test-report.md
+              echo "| Class | Method | Error |" >> test-report.md
+              echo "| ----- | ------ | ----- |" >> test-report.md
+              
+              jq -r '.tests[] | select(.outcome=="Fail") | "| \(.ApexClass.Name) | \(.MethodName) | \(.Message) |"' ./test-results/test-result.json >> test-report.md
+            fi
+          else
+            echo "Test result JSON not found!" >> test-report.md
+          fi
+
+          cat test-report.md
+
+      - name: Upload Test Report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: production-test-report
+          path: test-report.md
 
       - name: Post-Deployment Summary
         run: |

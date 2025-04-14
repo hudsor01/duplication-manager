@@ -4,8 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build/Test Commands
 
-- `sfdx apex:test:run -n ClassName` - Run a specific Apex test class
-- `sfdx apex:test:run -t ClassName.testMethodName` - Run a specific test method
+- use sf commands to use salesforce/cli - fetch this documenation for guidance
 - `npm run test:unit` - Run LWC unit tests
 - `npm run test:unit:watch` - Run LWC tests in watch mode
 - `npm run lint` - Lint LWC code
