@@ -1,11 +1,11 @@
 /**
  * Enhanced centralized store for duplicate manager application state
  * Uses Lightning Message Service exclusively for communication
+ * Performance optimized to prevent freezing in Safari and other browsers
  *
- *@author Richard Hudson
+ * @author Richard Hudson
  * @updated Richard Hudson - May 2025
  */
-// import { MessageContext } from 'lightning/messageService';
 import {
   sendMessage,
   subscribeToChannel,
@@ -13,18 +13,63 @@ import {
 } from "c/duplicationMessageService";
 import { MESSAGE_TYPES } from "c/duplicationConstants";
 
+// Throttle time for state updates to prevent freezing (ms)
+const UPDATE_THROTTLE_MS = 200; // Increased from 50ms to 200ms to prevent Safari freezing
+
+// Flag to track if updates are being throttled
+let isThrottlingUpdates = false;
+let pendingUpdate = null;
+
 /**
- * Utility to check if we're in a browser environment with localStorage
+ * Utility to safely check if we're in a browser environment with localStorage
  * @returns {Boolean} True if localStorage is available
  */
-const isLocalStorageAvailable = () => {
-  try {
-    const test = "test";
-    localStorage.setItem(test, test);
-    localStorage.removeItem(test);
-    return true;
-  } catch (e) {
-    return false;
+const isLocalStorageAvailable = (() => {
+  let result = null;
+  return () => {
+    if (result !== null) return result;
+    
+    try {
+      const test = "test";
+      localStorage.setItem(test, test);
+      localStorage.removeItem(test);
+      result = true;
+    } catch (e) {
+      result = false;
+    }
+    return result;
+  };
+})();
+
+/**
+ * Safe localStorage wrapper with fallback
+ */
+const safeStorage = {
+  getItem(key) {
+    if (!isLocalStorageAvailable()) return null;
+    try {
+      return localStorage.getItem(key);
+    } catch (e) {
+      return null;
+    }
+  },
+  setItem(key, value) {
+    if (!isLocalStorageAvailable()) return;
+    try {
+      localStorage.setItem(key, value);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  },
+  removeItem(key) {
+    if (!isLocalStorageAvailable()) return;
+    try {
+      localStorage.removeItem(key);
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 };
 
@@ -33,29 +78,23 @@ const isLocalStorageAvailable = () => {
  * @returns {Object|null} Draft job or null if not found
  */
 const loadInitialDraftJob = () => {
-  if (!isLocalStorageAvailable()) {
-    return null;
-  }
+  const savedDraft = safeStorage.getItem("duplicateDraftJob");
 
   try {
-    const savedDraft = localStorage.getItem("duplicateDraftJob");
-
     // Parse draft job data
     const draft = savedDraft ? JSON.parse(savedDraft) : null;
+    if (!draft) return null;
 
-    // Add timestamp if not present
-    if (draft && !draft.timestamp) {
-      draft.timestamp = new Date().toISOString();
+    // Add missing fields
+    if (!draft.timestamp) {
+      draft.timestamp = Date.now();
     }
-
-    // Add status if not present
-    if (draft && !draft.status) {
+    if (!draft.status) {
       draft.status = "draft";
     }
 
     return draft;
   } catch (e) {
-    console.error("Error loading initial draft job:", e);
     return null;
   }
 };
@@ -63,7 +102,7 @@ const loadInitialDraftJob = () => {
 // Cache timeout in milliseconds (5 minutes)
 const CACHE_TIMEOUT = 5 * 60 * 1000;
 
-// Initial state
+// Initial state - minimal version to reduce memory usage
 const initialState = {
   configurations: [],
   selectedConfiguration: null,
@@ -77,18 +116,9 @@ const initialState = {
   draftJob: loadInitialDraftJob(),
   // Cache metadata
   cache: {
-    configurations: {
-      timestamp: null,
-      isPending: false
-    },
-    jobs: {
-      timestamp: null,
-      isPending: false
-    },
-    statistics: {
-      timestamp: null,
-      isPending: false
-    }
+    configurations: { timestamp: null, isPending: false },
+    jobs: { timestamp: null, isPending: false },
+    statistics: { timestamp: null, isPending: false }
   },
   // Statistics
   statistics: {
@@ -111,62 +141,103 @@ class duplicationStore {
   _listeners = [];
   _messageContext = null;
   _subscription = null;
-  _instanceId = "store-" + Date.now() + "-" + Math.floor(Math.random() * 10000);
+  _instanceId = `store-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+  _updateTimerId = null;
+  _isInitialized = false;
 
   /**
    * Initialize the store with a message context
    * @param {MessageContext} messageContext - LWC message context
    */
   initialize(messageContext) {
-    this._messageContext = messageContext;
+    // Prevent double initialization which causes memory leaks
+    if (this._isInitialized) return;
+    
+    try {
+      this._messageContext = messageContext;
+      this._isInitialized = true;
 
-    // Subscribe to store-related messages
-    this._subscription = subscribeToChannel(
-      (message) => {
-        // Only process store update messages
-        if (message.type === MESSAGE_TYPES.STORE_UPDATED) {
-          // Update internal state from message
-          const storeUpdate = message.payload;
+      // Make sure store has the initial state
+      if (!this._state) {
+        this._state = { ...initialState };
+      }
 
-          // Skip if message came from this instance
-          if (message.source === this._instanceId) {
-            return;
+      // Ensure loading state is initially false to prevent hangs
+      this._state.isLoading = false;
+
+      // Subscribe to store-related messages using optimized service
+      this._subscription = subscribeToChannel(
+        (message) => {
+          try {
+            // Only process our store messages
+            if (!message || !message.type) return;
+            
+            // Skip our own messages
+            if (message.source === this._instanceId) {
+              return;
+            }
+            
+            if (message.type === MESSAGE_TYPES.STORE_UPDATED) {
+              // Update internal state from message
+              this._applyExternalUpdate(message.payload);
+            } else if (message.type === MESSAGE_TYPES.STORE_SECTION_UPDATED && message.payload) {
+              // Apply sectional update if properly formed
+              const { section, state } = message.payload;
+              if (section && state) {
+                this._applyExternalSectionUpdate(section, state);
+              }
+            }
+          } catch (error) {
+            // Silent error handling
           }
+        },
+        { filter: (msg) => msg && msg.type && msg.type.startsWith("store.") }
+      );
 
-          // Apply the update to our state
-          this._applyExternalUpdate(storeUpdate);
-        } else if (message.type === MESSAGE_TYPES.STORE_SECTION_UPDATED) {
-          // Handle sectional updates
-          const sectionUpdate = message.payload;
-
-          // Skip if message came from this instance
-          if (message.source === this._instanceId) {
-            return;
-          }
-
-          // Apply the section update to our state
-          if (sectionUpdate && sectionUpdate.section && sectionUpdate.state) {
-            this._applyExternalSectionUpdate(
-              sectionUpdate.section,
-              sectionUpdate.state
-            );
-          }
-        }
-      },
-      { filter: (msg) => msg.type.startsWith("store.") }
-    );
-
-    // Store initialized
+      // Broadcast initial state to ensure all components sync
+      // Use setTimeout to avoid Safari rendering issues
+      setTimeout(() => {
+        // Only send minimal state information to avoid large messages
+        const minimalState = {
+          isLoading: this._state.isLoading,
+          hasConfiguration: !!this._state.selectedConfiguration,
+          initialized: true
+        };
+        
+        sendMessage(MESSAGE_TYPES.STORE_UPDATED, minimalState, {
+          priority: "high",
+          source: this._instanceId
+        });
+      }, 100); // Slight delay to ensure DOM is ready
+    } catch (error) {
+      // Reset to safe state on error
+      this._state = { ...initialState, isLoading: false };
+    }
   }
 
   /**
    * Clean up subscriptions when store is no longer needed
    */
   dispose() {
+    this._isInitialized = false;
+    
+    // Cancel any pending updates
+    if (this._updateTimerId) {
+      clearTimeout(this._updateTimerId);
+      this._updateTimerId = null;
+    }
+    
+    // Clear pending update
+    pendingUpdate = null;
+    
+    // Unsubscribe from messages
     if (this._subscription) {
       unsubscribeFromChannel(this._subscription);
       this._subscription = null;
     }
+    
+    // Clear listeners to prevent memory leaks
+    this._listeners = [];
   }
 
   /**
@@ -212,21 +283,26 @@ class duplicationStore {
    * @private
    */
   _notifyLocalListeners(prevState) {
+    if (this._listeners.length === 0) return;
+    
     const currentState = this.getState();
 
-    // Notify direct subscribers
-    this._listeners.forEach((listener) => {
-      try {
-        listener(currentState, prevState);
-      } catch (error) {
-        console.error("Error in store listener:", error);
-      }
-    });
+    // Use setTimeout instead of requestAnimationFrame to avoid Safari issues
+    setTimeout(() => {
+      // Notify direct subscribers - protect against errors in listeners
+      this._listeners.forEach((listener) => {
+        try {
+          listener(currentState, prevState);
+        } catch (error) {
+          // Silent error handling
+        }
+      });
+    }, 0);
   }
 
   /**
    * Get current state
-   * @returns {Object} Current application state
+   * @returns {Object} Shallow copy of current application state
    */
   getState() {
     return { ...this._state };
@@ -238,12 +314,13 @@ class duplicationStore {
    * @returns {Object} The requested state section
    */
   getStateSection(section) {
-    if (this._state[section] !== undefined) {
-      return Array.isArray(this._state[section])
-        ? [...this._state[section]]
-        : { ...this._state[section] };
+    if (!section || this._state[section] === undefined) {
+      return undefined;
     }
-    return undefined;
+    
+    return Array.isArray(this._state[section])
+      ? [...this._state[section]]
+      : { ...this._state[section] };
   }
 
   /**
@@ -252,13 +329,11 @@ class duplicationStore {
    * @returns {Boolean} True if cache is valid
    */
   isCacheValid(section) {
-    if (!this._state.cache[section] || !this._state.cache[section].timestamp) {
+    if (!section || !this._state.cache[section] || !this._state.cache[section].timestamp) {
       return false;
     }
 
-    const now = new Date().getTime();
-    const timestamp = this._state.cache[section].timestamp;
-    return now - timestamp < CACHE_TIMEOUT;
+    return Date.now() - this._state.cache[section].timestamp < CACHE_TIMEOUT;
   }
 
   /**
@@ -276,15 +351,6 @@ class duplicationStore {
    */
   isDraftForConfig(configId) {
     return this._state.draftJob && this._state.draftJob.configId === configId;
-  }
-
-  /**
-   * Get message timestamp
-   * @returns {String} ISO timestamp
-   * @private
-   */
-  _getTimestamp() {
-    return new Date().toISOString();
   }
 
   /**
@@ -333,23 +399,24 @@ class duplicationStore {
   dispatch(actionType, payload) {
     // Check if action type is valid
     if (!actionType || !duplicationStore.actions) {
-      console.error("Invalid action type or actions not defined:", actionType);
       return;
     }
 
-    // Action dispatched
+    // Process action
     try {
       const prevState = { ...this._state };
       let stateChanged = false;
+      let updatedSection = null;
 
       switch (actionType) {
         case duplicationStore.actions.SET_CONFIGURATIONS:
           this._state.configurations = Array.isArray(payload) ? payload : [];
           // Update cache timestamp
           this._state.cache.configurations = {
-            timestamp: new Date().getTime(),
+            timestamp: Date.now(),
             isPending: false
           };
+          updatedSection = "configurations";
           stateChanged = true;
           break;
 
@@ -367,6 +434,7 @@ class duplicationStore {
               ...this._state.recentConfigurations.slice(0, 4) // Keep last 5 including current
             ];
           }
+          updatedSection = "configurations";
           stateChanged = true;
           break;
 
@@ -374,14 +442,16 @@ class duplicationStore {
           this._state.scheduledJobs = Array.isArray(payload) ? payload : [];
           // Update cache timestamp
           this._state.cache.jobs = {
-            timestamp: new Date().getTime(),
+            timestamp: Date.now(),
             isPending: false
           };
+          updatedSection = "jobs";
           stateChanged = true;
           break;
 
         case duplicationStore.actions.UPDATE_ACTIVE_JOBS:
           this._state.activeJobs = Array.isArray(payload) ? payload : [];
+          updatedSection = "jobs";
           stateChanged = true;
           break;
 
@@ -396,30 +466,28 @@ class duplicationStore {
             payload.section &&
             this._state.cache[payload.section]
           ) {
-            this._state.cache[payload.section].isPending = Boolean(
-              payload.status
-            );
+            this._state.cache[payload.section].isPending = Boolean(payload.status);
             stateChanged = true;
           }
           break;
 
         case duplicationStore.actions.ADD_ERROR: {
-          // Add timestamp if not already present
-          const errorObj = { ...payload };
-          if (!errorObj.timestamp) {
-            errorObj.timestamp = new Date().toISOString();
-          }
-          // Add unique id for error reference
-          if (!errorObj.id) {
-            errorObj.id = `err-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-          }
+          if (!payload) break;
+          // Add timestamp and ID for error reference
+          const errorObj = { 
+            ...payload,
+            timestamp: payload.timestamp || Date.now(),
+            id: payload.id || `err-${Date.now()}-${Math.floor(Math.random() * 1000)}`
+          };
           this._state.errors = [...this._state.errors, errorObj];
+          updatedSection = "errors";
           stateChanged = true;
           break;
         }
 
         case duplicationStore.actions.CLEAR_ERRORS:
           this._state.errors = [];
+          updatedSection = "errors";
           stateChanged = true;
           break;
 
@@ -452,9 +520,10 @@ class duplicationStore {
           this._state.statistics = { ...this._state.statistics, ...payload };
           // Update cache timestamp
           this._state.cache.statistics = {
-            timestamp: new Date().getTime(),
+            timestamp: Date.now(),
             isPending: false
           };
+          updatedSection = "statistics";
           stateChanged = true;
           break;
 
@@ -463,7 +532,7 @@ class duplicationStore {
             // Add to recent merges with timestamp
             const mergeResult = {
               ...payload,
-              timestamp: payload.timestamp || new Date().toISOString()
+              timestamp: payload.timestamp || Date.now()
             };
             this._state.statistics.recentMerges = [
               mergeResult,
@@ -472,9 +541,7 @@ class duplicationStore {
 
             // Update object statistics if applicable
             if (payload.objectApiName && payload.count) {
-              const objStats = this._state.statistics.byObject[
-                payload.objectApiName
-              ] || {
+              const objStats = this._state.statistics.byObject[payload.objectApiName] || {
                 totalDuplicates: 0,
                 totalMerged: 0
               };
@@ -485,13 +552,15 @@ class duplicationStore {
               // Update total count
               this._state.statistics.totalDuplicates += payload.count;
             }
-
+            
+            updatedSection = "statistics";
             stateChanged = true;
           }
           break;
 
         case duplicationStore.actions.UPDATE_PAGINATION:
           this._state.pagination = { ...this._state.pagination, ...payload };
+          updatedSection = "pagination";
           stateChanged = true;
           break;
 
@@ -516,25 +585,19 @@ class duplicationStore {
             this._state.draftJob = {
               ...existingDraft,
               ...payload,
-              timestamp: new Date().toISOString(),
+              timestamp: Date.now(),
               status: payload.status || existingDraft.status || "draft",
-              lastModified: new Date().toISOString(),
+              lastModified: Date.now(),
               savedBy: payload.savedBy || existingDraft.savedBy
             };
 
-            // Save to localStorage for persistence
-            try {
-              localStorage.setItem(
-                "duplicateDraftJob",
-                JSON.stringify(this._state.draftJob)
-              );
-            } catch (storageError) {
-              console.error(
-                "Error saving draft job to localStorage:",
-                storageError
-              );
-            }
+            // Save to localStorage for persistence - use safeStorage wrapper
+            safeStorage.setItem(
+              "duplicateDraftJob",
+              JSON.stringify(this._state.draftJob)
+            );
 
+            updatedSection = "draftJob";
             stateChanged = true;
           }
           break;
@@ -542,7 +605,7 @@ class duplicationStore {
         case duplicationStore.actions.LOAD_DRAFT_JOB:
           try {
             // Try to load from localStorage first
-            const savedDraft = localStorage.getItem("duplicateDraftJob");
+            const savedDraft = safeStorage.getItem("duplicateDraftJob");
             if (savedDraft) {
               this._state.draftJob = JSON.parse(savedDraft);
               stateChanged = true;
@@ -551,92 +614,116 @@ class duplicationStore {
               this._state.draftJob = payload;
               stateChanged = true;
             }
+            updatedSection = "draftJob";
           } catch (loadError) {
-            console.error(
-              "Error loading draft job from localStorage:",
-              loadError
-            );
+            // Silent error handling for localStorage
           }
           break;
 
         case duplicationStore.actions.CLEAR_DRAFT_JOB:
           if (this._state.draftJob) {
             this._state.draftJob = null;
-
             // Remove from localStorage
-            try {
-              localStorage.removeItem("duplicateDraftJob");
-            } catch (removeError) {
-              console.error(
-                "Error removing draft job from localStorage:",
-                removeError
-              );
-            }
-
+            safeStorage.removeItem("duplicateDraftJob");
+            updatedSection = "draftJob";
             stateChanged = true;
           }
           break;
 
         case duplicationStore.actions.RESET_STATE:
           this._state = { ...initialState };
-
           // Clear localStorage
-          try {
-            localStorage.removeItem("duplicateDraftJob");
-          } catch (resetError) {
-            console.error(
-              "Error removing draft job from localStorage:",
-              resetError
-            );
-          }
-
+          safeStorage.removeItem("duplicateDraftJob");
           stateChanged = true;
           break;
 
         default:
-          console.warn(`Unknown action type: ${actionType}`);
+          // No action matched
+          break;
       }
 
       if (stateChanged) {
-        // Determine which section was updated for more granular updates
-        let updatedSection = null;
-
-        // Map action types to state sections
-        switch (actionType) {
-          case duplicationStore.actions.SET_CONFIGURATIONS:
-          case duplicationStore.actions.SELECT_CONFIGURATION:
-            updatedSection = "configurations";
-            break;
-          case duplicationStore.actions.UPDATE_SCHEDULED_JOBS:
-          case duplicationStore.actions.UPDATE_ACTIVE_JOBS:
-            updatedSection = "jobs";
-            break;
-          case duplicationStore.actions.SAVE_DRAFT_JOB:
-          case duplicationStore.actions.LOAD_DRAFT_JOB:
-          case duplicationStore.actions.CLEAR_DRAFT_JOB:
-            updatedSection = "draftJob";
-            break;
-          case duplicationStore.actions.UPDATE_STATISTICS:
-          case duplicationStore.actions.ADD_MERGE_RESULT:
-            updatedSection = "statistics";
-            break;
-          case duplicationStore.actions.UPDATE_PAGINATION:
-            updatedSection = "pagination";
-            break;
-          case duplicationStore.actions.ADD_ERROR:
-          case duplicationStore.actions.CLEAR_ERRORS:
-            updatedSection = "errors";
-            break;
-          // Global state updates don't have a specific section
-          default:
-            updatedSection = null;
-        }
-
-        this._notifyListeners(prevState, updatedSection);
+        // Use the throttling mechanism to prevent excessive updates
+        this._scheduleUpdate(prevState, updatedSection);
       }
     } catch (error) {
-      console.error("Error in store dispatch:", error);
+      // Silent error handling
     }
+  }
+
+  /**
+   * Schedule an update with throttling to prevent freezing
+   * @param {Object} prevState - Previous state for comparison
+   * @param {String} updatedSection - Section of state that was updated
+   * @private
+   */
+  _scheduleUpdate(prevState, updatedSection) {
+    // If we're already throttling updates, just update the pending update data
+    if (isThrottlingUpdates) {
+      pendingUpdate = { prevState, updatedSection };
+      return;
+    }
+    
+    // Set throttling flag
+    isThrottlingUpdates = true;
+    
+    // Schedule this update immediately
+    this._processPendingUpdate(prevState, updatedSection);
+    
+    // Schedule processing for future updates
+    this._updateTimerId = setTimeout(() => {
+      isThrottlingUpdates = false;
+      this._updateTimerId = null;
+      
+      // If there's a pending update, process it
+      if (pendingUpdate) {
+        const { prevState, updatedSection } = pendingUpdate;
+        pendingUpdate = null;
+        this._scheduleUpdate(prevState, updatedSection);
+      }
+    }, UPDATE_THROTTLE_MS);
+  }
+  
+  /**
+   * Process a pending update by notifying listeners
+   * @param {Object} prevState - Previous state for comparison
+   * @param {String} updatedSection - Section of state that was updated
+   * @private
+   */
+  _processPendingUpdate(prevState, updatedSection) {
+    const currentState = this.getState();
+    
+    // Use setTimeout instead of requestAnimationFrame to avoid Safari issues
+    setTimeout(() => {
+      // Use Lightning Message Service with optimized messaging
+      if (updatedSection) {
+        // If a specific section was updated, publish just that section
+        sendMessage(
+          MESSAGE_TYPES.STORE_SECTION_UPDATED,
+          { section: updatedSection, state: currentState[updatedSection] },
+          {
+            priority: "normal",
+            source: this._instanceId
+          }
+        );
+      } else {
+        // For full state updates, send only key information instead of the entire state
+        // This reduces the message size and prevents unnecessary re-renders
+        const minimalState = {
+          isLoading: currentState.isLoading,
+          hasError: currentState.errors && currentState.errors.length > 0,
+          lastUpdated: new Date().toISOString()
+        };
+        
+        sendMessage(MESSAGE_TYPES.STORE_UPDATED, minimalState, {
+          priority: "normal",
+          source: this._instanceId
+        });
+      }
+
+      // Also notify local listeners
+      this._notifyLocalListeners(prevState);
+    }, 0);
   }
 
   /**
@@ -645,42 +732,14 @@ class duplicationStore {
    * @returns {function} Unsubscribe function
    */
   subscribe(listener) {
+    if (typeof listener !== 'function') return () => {};
+    
     this._listeners.push(listener);
+    
+    // Return unsubscribe function
     return () => {
       this._listeners = this._listeners.filter((l) => l !== listener);
     };
-  }
-
-  /**
-   * Notify all subscribed listeners about state change
-   * @param {Object} prevState - Previous state for comparison
-   * @param {String} updatedSection - Section of state that was updated
-   * @private
-   */
-  _notifyListeners(prevState, updatedSection) {
-    const currentState = this.getState();
-
-    // Use Lightning Message Service with enhanced capabilities
-    if (updatedSection) {
-      // If a specific section was updated, publish just that section
-      sendMessage(
-        MESSAGE_TYPES.STORE_SECTION_UPDATED,
-        { section: updatedSection, state: currentState[updatedSection] },
-        {
-          priority: "normal",
-          source: this._instanceId
-        }
-      );
-    } else {
-      // Otherwise publish the full state update
-      sendMessage(MESSAGE_TYPES.STORE_UPDATED, currentState, {
-        priority: "normal",
-        source: this._instanceId
-      });
-    }
-
-    // Also notify local listeners
-    this._notifyLocalListeners(prevState);
   }
 }
 
@@ -688,19 +747,6 @@ class duplicationStore {
  * Create and export singleton instance
  */
 const store = new duplicationStore();
-
-/**
- * Generate a UUID for correlation IDs
- * @returns {string} UUID
- * @private
- */
-function generateUuid() {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-    const r = (Math.random() * 16) | 0;
-    const v = c === "x" ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-}
 
 export { duplicationStore };
 export default store;

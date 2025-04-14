@@ -25,6 +25,22 @@
         description="Ensures component respects safe areas on mobile devices"
       />
         </targetConfig>
+        <targetConfig targets="lightning__Tab">
+            <property
+        name="height"
+        type="Integer"
+        default="800"
+        label="Minimum Height"
+        description="Minimum height of the component in pixels"
+      />
+            <property
+        name="useSafeArea"
+        type="Boolean"
+        default="true"
+        label="Use Safe Area"
+        description="Ensures component respects safe areas on mobile devices"
+      />
+        </targetConfig>
     </targetConfigs>
     <masterLabel>Duplicate Finder</masterLabel>
     <description

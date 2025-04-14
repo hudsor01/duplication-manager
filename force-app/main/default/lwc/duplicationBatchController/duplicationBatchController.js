@@ -18,6 +18,7 @@ export default class DuplicationBatchController extends LightningElement {
   isLoading = false;
   error = null;
   batchSize = 200; // Default batch size
+  runMode = "dryRun"; // Default to dry run mode
   batchSizeOptions = [
     { label: "50 Records", value: 50 },
     { label: "100 Records", value: 100 },
@@ -34,12 +35,19 @@ export default class DuplicationBatchController extends LightningElement {
    * Lifecycle hook - Called when component is inserted into the DOM
    */
   connectedCallback() {
+    // Set initial state
+    this.isLoading = false;
+    this.error = null;
+
     // Subscribe to store changes
     this.subscription = subscribeToChannel((message) => {
       if (message.type === MESSAGE_TYPES.STORE_UPDATED) {
         this.handleStoreChange(message.payload);
       }
     });
+
+    // Safety timeout using Promise to ensure we don't get stuck in loading state
+    this.safetyPromise = this.createSafetyTimeout(5000);
   }
 
   /**
@@ -50,6 +58,44 @@ export default class DuplicationBatchController extends LightningElement {
     if (this.subscription) {
       unsubscribeFromChannel(this.subscription);
     }
+
+    // Cancel any pending safety timeout
+    this.safetyPromise = null;
+  }
+
+  /**
+   * Creates a safety system with manual timeout to avoid loading state getting stuck
+   * @returns {Promise} Promise that resolves immediately but triggers a loading reset
+   */
+  createSafetyTimeout() {
+    // Create a promise that resolves immediately
+    return Promise.resolve().then(() => {
+      // Store current loading state
+      const initialLoadingState = this.isLoading;
+      
+      // Set a simple timeout to forcibly reset loading state after 5 seconds
+      // This is a safety mechanism in case the normal flow fails
+      setTimeout(() => {
+        if (this.isLoading && initialLoadingState) {
+          // Safety mechanism triggered - reset loading state
+          this.isLoading = false;
+          
+          // Also reset the store loading state
+          store.dispatch(duplicationStore.actions.SET_LOADING, false);
+        }
+      }, 5000);
+    });
+  }
+
+  /**
+   * Get a unique ID for the component's root template
+   */
+  get templateRootId() {
+    if (!this._templateId) {
+      // Generate a simple ID based on component instance
+      this._templateId = `batch_controller_${Date.now()}`;
+    }
+    return this._templateId;
   }
 
   /**
@@ -57,8 +103,18 @@ export default class DuplicationBatchController extends LightningElement {
    * @param {Object} state - New store state
    */
   handleStoreChange(state) {
-    // Update component based on store state if needed
-    this.isLoading = state.isLoading;
+    try {
+      // Update component based on store state if needed
+      if (state && typeof state === "object") {
+        this.isLoading = !!state.isLoading;
+      } else {
+        // If we receive invalid state, ensure loading is false
+        this.isLoading = false;
+      }
+    } catch (error) {
+      // Reset loading on error and track the issue silently
+      this.isLoading = false;
+    }
   }
 
   /**
@@ -67,7 +123,6 @@ export default class DuplicationBatchController extends LightningElement {
    */
   handleBatchSizeChange(event) {
     this.batchSize = parseInt(event.detail.value, 10);
-    console.log("Batch size changed to:", this.batchSize);
   }
 
   /**
@@ -136,9 +191,7 @@ export default class DuplicationBatchController extends LightningElement {
    * @param {Boolean} isDryRun - Whether this is a dry run (find only)
    */
   executeJob(settingDeveloperName, isDryRun) {
-    console.log(
-      `Executing ${isDryRun ? "dry run" : "merge"} job for setting: ${settingDeveloperName}`
-    );
+    // Execute job based on selected configuration and mode
 
     // Set loading state
     this.isLoading = true;
@@ -146,14 +199,12 @@ export default class DuplicationBatchController extends LightningElement {
 
     // Call Apex method
     runDuplicateFinderBatch({
-      settingDeveloperName: settingDeveloperName,
+      configId: settingDeveloperName,
       isDryRun: isDryRun,
       batchSize: this.batchSize
     })
       .then((result) => {
-        console.log("Job executed successfully, job ID:", result);
-
-        // Show success message
+        // Job executed successfully, show success message
         this.showToast(
           "Success",
           `${isDryRun ? "Dry run" : "Merge operation"} started successfully (Job ID: ${result})`,
@@ -172,7 +223,7 @@ export default class DuplicationBatchController extends LightningElement {
         );
       })
       .catch((error) => {
-        console.error("Error executing job:", error);
+        // Handle error through proper error handling method
         this.handleError(
           `Error starting ${isDryRun ? "dry run" : "merge operation"}`,
           error
@@ -219,7 +270,7 @@ export default class DuplicationBatchController extends LightningElement {
       }
     }
 
-    console.error(errorMessage);
+    // Set error state for component
     this.error = { message: errorMessage };
 
     // Add to store errors
@@ -236,8 +287,13 @@ export default class DuplicationBatchController extends LightningElement {
    * @returns {Object} Selected configuration or null
    */
   get selectedConfiguration() {
-    const state = store.getState();
-    return state.selectedConfiguration;
+    try {
+      const state = store.getState();
+      return state?.selectedConfiguration || null;
+    } catch (error) {
+      // In case of error, safely return null
+      return null;
+    }
   }
 
   /**
@@ -262,5 +318,30 @@ export default class DuplicationBatchController extends LightningElement {
    */
   get hasError() {
     return this.error !== null;
+  }
+
+  /**
+   * Handle run mode change
+   * @param {Event} event - Change event
+   */
+  handleRunModeChange(event) {
+    this.runMode = event.target.value;
+
+    // Show toast to clearly indicate mode change
+    const modeLabel = this.isDryRunMode ? "Dry Run" : "Live Merge";
+    const variant = this.isDryRunMode ? "info" : "warning";
+    const message = this.isDryRunMode
+      ? "Switched to Dry Run mode - this will identify duplicates without modifying data."
+      : "Switched to Live Merge mode - this will permanently merge duplicate records.";
+
+    this.showToast(`Mode: ${modeLabel}`, message, variant);
+  }
+
+  /**
+   * Check if currently in dry run mode
+   * @returns {Boolean} True if in dry run mode
+   */
+  get isDryRunMode() {
+    return this.runMode === "dryRun";
   }
 }

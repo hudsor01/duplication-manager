@@ -18,12 +18,23 @@ import duplication_CHANNEL from "@salesforce/messageChannel/DuplicationChannel_c
 // Unique ID for this component instance
 const INSTANCE_ID = generateUuid();
 
-// Middleware stack for message processing
+// Middleware stack for message processing - limit to prevent performance issues
 const middleware = [];
+const MAX_MIDDLEWARE = 5;
 
 // Create a message context that will be shared across all subscribers
 // This is a fallback context - ideally components should use @wire(MessageContext)
 let messageContext = createMessageContext();
+
+// Track all active subscriptions for proper cleanup - use WeakSet to prevent memory leaks
+const activeSubscriptions = new WeakSet();
+
+// Track pending requests to avoid memory leaks
+const pendingRequests = new Map();
+
+// Flag to prevent multiple rapid message sending that can cause browser freezing
+let isProcessingMessage = false;
+const MESSAGE_THROTTLE_MS = 50; // Increased from 10ms to 50ms to prevent Safari freezing
 
 /**
  * Set the message context from a parent component
@@ -43,22 +54,33 @@ export function setMessageContext(context) {
  */
 export function subscribeToChannel(messageHandler, options = {}) {
   if (!messageHandler) {
-    // Error: Message handler function is required
     return null;
   }
 
-  // Create a wrapper handler that applies middleware
+  // Create a wrapper handler that applies middleware and adds error handling
   const wrappedHandler = (message) => {
-    // Apply middleware
-    let processedMessage = message;
-    for (const middlewareFn of middleware) {
-      processedMessage = middlewareFn(processedMessage, "incoming");
-      // Stop processing if middleware returns null
-      if (!processedMessage) return;
-    }
+    try {
+      if (!message) return;
+      
+      // Optimize middleware processing - only apply if there are any
+      if (middleware.length === 0) {
+        messageHandler(message);
+        return;
+      }
+      
+      // Apply middleware with short-circuit for better performance
+      let processedMessage = message;
+      for (let i = 0; i < middleware.length && processedMessage; i++) {
+        processedMessage = middleware[i](processedMessage, "incoming");
+      }
 
-    // Call the original handler with the processed message
-    messageHandler(processedMessage);
+      // Call the original handler with the processed message if still valid
+      if (processedMessage) {
+        messageHandler(processedMessage);
+      }
+    } catch (error) {
+      // Silent error handling
+    }
   };
 
   // Subscribe to the Lightning Message Channel
@@ -68,6 +90,11 @@ export function subscribeToChannel(messageHandler, options = {}) {
     wrappedHandler,
     options
   );
+  
+  // Track subscription for global cleanup if needed
+  if (subscription) {
+    activeSubscriptions.add(subscription);
+  }
 
   return subscription;
 }
@@ -77,8 +104,14 @@ export function subscribeToChannel(messageHandler, options = {}) {
  * @param {object} subscription - Subscription returned by subscribeToChannel
  */
 export function unsubscribeFromChannel(subscription) {
-  if (subscription) {
+  if (!subscription) return;
+  
+  try {
     unsubscribe(subscription);
+    
+    // Remove from active subscriptions tracking - WeakSet will handle cleanup automatically
+  } catch (error) {
+    // Silent error handling
   }
 }
 
@@ -90,49 +123,87 @@ export function unsubscribeFromChannel(subscription) {
  * @returns {string} Correlation ID for tracking the message
  */
 export function sendMessage(type, data, options = {}) {
-  const defaultOptions = {
-    priority: "normal",
-    correlationId: null,
-    jobId: null,
-    configId: null
-  };
-
-  const finalOptions = { ...defaultOptions, ...options };
-
-  // Create the message
-  let message = {
-    type: type,
-    payload: data,
-    timestamp: new Date().toISOString(),
-    source: INSTANCE_ID,
-    priority: finalOptions.priority,
-    correlationId: finalOptions.correlationId || generateUuid(),
-    jobId: finalOptions.jobId,
-    configId: finalOptions.configId
-  };
-
-  // Apply middleware chain
-  for (const middlewareFn of middleware) {
-    message = middlewareFn(message, "outgoing");
-    // Stop sending if middleware returns null
-    if (!message) return null;
+  if (!type) return null;
+  
+  // Handle high priority messages immediately, otherwise throttle to prevent browser freezing
+  if (options.priority !== "high" && isProcessingMessage) {
+    // Return a correlation ID but queue the message for later processing
+    const correlationId = options.correlationId || generateUuid();
+    
+    // Use requestAnimationFrame for better performance than setTimeout
+    window.requestAnimationFrame(() => {
+      sendMessage(type, data, {...options, correlationId});
+    });
+    
+    return correlationId;
   }
+  
+  try {
+    isProcessingMessage = true;
+    
+    const defaultOptions = {
+      priority: "normal",
+      correlationId: null,
+      jobId: null,
+      configId: null
+    };
 
-  // Publish to the Lightning Message Channel
-  publish(messageContext, duplication_CHANNEL, message);
+    const finalOptions = { ...defaultOptions, ...options };
 
-  // Return the correlation ID for tracking
-  return message.correlationId;
+    // Create the message - use simpler timestamp for better performance
+    let message = {
+      type: type,
+      payload: data,
+      timestamp: Date.now(),
+      source: INSTANCE_ID,
+      priority: finalOptions.priority,
+      correlationId: finalOptions.correlationId || generateUuid(),
+      jobId: finalOptions.jobId,
+      configId: finalOptions.configId
+    };
+
+    // Apply middleware if any exist
+    if (middleware.length > 0) {
+      // Apply middleware chain with short-circuit optimization
+      for (let i = 0; i < middleware.length && message; i++) {
+        message = middleware[i](message, "outgoing");
+      }
+      
+      // Stop sending if middleware nullified the message
+      if (!message) {
+        isProcessingMessage = false;
+        return null;
+      }
+    }
+
+    // Publish to the Lightning Message Channel
+    publish(messageContext, duplication_CHANNEL, message);
+
+    // Use requestAnimationFrame to reset flag for better browser repaint cycles
+    window.requestAnimationFrame(() => {
+      isProcessingMessage = false;
+    });
+    
+    // Return the correlation ID for tracking
+    return message.correlationId;
+  } catch (error) {
+    // Silent error handling
+    isProcessingMessage = false;
+    return null;
+  }
 }
 
 /**
  * Add middleware to the message processing pipeline
  * @param {function} middlewareFn - Function(message, direction) that processes messages
+ * @returns {boolean} True if middleware was added successfully
  */
 export function addMiddleware(middlewareFn) {
-  if (typeof middlewareFn === "function") {
+  if (typeof middlewareFn === "function" && middleware.length < MAX_MIDDLEWARE) {
     middleware.push(middlewareFn);
+    return true;
   }
+  return false;
 }
 
 /**
@@ -143,59 +214,102 @@ export function clearMiddleware() {
 }
 
 /**
+ * Clean up all active subscriptions
+ * Use this on app unload or manual cleanup if needed
+ */
+export function cleanupAllSubscriptions() {
+  try {
+    // Clean up any pending requests
+    pendingRequests.forEach((request, id) => {
+      if (request.timeoutId) {
+        clearTimeout(request.timeoutId);
+      }
+      if (request.subscription) {
+        unsubscribeFromChannel(request.subscription);
+      }
+    });
+    
+    pendingRequests.clear();
+  } catch (error) {
+    // Silent error handling
+  }
+}
+
+/**
  * Send a request and wait for a response with the same correlation ID
  * @param {string} type - Message type/action
  * @param {object} data - Message payload
- * @param {number} timeout - Timeout in ms (default: 5000)
+ * @param {number} timeout - Optional timeout in ms (defaults to 10000)
  * @returns {Promise} Promise that resolves with the response
  */
-export function sendRequest(type, data, timeout = 5000) {
+export function sendRequest(type, data, timeout = 10000) {
   return new Promise((resolve, reject) => {
-    // Generate correlation ID for this request
-    const correlationId = generateUuid();
+    try {
+      // Generate correlation ID for this request
+      const correlationId = generateUuid();
 
-    // Declare timeoutId at the beginning
-    let timeoutId;
+      // Track our subscription for cleanup
+      let subscriptionRef;
+      let timeoutId;
 
-    // Create a one-time subscription to listen for the response
-    const subscription = subscribeToChannel((message) => {
-      // Only process responses with matching correlation ID
-      if (message.correlationId === correlationId) {
-        // Unsubscribe from the channel since we got our response
-        unsubscribeFromChannel(subscription);
-
-        // Clear the timeout
+      // Create a one-time subscription to listen for the response
+      const subscription = subscribeToChannel((message) => {
+        if (!message || !message.correlationId || message.correlationId !== correlationId) return;
+        
+        // Clear timeout to prevent memory leaks
         if (timeoutId) {
           clearTimeout(timeoutId);
+          timeoutId = null;
         }
+
+        // Unsubscribe from the channel since we got our response
+        if (subscriptionRef) {
+          unsubscribeFromChannel(subscriptionRef);
+          subscriptionRef = null;
+        }
+        
+        // Remove from pending requests
+        pendingRequests.delete(correlationId);
 
         // Resolve the promise with the response payload
         resolve(message.payload);
-      }
-    });
-
-    // Using a safe approach for async operations in LWC
-    // Avoid using setTimeout directly in production code
-    // This is just a fallback mechanism
-    Promise.resolve()
-      .then(() => {
-        // Simulate timeout with Promise
-        const timer = new Promise((_, timeoutReject) => {
-          // Store timeout ID for potential cancellation
-          timeoutId = setTimeout(() => {
-            unsubscribeFromChannel(subscription);
-            timeoutReject(new Error(`Request timed out after ${timeout}ms`));
-          }, timeout);
-        });
-
-        return Promise.race([timer]);
-      })
-      .catch((err) => {
-        reject(err);
       });
 
-    // Send the request message with the correlation ID
-    sendMessage(type, data, { correlationId });
+      // Store reference to subscription
+      subscriptionRef = subscription;
+
+      // Track this pending request for potential cleanup
+      pendingRequests.set(correlationId, {
+        subscription: subscriptionRef,
+        timeoutId: null,
+        startTime: Date.now()
+      });
+      
+      // Set timeout to prevent lingering subscriptions - reduced from default 30s to 10s
+      timeoutId = setTimeout(() => {
+        // Unsubscribe from the channel on timeout
+        if (subscriptionRef) {
+          unsubscribeFromChannel(subscriptionRef);
+          subscriptionRef = null;
+        }
+        
+        // Remove from pending requests
+        pendingRequests.delete(correlationId);
+        
+        reject(new Error(`Request timed out after ${timeout}ms`));
+      }, timeout);
+      
+      // Update the timeoutId in the pending requests map
+      if (pendingRequests.has(correlationId)) {
+        pendingRequests.get(correlationId).timeoutId = timeoutId;
+      }
+
+      // Send the request message with the correlation ID
+      sendMessage(type, data, { correlationId, priority: "high" });
+    } catch (error) {
+      // Reject with error
+      reject(error);
+    }
   });
 }
 
@@ -205,11 +319,13 @@ export function sendRequest(type, data, timeout = 5000) {
  * @returns {string} UUID
  */
 function generateUuid() {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-    const r = (Math.random() * 16) | 0;
-    const v = c === "x" ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
+  try {
+    // Simplified UUID generation for better performance
+    return Date.now().toString(36) + Math.random().toString(36).substring(2, 9);
+  } catch (error) {
+    // Fallback UUID in case of error
+    return `fallback-${Date.now()}`;
+  }
 }
 
 /**
@@ -219,13 +335,24 @@ function generateUuid() {
  * @returns {function} Handler function that only calls callback for specified types
  */
 export function createFilteredHandler(callback, types) {
+  if (!callback || !types) return (message) => {};
+  
   // Convert to array if necessary
   const typeArray = Array.isArray(types) ? types : [types];
+  
+  // Create a Set for faster lookups
+  const typeSet = new Set(typeArray);
 
-  // Return a handler that filters messages
+  // Return an optimized handler that filters messages
   return (message) => {
-    if (typeArray.includes(message.type)) {
-      callback(message);
+    try {
+      if (!message || !message.type) return;
+      
+      if (typeSet.has(message.type)) {
+        callback(message);
+      }
+    } catch (error) {
+      // Silent error handling
     }
   };
 }

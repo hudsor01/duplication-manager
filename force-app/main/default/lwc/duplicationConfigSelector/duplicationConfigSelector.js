@@ -2,6 +2,7 @@ import { LightningElement, wire } from "lwc";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import { MessageContext } from "lightning/messageService";
 import getActiveSettings from "@salesforce/apex/DuplicateRecordController.getActiveSettings";
+import getFieldsForObject from "@salesforce/apex/DuplicateRecordController.getFieldsForObject";
 import store from "c/duplicationStore";
 import { duplicationStore } from "c/duplicationStore";
 import {
@@ -27,6 +28,14 @@ export default class DuplicationConfigSelector extends LightningElement {
 
   // Holds recently used configurations
   recentConfigurations = [];
+  
+  // Custom field selection properties
+  useCustomConfig = false;
+  availableFields = [];
+  selectedFields = [];
+  originalMatchFields = [];
+  loadingFields = false;
+  customMatchFields = "";
 
   // Get message context for LMS
   @wire(MessageContext)
@@ -194,6 +203,21 @@ export default class DuplicationConfigSelector extends LightningElement {
 
         if (selectedConfig) {
           this.selectedConfigId = configId;
+          this.useCustomConfig = false;
+          this.customMatchFields = "";
+          this.resetFieldSelections();
+
+          // If we have a valid object API name, load available fields
+          if (selectedConfig.ObjectApiName) {
+            this.loadAvailableFields(selectedConfig.ObjectApiName);
+          }
+
+          // Store original match fields for later reference
+          if (selectedConfig.MatchFields) {
+            this.originalMatchFields = selectedConfig.MatchFields.split(',').map(field => field.trim());
+          } else {
+            this.originalMatchFields = [];
+          }
 
           // Update store with selected configuration
           try {
@@ -219,6 +243,11 @@ export default class DuplicationConfigSelector extends LightningElement {
       } else {
         // Clear selection
         this.selectedConfigId = "";
+        this.useCustomConfig = false;
+        this.customMatchFields = "";
+        this.availableFields = [];
+        this.originalMatchFields = [];
+        
         try {
           if (
             duplicationStore.actions &&
@@ -233,6 +262,53 @@ export default class DuplicationConfigSelector extends LightningElement {
     } catch (error) {
       this.handleError("Error changing configuration", error);
     }
+  }
+  
+  /**
+   * Load available fields for the selected object
+   * @param {String} objectApiName - API name of the object
+   */
+  loadAvailableFields(objectApiName) {
+    if (!objectApiName) return;
+    
+    this.loadingFields = true;
+    
+    getFieldsForObject({ objectApiName })
+      .then(result => {
+        if (result && result.fieldGroups) {
+          // Combine all field groups into one list
+          let allFields = [];
+          result.fieldGroups.forEach(group => {
+            if (group.fields && Array.isArray(group.fields)) {
+              allFields = [...allFields, ...group.fields];
+            }
+          });
+          
+          // Process fields to match original field selection
+          this.availableFields = allFields.map(field => {
+            return {
+              apiName: field.apiName,
+              label: `${field.label} (${field.apiName})`,
+              type: field.type,
+              selected: this.originalMatchFields.includes(field.apiName)
+            };
+          });
+          
+          // Sort fields by label
+          this.availableFields.sort((a, b) => {
+            return a.label.localeCompare(b.label);
+          });
+          
+          // Initialize selected fields from original match fields
+          this.selectedFields = [...this.originalMatchFields];
+        }
+      })
+      .catch(error => {
+        this.handleError("Error loading fields for object", error);
+      })
+      .finally(() => {
+        this.loadingFields = false;
+      });
   }
 
   /**
@@ -319,6 +395,122 @@ export default class DuplicationConfigSelector extends LightningElement {
   }
 
   /**
+   * Handle toggling custom configuration mode
+   * @param {Event} event - Change event
+   */
+  handleCustomConfigChange(event) {
+    this.useCustomConfig = event.target.checked;
+    
+    if (this.useCustomConfig) {
+      // If turning on custom config and we don't have fields loaded yet
+      const selectedConfig = this.selectedConfiguration;
+      if (selectedConfig && selectedConfig.ObjectApiName && this.availableFields.length === 0) {
+        this.loadAvailableFields(selectedConfig.ObjectApiName);
+      }
+    } else {
+      // If turning off custom config, reset to original settings
+      this.customMatchFields = "";
+      this.resetFieldSelections();
+    }
+  }
+  
+  /**
+   * Handle field selection in custom config mode
+   * @param {Event} event - Change event
+   */
+  handleFieldSelection(event) {
+    const fieldName = event.target.dataset.field;
+    const isChecked = event.target.checked;
+    
+    // Update the availableFields array
+    this.availableFields = this.availableFields.map(field => {
+      if (field.apiName === fieldName) {
+        field.selected = isChecked;
+      }
+      return field;
+    });
+    
+    // Update the selectedFields array
+    if (isChecked) {
+      if (!this.selectedFields.includes(fieldName)) {
+        this.selectedFields.push(fieldName);
+      }
+    } else {
+      this.selectedFields = this.selectedFields.filter(field => field !== fieldName);
+    }
+  }
+  
+  /**
+   * Reset field selections to original config
+   */
+  resetFieldSelections() {
+    if (this.availableFields.length === 0) return;
+    
+    this.availableFields = this.availableFields.map(field => {
+      field.selected = this.originalMatchFields.includes(field.apiName);
+      return field;
+    });
+    
+    this.selectedFields = [...this.originalMatchFields];
+  }
+  
+  /**
+   * Handle reset to default fields
+   */
+  handleResetFields() {
+    this.resetFieldSelections();
+    this.customMatchFields = "";
+    
+    this.showToast(
+      "Success", 
+      "Field selection reset to original configuration", 
+      "success"
+    );
+  }
+  
+  /**
+   * Apply custom field configuration
+   */
+  handleApplyCustomConfig() {
+    if (this.selectedFields.length === 0) {
+      this.showToast(
+        "Error",
+        "Please select at least one field for matching",
+        "error"
+      );
+      return;
+    }
+    
+    // Create custom match fields string
+    this.customMatchFields = this.selectedFields.join(", ");
+    
+    // Create a modified configuration
+    const originalConfig = this.selectedConfiguration;
+    if (!originalConfig) return;
+    
+    const customConfig = { ...originalConfig };
+    customConfig.MatchFields = this.customMatchFields;
+    
+    // Update store with modified configuration
+    try {
+      if (duplicationStore.actions && duplicationStore.actions.SELECT_CONFIGURATION) {
+        store.dispatch(
+          duplicationStore.actions.SELECT_CONFIGURATION,
+          customConfig
+        );
+      }
+      
+      this.showToast(
+        "Success",
+        "Custom field configuration applied",
+        "success"
+      );
+    } catch (error) {
+      this.handleError("Error applying custom configuration", error);
+    }
+  }
+  
+  /**
    * Get current selected configuration
    * @returns {Object} Selected configuration or null
    */
@@ -350,6 +542,34 @@ export default class DuplicationConfigSelector extends LightningElement {
   get hasConfigurations() {
     return this.configsLoaded && this.configOptions.length > 0;
   }
+  
+  /**
+   * Check if custom field panel should be shown
+   * @returns {Boolean} True if custom field panel should be shown
+   */
+  get showCustomFieldPanel() {
+    return this.hasSelectedConfiguration && this.useCustomConfig;
+  }
+  
+  /**
+   * Check if apply button should be disabled
+   * @returns {Boolean} True if apply button should be disabled
+   */
+  get isApplyDisabled() {
+    return this.selectedFields.length === 0;
+  }
+  
+  /**
+   * Get display version of match fields (custom or original)
+   * @returns {String} Match fields to display
+   */
+  get displayMatchFields() {
+    if (this.useCustomConfig && this.customMatchFields) {
+      return this.customMatchFields;
+    }
+    
+    return this.selectedConfiguration?.MatchFields || "";
+  }
 
   /**
    * Display deployment guide modal
@@ -372,5 +592,19 @@ export default class DuplicationConfigSelector extends LightningElement {
    */
   get hasError() {
     return this.error !== null;
+  }
+
+  /**
+   * Handler for viewing documentation about the duplication detection algorithm
+   */
+  handleViewDocs() {
+    // Create and dispatch a toast notification with the documentation information
+    const evt = new ShowToastEvent({
+      title: 'Duplication Detection Documentation',
+      message: 'The detailed documentation for the fuzzy matching algorithm is available in the Help section. Click the Help icon in the top right corner of the page.',
+      variant: 'info',
+      mode: 'sticky'
+    });
+    this.dispatchEvent(evt);
   }
 }

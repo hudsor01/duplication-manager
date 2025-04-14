@@ -1,0 +1,44 @@
+/* Fix for dropdown menu z-index issue - using a very high z-index */
+:host {
+  position: relative;
+  z-index: 9000 !important; /* Very high z-index to ensure it's on top */
+}
+
+/* Ensure the combobox dropdown appears above other elements */
+.config-selector-container {
+  position: relative;
+  z-index: 9000 !important; /* Very high z-index to ensure it's on top */
+}
+
+/* Make spacing for the dropdown */
+.config-selector-combobox {
+  position: relative;
+  margin-bottom: 0;
+}
+
+/* Scrollable field selection container */
+.slds-scrollable {
+  overflow-y: auto;
+  border: 1px solid #dddbda;
+  border-radius: 4px;
+  background-color: #ffffff;
+}
+
+/* Selected field highlighting */
+lightning-input.field-selected {
+  font-weight: bold;
+}
+
+/* Custom field selection panel */
+.custom-field-panel {
+  background-color: #f3f2f2;
+  border-radius: 4px;
+}
+
+/* Field category header */
+.field-category {
+  font-weight: bold;
+  color: #706e6b;
+  padding: 8px 12px;
+  border-bottom: 1px solid #dddbda;
+}

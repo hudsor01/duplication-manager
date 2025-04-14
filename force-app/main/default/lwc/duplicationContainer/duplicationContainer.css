@@ -11,6 +11,8 @@
   background-color: #f3f3f3;
   min-height: 500px;
   height: auto;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .sidebar-column {
@@ -22,9 +24,12 @@
 
 .main-column {
   overflow-y: auto;
+  overflow-x: hidden;
   height: 100%;
   padding: 0.75rem;
   position: relative;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .component-container {
@@ -35,16 +40,19 @@
   padding: 1rem;
   transition: all 0.3s ease;
   animation: fadeIn 0.5s ease-out;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translate3d(0, 20px, 0); /* Use translate3d for hardware acceleration */
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0); /* Use translate3d for hardware acceleration */
   }
 }
 
@@ -89,6 +97,7 @@
   margin-right: 4px;
   position: relative;
   overflow: hidden;
+  will-change: transform; /* Optimize for Safari rendering */
 }
 
 .custom-tab.active {
@@ -96,14 +105,14 @@
   background-color: rgba(21, 137, 238, 0.08);
   color: #0070d2;
   font-weight: 600;
-  transform: translateY(-1px);
+  transform: translate3d(0, -1px, 0); /* Use translate3d for hardware acceleration */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .custom-tab:hover:not(.active) {
   background-color: rgba(0, 0, 0, 0.03);
   border-bottom-color: #dddbda;
-  transform: translateY(-1px);
+  transform: translate3d(0, -1px, 0); /* Use translate3d for hardware acceleration */
 }
 
 .custom-tab:before {
@@ -147,30 +156,18 @@
 
 /* Animation for content transitions */
 .tab-content-container {
-  transition:
-    opacity 0.4s ease-in-out,
-    transform 0.4s ease-in-out,
-    height 0.4s ease-in-out;
   position: relative;
-  transform-origin: top center;
 }
 
-.tab-content-hide {
-  opacity: 0;
-  height: 0;
-  transform: translateY(10px);
-  overflow: hidden;
-  position: absolute;
-  width: 100%;
-  visibility: hidden;
+/* Using standard Salesforce classes for visibility, with will-change optimization for Safari */
+.slds-show {
+  display: block !important;
+  visibility: visible !important;
+  will-change: opacity; /* Optimize for Safari rendering */
 }
 
-.tab-content-show {
-  opacity: 1;
-  height: auto;
-  transform: translateY(0);
-  visibility: visible;
-  position: relative;
+.slds-hide {
+  display: none !important;
 }
 
 /* Fade-in animation for content elements */
@@ -181,11 +178,11 @@
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translate3d(0, 20px, 0); /* Use translate3d for hardware acceleration */
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0); /* Use translate3d for hardware acceleration */
   }
 }
 
@@ -228,11 +225,28 @@
 
 @keyframes slideInDown {
   from {
-    transform: translateY(-20px);
+    transform: translate3d(0, -20px, 0); /* Use translate3d for hardware acceleration */
     opacity: 0;
   }
   to {
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0); /* Use translate3d for hardware acceleration */
     opacity: 1;
   }
+}
+
+/* Make the config container have higher z-index to ensure dropdown appears above other content */
+.config-container {
+  position: relative;
+  z-index: 5;
+  margin-bottom: 2rem;
+}
+
+/* Simplified safe area styles without webkit-specific properties */
+.safe-area-enabled {
+  width: 100%;
+  height: 100%;
+  min-height: 100vh; 
+  overflow-x: hidden;
+  position: relative;
+  z-index: 1;
 }

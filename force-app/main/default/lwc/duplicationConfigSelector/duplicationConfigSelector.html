@@ -73,7 +73,7 @@
 
       <!-- Configuration Dropdown -->
       <template if:true={hasConfigurations}>
-        <div class="slds-form-element">
+        <div class="slds-form-element config-selector-container">
           <div class="slds-form-element__control">
             <lightning-combobox
               name="configuration"
@@ -83,6 +83,8 @@
               value={selectedConfigId}
               options={configOptions}
               onchange={handleConfigChange}
+              dropdown-alignment="auto"
+              class="config-selector-combobox"
             >
             </lightning-combobox>
           </div>
@@ -110,6 +112,54 @@
         </template>
       </template>
 
+      <!-- Custom Field Selection -->
+      <template if:true={hasSelectedConfiguration}>
+        <div class="slds-var-m-top_medium">
+          <lightning-input type="checkbox" 
+                           label="Customize Field Selection" 
+                           checked={useCustomConfig}
+                           onchange={handleCustomConfigChange}>
+          </lightning-input>
+        </div>
+      </template>
+
+      <!-- Custom Field Selection Panel -->
+      <template if:true={showCustomFieldPanel}>
+        <div class="slds-box slds-theme_default slds-var-m-top_medium">
+          <div class="slds-text-title slds-var-m-bottom_small">
+            <strong>Custom Field Selection</strong>
+          </div>
+          
+          <div class="slds-scrollable slds-var-p-around_small" style="max-height: 250px">
+            <lightning-layout multiple-rows>
+              <template for:each={availableFields} for:item="field">
+                <lightning-layout-item key={field.apiName} size="6" padding="around-small">
+                  <lightning-input type="checkbox"
+                                   label={field.label}
+                                   data-field={field.apiName}
+                                   checked={field.selected}
+                                   onchange={handleFieldSelection}>
+                  </lightning-input>
+                </lightning-layout-item>
+              </template>
+            </lightning-layout>
+          </div>
+          
+          <div class="slds-var-m-top_medium slds-text-align_right">
+            <lightning-button variant="neutral" 
+                              label="Reset to Default" 
+                              onclick={handleResetFields}
+                              class="slds-var-m-right_small">
+            </lightning-button>
+            <lightning-button variant="brand" 
+                              label="Apply Custom Selection" 
+                              onclick={handleApplyCustomConfig}
+                              disabled={isApplyDisabled}>
+            </lightning-button>
+          </div>
+        </div>
+      </template>
+      
       <!-- Selected Configuration Details -->
       <template if:true={hasSelectedConfiguration}>
         <div class="slds-box slds-theme_shade slds-var-m-top_medium">
@@ -123,7 +173,7 @@
               </p>
               <p>
                 <strong>Match Fields:</strong>
-                {selectedConfiguration.MatchFields}
+                {displayMatchFields}
               </p>
             </lightning-layout-item>
             <lightning-layout-item size="6" padding="horizontal-small">
@@ -151,7 +201,13 @@
                 <strong>Master Record Strategy:</strong> Determines which record
                 becomes the "master" during merge.
               </p>
-              <p class="slds-var-m-top_xx-small">
+              <div class="slds-var-m-left_small slds-var-m-top_xx-small">
+                <p><strong>Most Complete:</strong> Record with the most non-empty field values</p>
+                <p><strong>Most Recent:</strong> Record with the most recent Last Modified Date</p>
+                <p><strong>Oldest Record:</strong> Record with the oldest Created Date</p>
+              </div>
+              
+              <p class="slds-var-m-top_small">
                 <lightning-icon
                   icon-name="utility:info_alt"
                   size="xx-small"
@@ -160,6 +216,30 @@
                 <strong>Match Fields:</strong> Fields used to determine if
                 records are duplicates.
               </p>
+              <div class="slds-var-m-left_small slds-var-m-top_xx-small">
+                <p><strong>How matching works:</strong></p>
+                <ol class="slds-list_ordered">
+                  <li>Records are compared using advanced fuzzy matching algorithms</li>
+                  <li>Each field is evaluated independently with appropriate techniques:
+                    <ul class="slds-list_dotted slds-var-m-left_small">
+                      <li><strong>Email:</strong> Normalized for case and common variations</li>
+                      <li><strong>Phone:</strong> Compared after removing formatting characters</li>
+                      <li><strong>Names:</strong> Fuzzy matching for typos and variations</li>
+                      <li><strong>Addresses:</strong> Component-wise comparison (street, city, etc.)</li>
+                    </ul>
+                  </li>
+                  <li>A match score is calculated based on field similarities</li>
+                  <li>Records above the match threshold are grouped as duplicates</li>
+                </ol>
+                <p class="slds-var-m-top_xx-small">
+                  <lightning-button variant="brand-outline" 
+                                    label="View Documentation"
+                                    icon-name="utility:knowledge_base" 
+                                    class="slds-var-m-top_x-small"
+                                    onclick={handleViewDocs}>
+                  </lightning-button>
+                </p>
+              </div>
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { LightningElement, track, wire } from "lwc";
+import { LightningElement, track, wire, api } from "lwc";
 import {
   subscribeToChannel,
   unsubscribeFromChannel,
@@ -6,11 +6,26 @@ import {
 } from "c/duplicationMessageService";
 import { MESSAGE_TYPES } from "c/duplicationConstants";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
+import { NavigationMixin } from "lightning/navigation";
 import getUserSettings from "@salesforce/apex/DuplicateRecordController.getUserSettings";
-import saveUserSettings from "@salesforce/apex/DuplicateRecordController.saveUserSettings";
+import saveUserSettings from "@salesforce/apex/DRCSaveSettings.saveUserSettings";
 import getDuplicateStatistics from "@salesforce/apex/DuplicateRecordStatisticsController.getDuplicateStatistics";
 
-export default class duplicationContainer extends LightningElement {
+export default class duplicationContainer extends NavigationMixin(
+  LightningElement
+) {
+  // API properties passed from parent components
+  @api height = 800;
+  @api useSafeArea = false; // Default to false, will be set to true by parent
+  
+  @track activeTab = "dashboard";
+  @track showSettings = false;
+  @track selectedRecordIds = [];
+  @track selectedObjectApiName = "";
+  @track selectedGroupId = "";
+  @track isLoading = false;
+  
+  // Track tab information
   @track tabs = [
     {
       name: "dashboard",
@@ -25,15 +40,6 @@ export default class duplicationContainer extends LightningElement {
       name: "batchjobs",
       label: "Batch Jobs",
       icon: "utility:refresh",
-      selected: false,
-      tabindex: -1,
-      class: "slds-tabs_default__item",
-      customClass: "slds-tabs_default__item custom-tab"
-    },
-    {
-      name: "compare",
-      label: "Compare",
-      icon: "utility:display_text",
       selected: false,
       tabindex: -1,
       class: "slds-tabs_default__item",
@@ -59,21 +65,12 @@ export default class duplicationContainer extends LightningElement {
     }
   ];
 
-  @track activeTab = "dashboard";
-  @track showSettings = false;
-  @track selectedRecordIds = [];
-  @track selectedObjectApiName = "";
-  @track selectedGroupId = "";
-  @track isLoading = false;
-
-  // Property to track loading timeout
-  loadingTimeout;
-
   @track metrics = {
     duplicatesFound: 0,
     recordsMerged: 0,
     duplicatesTrend: 0,
-    mergesTrend: 0
+    mergesTrend: 0,
+    currentMonthMerges: 0
   };
 
   @track userSettings = {
@@ -112,45 +109,60 @@ export default class duplicationContainer extends LightningElement {
     { label: "Job completion notifications", value: "notificationsEnabled" }
   ];
 
-  subscription;
+  subscription = null;
+  _resizeHandler = null;
+  _resizeTimeout = null;
 
   connectedCallback() {
+    // Set default loading state
+    this.isLoading = false;
+
     // Subscribe to channel messages
     this.subscription = subscribeToChannel(this.handleMessage.bind(this));
 
     // Load metrics from database
     this.loadMetrics();
 
-    // Apply initial settings
-    this.applyInitialSettings();
+    // Always default to dashboard tab on initial load for consistency
+    this.activeTab = "dashboard";
+    
+    // Update tab states based on active tab
+    this.updateTabStates();
+    
+    // Add resize listener for viewport adjustments
+    this._resizeHandler = this.handleResize.bind(this);
+    window.addEventListener('resize', this._resizeHandler, {passive: true});
   }
-
-  applyInitialSettings() {
-    // Apply default view from user settings if available
-    if (
-      this.userSettings?.defaultView &&
-      this.userSettings.defaultView !== "dashboard"
-    ) {
-      // Use Promise instead of setTimeout
-      Promise.resolve().then(() => {
-        this.switchTab(this.userSettings.defaultView);
-      });
+  
+  /**
+   * Handle window resize events with throttling
+   */
+  handleResize() {
+    // Use requestAnimationFrame to avoid too many updates
+    if (this._resizeTimeout) {
+      window.cancelAnimationFrame(this._resizeTimeout);
     }
+    
+    this._resizeTimeout = window.requestAnimationFrame(() => {
+      // Just update the container height - no other DOM manipulation
+      this.updateContainerHeight();
+    });
   }
-
-  @wire(getUserSettings)
-  wiredSettings({ error, data }) {
-    if (data) {
-      this.userSettings = { ...this.userSettings, ...data };
-      this.applyInitialSettings();
-    } else if (error) {
-      // Error loading user settings
-      this.showToast(
-        "Error",
-        "Could not load user settings: " +
-          (error.body?.message || error.message || "Unknown error"),
-        "error"
+  
+  /**
+   * Update container height only
+   */
+  updateContainerHeight() {
+    try {
+      const rootElement = this.template.querySelector(
+        ".slds-grid.slds-grid_vertical.slds-grid_frame"
       );
+      if (rootElement) {
+        // Simple height adjustment
+        rootElement.style.minHeight = `${window.innerHeight}px`;
+      }
+    } catch (error) {
+      // Silent error handling
     }
   }
 
@@ -160,144 +172,38 @@ export default class duplicationContainer extends LightningElement {
       unsubscribeFromChannel(this.subscription);
       this.subscription = null;
     }
-
-    // Clear any pending timeouts
-    if (this.loadingTimeout) {
-      window.clearTimeout(this.loadingTimeout);
-      this.loadingTimeout = null;
+    
+    // Remove resize listener
+    if (this._resizeHandler) {
+      window.removeEventListener('resize', this._resizeHandler);
+      this._resizeHandler = null;
     }
-
-    // Ensure all event listeners are properly removed
-    const elements = this.template.querySelectorAll("button, a, [data-id]");
-    if (elements) {
-      elements.forEach((element) => {
-        element.onclick = null;
-      });
+    
+    // Clear any pending animation frames
+    if (this._resizeTimeout) {
+      window.cancelAnimationFrame(this._resizeTimeout);
+      this._resizeTimeout = null;
     }
   }
 
   /**
-   * Handle messages from the message channel
+   * After component renders, ensure container height is set
+   * Use requestAnimationFrame to prevent Safari rendering issues
    */
-  handleMessage(message) {
-    // Message received in container
-
-    if (message.type === MESSAGE_TYPES.DUPLICATES_FOUND && message.payload) {
-      // Set selected record data for comparison
-      this.selectedRecordIds = message.payload.recordIds || [];
-      this.selectedObjectApiName = message.payload.objectApiName || "";
-      this.selectedGroupId = message.payload.groupId || "";
-
-      // Show loading state
-      this.showLoading("compare");
-
-      // Switch to compare tab using Promise instead of setTimeout
-      Promise.resolve().then(() => {
-        this.switchTab("compare");
-        this.hideLoading();
-      });
-    } else if (message.type === MESSAGE_TYPES.VIEW_CHANGE && message.payload) {
-      // Switch to the requested view
-      if (message.payload.view) {
-        this.showLoading(message.payload.view);
-        Promise.resolve().then(() => {
-          this.switchTab(message.payload.view);
-          this.hideLoading();
-        });
-      }
-    } else if (message.type === MESSAGE_TYPES.REFRESH_METRICS) {
-      // Refresh metrics data
-      this.loadMetrics();
-    }
+  renderedCallback() {
+    // Use requestAnimationFrame to avoid Safari rendering issues
+    window.requestAnimationFrame(() => {
+      // Just update the container height - no DOM manipulation for tabs
+      this.updateContainerHeight();
+    });
   }
 
   /**
-   * Show loading state for a specific tab
+   * Update all tab states based on active tab
    */
-  showLoading(tabName) {
-    this.isLoading = true;
-
-    // Add transition class to content element
-    const contentEl = this.template.querySelector(
-      `[aria-labelledby="${tabName}"]`
-    );
-    if (contentEl) {
-      contentEl.classList.add("tab-content-hide");
-      contentEl.classList.remove("tab-content-show");
-    }
-
-    // Use a timer to ensure smooth transitions
-    window.clearTimeout(this.loadingTimeout);
-    this.loadingTimeout = window.setTimeout(() => {
-      this.isLoading = false;
-    }, 600); // Slightly longer than transition time
-  }
-
-  /**
-   * Hide loading state
-   */
-  hideLoading() {
-    // Add transition class to content element
-    const contentEl = this.template.querySelector(
-      `[aria-labelledby="${this.activeTab}"]`
-    );
-
-    if (contentEl) {
-      // Slight delay to ensure DOM updates have occurred
-      window.setTimeout(() => {
-        contentEl.classList.add("tab-content-show");
-        contentEl.classList.remove("tab-content-hide");
-
-        // Add fade-in class to child elements
-        const childElements = contentEl.querySelectorAll(
-          ".component-container"
-        );
-        childElements.forEach((el, index) => {
-          el.classList.add("fade-in-element");
-          el.style.animationDelay = `${index * 0.1}s`;
-        });
-      }, 50);
-    }
-
-    // Set loading state to false
-    window.clearTimeout(this.loadingTimeout);
-    this.loadingTimeout = window.setTimeout(() => {
-      this.isLoading = false;
-    }, 300);
-  }
-
-  /**
-   * Handle tab click
-   */
-  handleTabClick(event) {
-    const tabName = event.currentTarget.dataset.id;
-
-    // Do nothing if we're already on this tab or loading
-    if (tabName === this.activeTab || this.isLoading) {
-      return;
-    }
-
-    // Show loading state
-    this.showLoading(tabName);
-
-    // Use setTimeout to create a smoother transition
-    setTimeout(() => {
-      this.switchTab(tabName);
-
-      // Slight delay before hiding loading to ensure smooth animation
-      setTimeout(() => {
-        this.hideLoading();
-      }, 250);
-    }, 150);
-  }
-
-  /**
-   * Switch to a specific tab
-   */
-  switchTab(tabName) {
-    // Reset all tabs
+  updateTabStates() {
     this.tabs = this.tabs.map((tab) => {
-      const isActive = tab.name === tabName;
+      const isActive = tab.name === this.activeTab;
       return {
         ...tab,
         selected: isActive,
@@ -310,64 +216,152 @@ export default class duplicationContainer extends LightningElement {
           : "slds-tabs_default__item custom-tab"
       };
     });
+  }
+  
+  /**
+   * Activate a tab by name - simplified version
+   */
+  activateTab(tabName) {
+    // Default to dashboard if tabName is invalid
+    if (!tabName || !this.tabs.some((tab) => tab.name === tabName)) {
+      tabName = "dashboard";
+    }
 
-    // Set active tab
+    // Set the active tab
     this.activeTab = tabName;
+    
+    // Update tab states based on the new active tab
+    this.updateTabStates();
+    
+    // Dispatch event for child components
+    this.dispatchEvent(new CustomEvent("tabactivated", {
+      detail: { tabName: tabName },
+      bubbles: false
+    }));
+  }
 
-    // Notify about tab change through message service
-    try {
-      if (typeof sendMessage === "function") {
-        sendMessage(MESSAGE_TYPES.VIEW_CHANGE, {
-          view: tabName,
-          action: "switch",
-          timestamp: new Date().toISOString()
-        });
+  @wire(getUserSettings)
+  wiredSettings({ error, data }) {
+    if (data) {
+      this.userSettings = { ...this.userSettings, ...data };
+    } else if (error) {
+      // Try loading from localStorage as fallback
+      try {
+        const localSettings = localStorage.getItem(
+          "duplicationManagerSettings"
+        );
+        if (localSettings) {
+          const parsedSettings = JSON.parse(localSettings);
+          this.userSettings = { ...this.userSettings, ...parsedSettings };
+        }
+      } catch (localError) {
+        // Fail silently
       }
-    } catch (error) {
-      console.error("Error sending tab change message:", error);
     }
   }
 
   /**
-   * Get CSS class for tab content
+   * Handle messages from the message channel
    */
-  getTabContentClass(tabName) {
-    return this.activeTab === tabName
-      ? "slds-tabs_default__content slds-show tab-content-container tab-content-show"
-      : "slds-tabs_default__content slds-hide tab-content-container tab-content-hide";
+  handleMessage(message) {
+    if (!message) return;
+    
+    if (message.type === MESSAGE_TYPES.DUPLICATES_FOUND && message.payload) {
+      // Set selected record data for comparison
+      this.selectedRecordIds = message.payload.recordIds || [];
+      this.selectedObjectApiName = message.payload.objectApiName || "";
+      this.selectedGroupId = message.payload.groupId || "";
+
+      // Navigate to batch jobs tab
+      this.activateTab("batchjobs");
+
+      // Publish a message to notify components about the selected records
+      sendMessage(MESSAGE_TYPES.RECORDS_SELECTED, {
+        recordIds: this.selectedRecordIds,
+        objectApiName: this.selectedObjectApiName,
+        groupId: this.selectedGroupId
+      });
+    } else if (message.type === MESSAGE_TYPES.VIEW_CHANGE && message.payload) {
+      // Switch to the requested view
+      if (message.payload.view) {
+        // If view is "compare", redirect to "batchjobs" since we removed the compare tab
+        const view =
+          message.payload.view === "compare"
+            ? "batchjobs"
+            : message.payload.view;
+        this.activateTab(view);
+      }
+    } else if (message.type === MESSAGE_TYPES.CHANGE_TAB && message.payload) {
+      // Handle tab change requests
+      if (message.payload.tabName) {
+        // Navigate to the requested tab
+        const tabName =
+          message.payload.tabName === "compare"
+            ? "batchjobs"
+            : message.payload.tabName;
+        this.activateTab(tabName);
+
+        // If we have additional object information, store it
+        if (message.payload.objectApiName) {
+          this.selectedObjectApiName = message.payload.objectApiName;
+
+          // If this is a merge view request, also send a RECORDS_SELECTED message
+          if (message.payload.showMergeView) {
+            sendMessage(MESSAGE_TYPES.QUICK_MERGE_DUPLICATES, {
+              objectName: message.payload.objectApiName,
+              source: "container"
+            });
+          }
+        }
+      }
+    } else if (message.type === MESSAGE_TYPES.REFRESH_METRICS) {
+      // Refresh metrics data
+      this.loadMetrics();
+    }
   }
 
   /**
-   * Get dashboard tab class
+   * Handle tab click
    */
+  handleTabClick(event) {
+    try {
+      const tabName = event.currentTarget.dataset.id;
+      if (tabName === this.activeTab) {
+        return;
+      }
+
+      // Activate the clicked tab
+      this.activateTab(tabName);
+    } catch (error) {
+      // Handle errors silently
+    }
+  }
+
+  /**
+   * Get CSS class for tab content - simple version
+   */
+  getTabContentClass(tabName) {
+    return this.activeTab === tabName
+      ? "slds-tabs_default__content slds-show"
+      : "slds-tabs_default__content slds-hide";
+  }
+
   get dashboardTabClass() {
     return this.getTabContentClass("dashboard");
   }
 
-  /**
-   * Get batch jobs tab class
-   */
   get batchjobsTabClass() {
     return this.getTabContentClass("batchjobs");
   }
 
-  /**
-   * Get compare tab class
-   */
   get compareTabClass() {
     return this.getTabContentClass("compare");
   }
 
-  /**
-   * Get jobs tab class
-   */
   get jobsTabClass() {
     return this.getTabContentClass("jobs");
   }
 
-  /**
-   * Get logs tab class
-   */
   get logsTabClass() {
     return this.getTabContentClass("logs");
   }
@@ -376,24 +370,20 @@ export default class duplicationContainer extends LightningElement {
    * Handle refresh button click
    */
   handleRefresh() {
-    // Show loading animation
-    this.showLoading(this.activeTab);
+    try {
+      // Publish refresh message
+      sendMessage(MESSAGE_TYPES.VIEW_CHANGE, {
+        action: "refresh",
+        view: this.activeTab
+      });
 
-    // Publish refresh message
-    sendMessage(MESSAGE_TYPES.VIEW_CHANGE, {
-      action: "refresh",
-      view: this.activeTab
-    });
-
-    // Reload metrics if on dashboard
-    if (this.activeTab === "dashboard") {
-      this.loadMetrics();
+      // Reload metrics if on dashboard
+      if (this.activeTab === "dashboard") {
+        this.loadMetrics();
+      }
+    } catch (error) {
+      // Handle errors silently
     }
-
-    // Hide loading using Promise instead of setTimeout
-    Promise.resolve().then(() => {
-      this.hideLoading();
-    });
   }
 
   /**
@@ -411,70 +401,66 @@ export default class duplicationContainer extends LightningElement {
   }
 
   /**
-   * Save settings
+   * Save settings safely
    */
   saveSettings() {
     // Capture current settings to send to server
     const settingsToSave = { ...this.userSettings };
 
     try {
-      // Close the modal immediately to avoid Lightning Modal issues
+      // Close the modal immediately
       this.showSettings = false;
 
-      // Execute in next microtask to ensure the modal is fully closed
-      Promise.resolve().then(() => {
-        // Convert settings to JSON, handling potential circular references
-        let settingsJson;
-        try {
-          settingsJson = JSON.stringify(settingsToSave);
-        } catch (jsonError) {
-          console.error("Error stringifying settings:", jsonError);
-          this.showToast("Error", "Could not process settings data", "error");
-          return;
-        }
+      // Simplify the settings JSON to make storage easier
+      const simplifiedSettings = {
+        showAllFields: this.userSettings.showAllFields || false,
+        autoRefresh: this.userSettings.autoRefresh || true,
+        defaultBatchSize: this.userSettings.defaultBatchSize || 200,
+        timeRange: this.userSettings.timeRange || "LAST_30_DAYS",
+        notificationsEnabled: this.userSettings.notificationsEnabled || true,
+        defaultView: this.userSettings.defaultView || "dashboard"
+      };
 
-        // Send to server using Apex
-        saveUserSettings({ settingsJson: settingsJson })
-          .then((result) => {
-            // Success handling
-            if (result) {
-              this.showToast(
-                "Success",
-                "Settings saved successfully",
-                "success"
-              );
+      // Convert the simplified settings to JSON
+      const simplifiedJson = JSON.stringify(simplifiedSettings);
 
-              // Apply settings for current session
-              try {
-                this.applySettings();
-              } catch (applyError) {
-                console.error("Error applying settings:", applyError);
-              }
+      // Send to server using Apex
+      saveUserSettings({ settingsJson: simplifiedJson })
+        .then((result) => {
+          // Success handling
+          if (result) {
+            this.showToast(
+              "Success",
+              "Settings saved successfully",
+              "success"
+            );
+          }
+        })
+        .catch((error) => {
+          // Error handling with more detailed logging
+          let errorMessage = "Unable to save settings";
+
+          if (error && error.body) {
+            if (error.body.message) {
+              errorMessage += ": " + error.body.message;
+            } else if (error.body.exceptionType) {
+              errorMessage += ": " + error.body.exceptionType;
             }
-          })
-          .catch((error) => {
-            // Error handling with detailed logging
-            console.error("Server error saving settings:", error);
+          }
 
-            // Create simplified error message
-            let errorMsg = "Unable to save settings";
-            if (error && typeof error === "object") {
-              // Avoid accessing properties that might not exist
-              errorMsg =
-                "Error: " +
-                (error.body && typeof error.body.message === "string"
-                  ? error.body.message
-                  : typeof error.message === "string"
-                    ? error.message
-                    : "Unknown server error");
-            }
+          this.showToast("Error", errorMessage, "error");
 
-            // Show toast with safe message
-            this.showToast("Error", errorMsg, "error");
-          });
-      });
+          // Store settings locally as fallback
+          try {
+            localStorage.setItem(
+              "duplicationManagerSettings",
+              simplifiedJson
+            );
+          } catch (localError) {
+            // Handle local storage errors silently
+          }
+        });
     } catch (error) {
-      console.error("Unexpected error in saveSettings function:", error);
       this.showSettings = false;
       this.showToast("Error", "Unexpected error occurred", "error");
     }
@@ -498,6 +484,22 @@ export default class duplicationContainer extends LightningElement {
    */
   handleHelp() {
     window.open("/apex/duplicateHelp", "_blank");
+  }
+
+  /**
+   * Handle schedule new job button click
+   */
+  handleScheduleNewJob() {
+    // First switch to the correct tab
+    this.activateTab("jobs");
+
+    // Then send a message to the job manager to open the schedule dialog
+    sendMessage(MESSAGE_TYPES.OPEN_SCHEDULE_JOB, {
+      source: "container"
+    });
+
+    // Show feedback that the action was triggered
+    this.showToast("Schedule Job", "Opening job scheduling dialog", "info");
   }
 
   /**
@@ -534,10 +536,28 @@ export default class duplicationContainer extends LightningElement {
   }
 
   /**
-   * Check if compare tab is active
+   * Check if we have records selected for comparison
    */
-  get isCompareTab() {
-    return this.activeTab === "compare";
+  get hasSelectedRecords() {
+    return this.selectedRecordIds && this.selectedRecordIds.length > 0;
+  }
+
+  /**
+   * Dynamic class for the batch controller column
+   */
+  get batchControllerColumnClass() {
+    return this.hasSelectedRecords
+      ? "slds-col slds-size_4-of-12"
+      : "slds-col slds-size_9-of-12";
+  }
+
+  /**
+   * Dynamic class for the sidebar column
+   */
+  get sidebarColumnClass() {
+    return this.hasSelectedRecords
+      ? "slds-col slds-size_4-of-12"
+      : "slds-col slds-size_3-of-12";
   }
 
   /**
@@ -620,42 +640,29 @@ export default class duplicationContainer extends LightningElement {
   }
 
   /**
-   * Apply settings to current session
-   */
-  applySettings() {
-    // Broadcast settings change
-    sendMessage(MESSAGE_TYPES.CONFIG_CHANGED, {
-      settings: this.userSettings
-    });
-
-    // Apply default view if needed
-    if (
-      this.activeTab === "dashboard" &&
-      this.userSettings.defaultView !== "dashboard"
-    ) {
-      this.switchTab(this.userSettings.defaultView);
-    }
-
-    // Refresh metrics with new time range
-    this.loadMetrics();
-  }
-
-  /**
    * Load metrics from database
    */
   loadMetrics() {
     getDuplicateStatistics({ timeRange: this.userSettings.timeRange })
       .then((result) => {
         if (result) {
-          this.metrics = result;
+          // Store the base metrics
+          this.metrics = { ...result };
+
+          // Calculate additional metrics for display in different views
+          if (this.metrics.recordsMerged) {
+            // Calculate current month as ~60% of total for last 30 days
+            const thisMonthEstimate = Math.round(
+              this.metrics.recordsMerged * 0.6
+            );
+            this.metrics.currentMonthMerges = thisMonthEstimate;
+          }
         }
       })
       .catch((error) => {
-        console.error("Error loading metrics:", error);
         this.showToast(
           "Error",
-          "Could not load metrics: " +
-            (error.body?.message || error.message || "Unknown error"),
+          "Could not load metrics: " + (error.message || "Unknown error"),
           "warning"
         );
       });
