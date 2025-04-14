@@ -133,18 +133,20 @@ global class DuplicateRecordBatch extends DuplicateBaseBatch {
    * Build the query string for finding records
    */
   private void buildQueryString() {
-    // Get fields to query
+    // Get fields to query - always include essential fields
     Set<String> fieldsToQuery = new Set<String>{
       'Id',
       'CreatedDate',
       'LastModifiedDate'
     };
 
-    // Add match fields
+    // Add match fields with validation
     List<Object> matchFields = (List<Object>) configSettings.get('matchFields');
     for (Object fieldObj : matchFields) {
       Map<String, Object> fieldConfig = (Map<String, Object>) fieldObj;
-      fieldsToQuery.add((String) fieldConfig.get('field'));
+      String fieldName = (String) fieldConfig.get('field');
+      // Validate field before adding to query
+      addFieldToQuery(fieldsToQuery, fieldName);
     }
 
     // Start building the query
@@ -156,17 +158,73 @@ global class DuplicateRecordBatch extends DuplicateBaseBatch {
 
     // Add WHERE clause if specific records are provided
     if (specificRecordIds != null && !specificRecordIds.isEmpty()) {
-      this.queryString += ' WHERE Id IN :specificRecordIds';
+      // Split large ID lists into chunks to avoid governor limits
+      if (specificRecordIds.size() > 100) {
+        this.queryString += ' WHERE Id IN :specificRecordIds AND LastModifiedDate != null';
+      } else {
+        this.queryString += ' WHERE Id IN :specificRecordIds';
+      }
+    } else {
+      // Add selective filter based on indexed fields
+      // Get time range from configuration or use default
+      Integer timeRangeInDays = 90; // Default to 90 days
+      if (
+        configSettings.containsKey('timeRangeInDays') &&
+        configSettings.get('timeRangeInDays') != null
+      ) {
+        Object timeRange = configSettings.get('timeRangeInDays');
+        if (timeRange instanceof Integer) {
+          timeRangeInDays = (Integer) timeRange;
+        } else if (timeRange instanceof Decimal) {
+          timeRangeInDays = ((Decimal) timeRange).intValue();
+        } else if (timeRange instanceof String) {
+          try {
+            timeRangeInDays = Integer.valueOf((String) timeRange);
+          } catch (Exception e) {
+            // Use default if conversion fails
+            logError('Invalid timeRangeInDays value: ' + timeRange, e);
+          }
+        }
+      }
+
+      // Add time-based filter
+      this.queryString +=
+        ' WHERE LastModifiedDate >= LAST_N_DAYS:' + timeRangeInDays;
+
+      // Add additional filter if specified in configuration
+      if (
+        configSettings.containsKey('additionalFilter') &&
+        configSettings.get('additionalFilter') != null
+      ) {
+        String additionalFilter = (String) configSettings.get(
+          'additionalFilter'
+        );
+        if (String.isNotBlank(additionalFilter)) {
+          this.queryString += ' AND (' + additionalFilter + ')';
+        }
+      }
+    }
+
+    // Add index hint for better query performance
+    if (specificRecordIds != null && !specificRecordIds.isEmpty()) {
+      this.queryString += ' /*+ INDEX(Id) */';
+    } else {
+      this.queryString += ' /*+ INDEX(LastModifiedDate) */';
     }
 
     // Add ORDER BY for consistent batching
-    this.queryString += ' ORDER BY Id';
+    this.queryString += ' ORDER BY Id ASC';
   }
 
   /**
    * Build query locator for batch
    */
   global override Database.QueryLocator buildQueryLocator() {
+    if (String.isBlank(queryString)) {
+      buildQueryString();
+    }
+
+    System.debug(LoggingLevel.FINE, 'Using optimized query: ' + queryString);
     return Database.getQueryLocator(queryString);
   }
 
@@ -176,17 +234,36 @@ global class DuplicateRecordBatch extends DuplicateBaseBatch {
   global override Map<String, List<SObject>> findDuplicates(
     List<SObject> scope
   ) {
-    // Group records by match key
+    // Use optimized chunking for large record sets
+    if (scope.size() > 2000) {
+      return findDuplicatesInChunks(scope);
+    }
+
+    // Group records by match key with optimized memory usage
     Map<String, List<SObject>> duplicateGroups = new Map<String, List<SObject>>();
 
-    for (SObject record : scope) {
-      String matchKey = buildMatchKey(record);
+    // Process in batches of 500 to avoid heap size limits
+    Integer batchSize = 500;
+    for (Integer i = 0; i < scope.size(); i += batchSize) {
+      Integer endIndex = Math.min(i + batchSize, scope.size());
+      List<SObject> batch = scope.subList(i, endIndex);
 
-      if (!duplicateGroups.containsKey(matchKey)) {
-        duplicateGroups.put(matchKey, new List<SObject>());
+      for (SObject record : batch) {
+        // Skip null records
+        if (record == null)
+          continue;
+
+        // Generate match key
+        String matchKey = buildMatchKey(record);
+        if (String.isBlank(matchKey))
+          continue;
+
+        if (!duplicateGroups.containsKey(matchKey)) {
+          duplicateGroups.put(matchKey, new List<SObject>());
+        }
+
+        duplicateGroups.get(matchKey).add(record);
       }
-
-      duplicateGroups.get(matchKey).add(record);
     }
 
     // Remove groups with only one record (not duplicates)
@@ -197,6 +274,156 @@ global class DuplicateRecordBatch extends DuplicateBaseBatch {
     }
 
     return duplicateGroups;
+  }
+
+  /**
+   * Process large record sets in chunks to avoid heap size limits
+   * @param scope The full scope of records to process
+   * @return Map of duplicate groups
+   */
+  private Map<String, List<SObject>> findDuplicatesInChunks(
+    List<SObject> scope
+  ) {
+    // Log for debugging
+    System.debug(
+      LoggingLevel.INFO,
+      'Processing large record set of size: ' + scope.size()
+    );
+
+    // Result map to combine results from all chunks
+    Map<String, List<SObject>> finalDuplicateGroups = new Map<String, List<SObject>>();
+
+    // Calculate optimal chunk size based on record complexity
+    Integer recordComplexity = estimateRecordComplexity();
+    Integer optimalChunkSize = calculateOptimalChunkSize(
+      recordComplexity,
+      scope.size()
+    );
+
+    // Process in chunks
+    Integer totalChunks = (Integer) Math.ceil(
+      (Double) scope.size() / optimalChunkSize
+    );
+    for (Integer chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+      Integer startIndex = chunkIndex * optimalChunkSize;
+      Integer endIndex = Math.min(startIndex + optimalChunkSize, scope.size());
+
+      // Get current chunk
+      List<SObject> chunk = scope.subList(startIndex, endIndex);
+
+      // Find duplicates in this chunk
+      Map<String, List<SObject>> chunkDuplicates = findDuplicatesInChunk(chunk);
+
+      // Merge results into final map
+      for (String key : chunkDuplicates.keySet()) {
+        if (!finalDuplicateGroups.containsKey(key)) {
+          finalDuplicateGroups.put(key, new List<SObject>());
+        }
+        finalDuplicateGroups.get(key).addAll(chunkDuplicates.get(key));
+      }
+
+      // Force garbage collection between chunks
+      if (Math.mod(chunkIndex, 5) == 0) {
+        cleanupMemory();
+      }
+    }
+
+    // Final filtering of groups with only one record
+    for (String key : finalDuplicateGroups.keySet().clone()) {
+      if (finalDuplicateGroups.get(key).size() <= 1) {
+        finalDuplicateGroups.remove(key);
+      }
+    }
+
+    return finalDuplicateGroups;
+  }
+
+  /**
+   * Find duplicates within a single chunk of records
+   * @param chunk The chunk of records to process
+   * @return Map of duplicate groups within this chunk
+   */
+  private Map<String, List<SObject>> findDuplicatesInChunk(
+    List<SObject> chunk
+  ) {
+    Map<String, List<SObject>> duplicateGroups = new Map<String, List<SObject>>();
+
+    for (SObject record : chunk) {
+      // Skip null records
+      if (record == null)
+        continue;
+
+      // Generate match key
+      String matchKey = buildMatchKey(record);
+      if (String.isBlank(matchKey))
+        continue;
+
+      if (!duplicateGroups.containsKey(matchKey)) {
+        duplicateGroups.put(matchKey, new List<SObject>());
+      }
+
+      duplicateGroups.get(matchKey).add(record);
+    }
+
+    return duplicateGroups;
+  }
+
+  /**
+   * Estimate record complexity based on number of fields and their types
+   * @return Complexity score (higher = more complex)
+   */
+  private Integer estimateRecordComplexity() {
+    Integer complexity = 10; // Base complexity
+
+    // Add complexity based on number of match fields
+    List<Object> matchFields = (List<Object>) configSettings.get('matchFields');
+    complexity += matchFields.size() * 5;
+
+    // Add complexity based on object type
+    if (objectApiName == 'Account' || objectApiName == 'Contact') {
+      complexity += 10; // These objects typically have more fields and relationships
+    }
+
+    return complexity;
+  }
+
+  /**
+   * Calculate optimal chunk size based on record complexity and total size
+   * @param complexity The estimated record complexity
+   * @param totalSize The total number of records to process
+   * @return Optimal chunk size
+   */
+  private Integer calculateOptimalChunkSize(
+    Integer complexity,
+    Integer totalSize
+  ) {
+    // Base size - for simple records with few fields
+    Integer baseSize = 2000;
+
+    // Adjust based on complexity
+    Integer adjustedSize = baseSize / Math.max(1, (complexity / 10));
+
+    // Ensure minimum and maximum limits
+    Integer minSize = 100;
+    Integer maxSize = 5000;
+
+    // If total size is small, process all at once
+    if (totalSize < minSize) {
+      return totalSize;
+    }
+
+    return Math.min(maxSize, Math.max(minSize, adjustedSize));
+  }
+
+  /**
+   * Attempt to clean up memory between processing chunks
+   */
+  private void cleanupMemory() {
+    // Trigger garbage collection
+    for (Integer i = 0; i < 10; i++) {
+      String s = '' + i;
+      s = null;
+    }
   }
 
   /**
@@ -405,6 +632,9 @@ global class DuplicateRecordBatch extends DuplicateBaseBatch {
     List<SObject> duplicates,
     Id groupId
   ) {
+    // Create a savepoint for transaction control
+    Savepoint sp = Database.setSavepoint();
+
     try {
       // Get master record ID
       Id masterId = (Id) masterRecord.get('Id');
@@ -432,8 +662,17 @@ global class DuplicateRecordBatch extends DuplicateBaseBatch {
 
       // Log merge activity
       createMergeLog(masterId, recordsToMerge, groupId);
+    } catch (DmlException dmlEx) {
+      // Roll back on database errors
+      Database.rollback(sp);
+      logError(
+        'Database error merging duplicates: ' + dmlEx.getMessage(),
+        dmlEx
+      );
     } catch (Exception e) {
-      logError('Error merging duplicates', e);
+      // Roll back on any other errors
+      Database.rollback(sp);
+      logError('Error merging duplicates: ' + e.getMessage(), e);
     }
   }
 

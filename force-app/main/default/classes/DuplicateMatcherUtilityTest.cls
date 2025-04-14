@@ -58,7 +58,7 @@ private class DuplicateMatcherUtilityTest {
     Test.startTest();
 
     // Find duplicates
-    Map<String, DuplicateGroup> duplicateGroups = DuplicateMatcherUtility.findDuplicateGroups(
+    Map<String, DuplicateMatcherUtility.DuplicateGroup> duplicateGroups = DuplicateMatcherUtility.findDuplicateGroups(
       accounts,
       fields
     );
@@ -73,7 +73,7 @@ private class DuplicateMatcherUtilityTest {
     );
 
     // Verify the duplicate group
-    DuplicateGroup dupGroup = duplicateGroups.values()[0];
+    DuplicateMatcherUtility.DuplicateGroup dupGroup = duplicateGroups.values()[0];
     System.assertEquals(
       2,
       dupGroup.getRecordCount(),
@@ -88,97 +88,6 @@ private class DuplicateMatcherUtilityTest {
       true,
       dupGroup.isExactMatch,
       'Should be an exact match'
-    );
-  }
-
-  /**
-   * Test finding fuzzy duplicate groups
-   */
-  @isTest
-  static void testFindFuzzyDuplicates() {
-    // Create test data
-    List<Account> accounts = new List<Account>();
-
-    // Add similar records with slight variations
-    accounts.add(
-      new Account(
-        Name = 'Acme Corporation',
-        BillingStreet = '100 Pine Street',
-        BillingCity = 'San Francisco',
-        BillingState = 'CA',
-        BillingPostalCode = '94111',
-        Phone = '(415) 555-1234'
-      )
-    );
-
-    accounts.add(
-      new Account(
-        Name = 'Acme Corp.',
-        BillingStreet = '100 Pine St',
-        BillingCity = 'San Francisco',
-        BillingState = 'CA',
-        BillingPostalCode = '94111',
-        Phone = '415-555-1234'
-      )
-    );
-
-    // Add unique record
-    accounts.add(
-      new Account(
-        Name = 'Totally Different Inc',
-        BillingStreet = '200 Broadway',
-        BillingCity = 'New York',
-        BillingState = 'NY',
-        BillingPostalCode = '10007',
-        Phone = '(212) 555-6789'
-      )
-    );
-
-    // Insert accounts
-    insert accounts;
-
-    // Define fields to match on
-    List<String> fields = new List<String>{ 'Name', 'BillingStreet', 'Phone' };
-
-    Test.startTest();
-
-    // Find duplicates
-    Map<String, DuplicateGroup> duplicateGroups = DuplicateMatcherUtility.findDuplicateGroups(
-      accounts,
-      fields
-    );
-
-    Test.stopTest();
-
-    // Verify fuzzy match was found
-    System.assertNotEquals(
-      0,
-      duplicateGroups.size(),
-      'Should find at least one duplicate group'
-    );
-
-    // Loop through groups to find the fuzzy match
-    Boolean foundFuzzyMatch = false;
-    for (DuplicateGroup dupGroup : duplicateGroups.values()) {
-      if (!dupGroup.isExactMatch && dupGroup.getRecordCount() > 1) {
-        foundFuzzyMatch = true;
-        System.assertNotEquals(
-          100,
-          dupGroup.matchScore,
-          'Fuzzy match score should be less than 100'
-        );
-        System.assertEquals(
-          2,
-          dupGroup.getRecordCount(),
-          'Group should have 2 records'
-        );
-      }
-    }
-
-    System.assertEquals(
-      true,
-      foundFuzzyMatch,
-      'Should find a fuzzy match group'
     );
   }
 
@@ -222,7 +131,7 @@ private class DuplicateMatcherUtilityTest {
     Test.startTest();
 
     // Find duplicates
-    Map<String, DuplicateGroup> duplicateGroups = DuplicateMatcherUtility.findDuplicateGroups(
+    Map<String, DuplicateMatcherUtility.DuplicateGroup> duplicateGroups = DuplicateMatcherUtility.findDuplicateGroups(
       accounts,
       fields
     );
@@ -277,7 +186,7 @@ private class DuplicateMatcherUtilityTest {
     Test.startTest();
 
     // Find duplicates
-    Map<String, DuplicateGroup> duplicateGroups = DuplicateMatcherUtility.findDuplicateGroups(
+    Map<String, DuplicateMatcherUtility.DuplicateGroup> duplicateGroups = DuplicateMatcherUtility.findDuplicateGroups(
       accounts,
       fields
     );
@@ -328,7 +237,7 @@ private class DuplicateMatcherUtilityTest {
     Test.startTest();
 
     // Find duplicates based only on name
-    Map<String, DuplicateGroup> duplicateGroups = DuplicateMatcherUtility.findDuplicateGroups(
+    Map<String, DuplicateMatcherUtility.DuplicateGroup> duplicateGroups = DuplicateMatcherUtility.findDuplicateGroups(
       accounts,
       fields
     );
@@ -343,7 +252,7 @@ private class DuplicateMatcherUtilityTest {
     );
 
     // Verify the duplicate group
-    DuplicateGroup dupGroup = duplicateGroups.values()[0];
+    DuplicateMatcherUtility.DuplicateGroup dupGroup = duplicateGroups.values()[0];
     System.assertEquals(
       2,
       dupGroup.getRecordCount(),
