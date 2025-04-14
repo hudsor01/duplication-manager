@@ -5,10 +5,18 @@ on:
     branches: [staging]
     paths:
       - 'force-app/**'
+  # Add manual trigger
+  workflow_dispatch:
+    inputs:
+      comments:
+        description: 'Deployment comments'
+        required: true
+        default: 'Manual integration deployment'
 
 jobs:
   deploy-to-sandbox:
     runs-on: ubuntu-latest
+    environment: integration
     steps:
       - uses: actions/checkout@v3
 
@@ -30,6 +38,12 @@ jobs:
           echo "$SALESFORCE_JWT_SECRET_KEY" > server.key
           sf org login jwt --client-id $CONSUMER_KEY --jwt-key-file server.key --username ${{ secrets.INTEGRATION_SANDBOX_USERNAME }} --alias integrationorg
 
+      # First validate the deployment
+      - name: Validate Integration Deployment
+        run: |
+          sf project deploy validate --source-dir force-app --target-org integrationorg --test-level RunLocalTests
+
+      # Then do the actual deployment
       - name: Deploy to Integration Sandbox
         run: |
           sf project deploy start --source-dir force-app --target-org integrationorg --test-level RunLocalTests
@@ -44,3 +58,10 @@ jobs:
         with:
           name: test-results
           path: ./test-results
+          
+      - name: Post-Deployment Summary
+        run: |
+          echo "Deployment to integration sandbox completed successfully"
+          echo "Deployed by: ${{ github.actor }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Comments: ${{ github.event.inputs.comments || 'Automated deployment from staging branch' }}"

@@ -18,17 +18,17 @@ jobs:
     environment: production
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-      
+
       - name: Install Salesforce CLI
         run: |
           npm install @salesforce/cli --global
           sf --version
-      
+
       - name: Auth to Salesforce Production
         env:
           SALESFORCE_JWT_SECRET_KEY: ${{ secrets.SALESFORCE_JWT_SECRET_KEY }}
@@ -36,19 +36,19 @@ jobs:
         run: |
           echo "$SALESFORCE_JWT_SECRET_KEY" > server.key
           sf org login jwt --client-id $CONSUMER_KEY --jwt-key-file server.key --username ${{ secrets.PROD_USERNAME }} --alias prodorg
-      
+
       # First validate the deployment
       - name: Validate Production Deployment
         run: |
           sf project deploy validate --source-dir force-app --target-org prodorg --test-level RunSpecifiedTests --tests $(cat tests/production-tests.txt | tr '\n' ' ')
-      
+
       # Manual approval step is enforced by the environment protection rules
-      
+
       # Then do the actual deployment
       - name: Deploy to Production
         run: |
           sf project deploy start --source-dir force-app --target-org prodorg --test-level RunSpecifiedTests --tests $(cat tests/production-tests.txt | tr '\n' ' ')
-      
+
       - name: Post-Deployment Summary
         run: |
           echo "Deployment to production completed successfully"
