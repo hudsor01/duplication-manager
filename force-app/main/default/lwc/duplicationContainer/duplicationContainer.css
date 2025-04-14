@@ -7,8 +7,10 @@
 
 .content-area {
   flex: 1;
-  overflow: hidden;
+  overflow: auto;
   background-color: #f3f3f3;
+  min-height: 500px;
+  height: auto;
 }
 
 .sidebar-column {
@@ -22,6 +24,37 @@
   overflow-y: auto;
   height: 100%;
   padding: 0.75rem;
+  position: relative;
+}
+
+.component-container {
+  background-color: white;
+  border-radius: 0.25rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1rem;
+  padding: 1rem;
+  transition: all 0.3s ease;
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sidebar-component-container {
+  transition: all 0.3s ease;
+}
+
+.sidebar-component-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .app-title {
@@ -49,26 +82,53 @@
   border-radius: 4px 4px 0 0;
   border-bottom: 3px solid transparent;
   transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease;
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    transform 0.3s ease,
+    color 0.3s ease;
+  margin-right: 4px;
+  position: relative;
+  overflow: hidden;
 }
 
 .custom-tab.active {
   border-bottom-color: #1589ee;
-  background-color: rgba(21, 137, 238, 0.05);
+  background-color: rgba(21, 137, 238, 0.08);
+  color: #0070d2;
+  font-weight: 600;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .custom-tab:hover:not(.active) {
   background-color: rgba(0, 0, 0, 0.03);
   border-bottom-color: #dddbda;
+  transform: translateY(-1px);
+}
+
+.custom-tab:before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 3px;
+  background-color: #1589ee;
+  transition: width 0.3s ease;
+}
+
+.custom-tab:hover:not(.active):before {
+  width: 100%;
 }
 
 .custom-tab-icon {
   --sds-c-icon-color-foreground-default: #706e6b;
+  transition: transform 0.3s ease;
 }
 
 .custom-tab.active .custom-tab-icon {
   --sds-c-icon-color-foreground-default: #1589ee;
+  transform: scale(1.1);
 }
 
 /* Card styling */
@@ -87,18 +147,46 @@
 
 /* Animation for content transitions */
 .tab-content-container {
-  transition: opacity 0.3s ease;
+  transition:
+    opacity 0.4s ease-in-out,
+    transform 0.4s ease-in-out,
+    height 0.4s ease-in-out;
+  position: relative;
+  transform-origin: top center;
 }
 
 .tab-content-hide {
   opacity: 0;
   height: 0;
+  transform: translateY(10px);
   overflow: hidden;
+  position: absolute;
+  width: 100%;
+  visibility: hidden;
 }
 
 .tab-content-show {
   opacity: 1;
   height: auto;
+  transform: translateY(0);
+  visibility: visible;
+  position: relative;
+}
+
+/* Fade-in animation for content elements */
+.fade-in-element {
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Health check status colors */

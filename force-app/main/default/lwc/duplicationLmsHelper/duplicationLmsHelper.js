@@ -2,9 +2,17 @@
  * Helper utility for migrating from PubSub to Lightning Message Service
  * Production implementation for Salesforce orgs
  */
-import { MessageContext, publish, subscribe, unsubscribe } from 'lightning/messageService';
-import { createMessageContext, releaseMessageContext } from 'lightning/messageService';
-import DUPLICATION_CHANNEL from '@salesforce/messageChannel/DuplicationChannel_c__c';
+import {
+  MessageContext,
+  publish,
+  subscribe,
+  unsubscribe
+} from "lightning/messageService";
+import {
+  createMessageContext,
+  releaseMessageContext
+} from "lightning/messageService";
+import DUPLICATION_CHANNEL from "@salesforce/messageChannel/DuplicationChannel_c__c";
 import { MESSAGE_TYPES } from "c/duplicationConstants";
 
 // Map legacy event names to new message types
@@ -20,7 +28,7 @@ const EVENT_TO_MESSAGE_MAP = {
   "duplicate.config.updated": MESSAGE_TYPES.CONFIG_CHANGED,
   "duplicate.ui.viewDuplicates": MESSAGE_TYPES.VIEW_CHANGE,
   "duplicate.ui.viewMergePreview": MESSAGE_TYPES.MERGE_PREVIEW,
-  "duplicate.stats.updated": MESSAGE_TYPES.SETTINGS_UPDATED,
+  "duplicate.stats.updated": MESSAGE_TYPES.SETTINGS_UPDATED
 };
 
 /**
@@ -34,9 +42,9 @@ export function subscribeMigrated(component, eventHandlers) {
 
   // Get message context from component
   const messageContext = component.messageContext || createMessageContext();
-  
+
   const subscriptions = {
-    lms: {},
+    lms: {}
   };
 
   // Process each event handler
@@ -95,7 +103,7 @@ export function unsubscribeMigrated(subscriptions) {
  */
 export function publishMigrated(eventName, payload, messageContext) {
   if (!messageContext) return;
-  
+
   // Get mapped message type
   const messageType = EVENT_TO_MESSAGE_MAP[eventName] || eventName;
 
@@ -103,7 +111,7 @@ export function publishMigrated(eventName, payload, messageContext) {
   const message = {
     type: messageType,
     payload: payload,
-    timestamp: new Date().toISOString(),
+    timestamp: new Date().toISOString()
   };
 
   // Send via LMS
@@ -120,10 +128,7 @@ export function enhanceWithLms(component) {
 
   // Add LMS methods to component
   component.subscribeToEvents = function (eventHandlerMap) {
-    this._lmsSubscriptions = subscribeMigrated(
-      this,
-      eventHandlerMap
-    );
+    this._lmsSubscriptions = subscribeMigrated(this, eventHandlerMap);
     return this._lmsSubscriptions;
   };
 

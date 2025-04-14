@@ -13,7 +13,7 @@
 		<name>ApexTrigger</name>
 	</types>
 	<types>
-		<members>duplicate_Manager</members>
+		<members>DuplicateManagerApp</members>
 		<name>CustomApplication</name>
 	</types>
 	<types>
@@ -59,7 +59,6 @@
 		<members>DuplicateJobStatistic__c.RecordsMerged__c</members>
 		<members>DuplicateJobStatistic__c.RecordsProcessed__c</members>
 		<members>DuplicateJobStatistic__c.Status__c</members>
-		<members>DuplicateMergeLogArchive__c.ArchivedDate__c</members>
 		<members>DuplicateMergeLogArchive__c.ArchivedDate__c</members>
 		<members>DuplicateMergeLogArchive__c.ErrorMessage__c</members>
 		<members>DuplicateMergeLogArchive__c.FieldMergeDetails__c</members>
@@ -113,24 +112,24 @@
 		<members>MergeJobLog__c.RecordIdsJSON__c</members>
 		<members>MergeJobLog__c.RecordsMerged__c</members>
 		<members>MergeJobLog__c.UserId__c</members>
-		<members>duplicateConfiguration__mdt.BatchSize__c</members>
-		<members>duplicateConfiguration__mdt.Description__c</members>
-		<members>duplicateConfiguration__mdt.IsActive__c</members>
-		<members>duplicateConfiguration__mdt.MasterRecordStrategy__c</members>
-		<members>duplicateConfiguration__mdt.MatchFieldWeights__c</members>
-		<members>duplicateConfiguration__mdt.MatchFields__c</members>
-		<members>duplicateConfiguration__mdt.MatchThreshold__c</members>
-		<members>duplicateConfiguration__mdt.ObjectApiName__c</members>
-		<members>duplicateConfiguration__mdt.PostMergeApexHandler__c</members>
-		<members>duplicateConfiguration__mdt.PreMergeApexHandler__c</members>
-		<members>duplicateConfiguration__mdt.SObject_API_Name__c</members>
-		<members>duplicateConfiguration__mdt.Version__c</members>
-		<members>duplicateSetting__mdt.Category__c</members>
-		<members>duplicateSetting__mdt.Description__c</members>
-		<members>duplicateSetting__mdt.IsActive__c</members>
-		<members>duplicateSetting__mdt.Key__c</members>
-		<members>duplicateSetting__mdt.ObjectApiName__c</members>
-		<members>duplicateSetting__mdt.Value__c</members>
+		<members>DuplicationConfiguration__mdt.BatchSize__c</members>
+		<members>DuplicationConfiguration__mdt.Description__c</members>
+		<members>DuplicationConfiguration__mdt.IsActive__c</members>
+		<members>DuplicationConfiguration__mdt.MasterRecordStrategy__c</members>
+		<members>DuplicationConfiguration__mdt.MatchFieldWeights__c</members>
+		<members>DuplicationConfiguration__mdt.MatchFields__c</members>
+		<members>DuplicationConfiguration__mdt.MatchThreshold__c</members>
+		<members>DuplicationConfiguration__mdt.ObjectApiName__c</members>
+		<members>DuplicationConfiguration__mdt.PostMergeApexHandler__c</members>
+		<members>DuplicationConfiguration__mdt.PreMergeApexHandler__c</members>
+		<members>DuplicationConfiguration__mdt.SObject_API_Name__c</members>
+		<members>DuplicationConfiguration__mdt.Version__c</members>
+		<members>DuplicationSetting__mdt.Category__c</members>
+		<members>DuplicationSetting__mdt.Description__c</members>
+		<members>DuplicationSetting__mdt.IsActive__c</members>
+		<members>DuplicationSetting__mdt.Key__c</members>
+		<members>DuplicationSetting__mdt.ObjectApiName__c</members>
+		<members>DuplicationSetting__mdt.Value__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
@@ -155,13 +154,13 @@
 	<types>
 		<members>DuplicateJobStatistic__c</members>
 		<members>DuplicateRunResult__c</members>
-		<members>Duplicate_Manager</members>
+		<members>DuplicateManager</members>
 		<members>MergeJobLog__c</members>
 		<name>CustomTab</name>
 	</types>
 	<types>
-		<members>Duplication_Manager</members>
-		<members>Duplication_Manager_UtilityBar</members>
+		<members>DuplicateManagerApp</members>
+		<members>DuplicateManagerUtilityBar</members>
 		<name>FlexiPage</name>
 	</types>
 	<types>

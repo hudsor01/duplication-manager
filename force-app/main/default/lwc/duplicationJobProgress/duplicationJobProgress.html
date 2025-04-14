@@ -1,132 +1,192 @@
 <template>
-    <div class="job-progress-container">
-        <!-- Loading State -->
-        <div if:true={isLoading} class="slds-is-relative slds-var-p-around_small">
-            <lightning-spinner alternative-text="Loading job status" size="small"></lightning-spinner>
-        </div>
-
-        <!-- Error Message -->
-        <div if:true={hasError} class="slds-var-p-around_small slds-text-color_error">
-            <lightning-icon icon-name="utility:error" size="x-small" class="slds-var-m-right_x-small"></lightning-icon>
-            <span>{error.message}</span>
-        </div>
-
-        <!-- Job Status Card -->
-        <lightning-card title="Job Progress" icon-name="standard:job_profile">
-            <div slot="actions">
-                <lightning-button-icon
-                    icon-name="utility:refresh"
-                    alternative-text="Refresh Status"
-                    title="Refresh Status"
-                    onclick={refresh}>
-                </lightning-button-icon>
-            </div>
-
-            <!-- Job Status Header -->
-            <div class="slds-var-p-horizontal_medium">
-                <div class="slds-grid slds-gutters slds-var-p-bottom_small">
-                    <div class="slds-col slds-size_2-of-3">
-                        <div class="slds-media">
-                            <div class="slds-media__figure">
-                                <lightning-icon icon-name={statusIcon} size="small" class={statusClass}></lightning-icon>
-                            </div>
-                            <div class="slds-media__body">
-                                <h3 class="slds-text-heading_small">
-                                    <span class={statusClass}>{status}</span>
-                                </h3>
-                                <p class="slds-text-body_small slds-var-p-top_xx-small">{lastUpdateFormatted}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="slds-col slds-size_1-of-3 slds-text-align_right">
-                        <div class="slds-text-title">{recordsProcessed} / {totalRecords} Records</div>
-                    </div>
-                </div>
-
-                <!-- Progress Bar -->
-                <div class="slds-var-p-bottom_medium">
-                    <lightning-progress-bar
-                        value={progress}
-                        size="large"
-                        variant={progressVariant}>
-                    </lightning-progress-bar>
-                </div>
-
-                <!-- Key Metrics -->
-                <div class="slds-grid slds-gutters slds-wrap slds-var-p-bottom_medium">
-                    <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4 slds-var-p-bottom_small">
-                        <div class="slds-text-title slds-truncate">Records Processed</div>
-                        <div class="slds-text-heading_medium">{recordsProcessed}</div>
-                    </div>
-                    <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4 slds-var-p-bottom_small">
-                        <div class="slds-text-title slds-truncate">Duplicates Found</div>
-                        <div class="slds-text-heading_medium">{duplicatesFound}</div>
-                    </div>
-                    <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4 slds-var-p-bottom_small">
-                        <div class="slds-text-title slds-truncate">Records Merged</div>
-                        <div class="slds-text-heading_medium">{recordsMerged}</div>
-                    </div>
-                    <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4 slds-var-p-bottom_small">
-                        <div class="slds-text-title slds-truncate">Progress</div>
-                        <div class="slds-text-heading_medium">{progress}%</div>
-                    </div>
-                </div>
-
-                <!-- Details Toggle Button -->
-                <div class="slds-text-align_center slds-var-p-bottom_small">
-                    <lightning-button
-                        label={detailsButtonLabel}
-                        onclick={toggleDetails}
-                        variant="neutral"
-                        icon-name="utility:info">
-                    </lightning-button>
-                </div>
-
-                <!-- Detailed Information (collapsible) -->
-                <div if:true={showDetails} class="slds-var-p-top_small">
-                    <div class="slds-box slds-theme_shade slds-var-m-bottom_small">
-                        <div class="slds-text-title slds-var-p-bottom_x-small">Job Details</div>
-
-                        <div class="slds-grid slds-wrap">
-                            <div class="slds-col slds-size_1-of-2 slds-var-p-bottom_x-small">
-                                <div class="slds-text-body_small"><b>Job ID:</b> {jobId}</div>
-                            </div>
-                            <div class="slds-col slds-size_1-of-2 slds-var-p-bottom_x-small">
-                                <div class="slds-text-body_small"><b>Status:</b> {status}</div>
-                            </div>
-                            <div class="slds-col slds-size_1-of-2 slds-var-p-bottom_x-small">
-                                <div class="slds-text-body_small"><b>Start Time:</b>
-                                    <lightning-formatted-date-time
-                                        value={startTime}
-                                        year="numeric"
-                                        month="short"
-                                        day="2-digit"
-                                        hour="2-digit"
-                                        minute="2-digit">
-                                    </lightning-formatted-date-time>
-                                </div>
-                            </div>
-                            <div class="slds-col slds-size_1-of-2 slds-var-p-bottom_x-small">
-                                <div class="slds-text-body_small"><b>Estimated Completion:</b>
-                                    <template if:true={estimatedCompletion}>
-                                        <lightning-formatted-date-time
-                                            value={estimatedCompletion}
-                                            year="numeric"
-                                            month="short"
-                                            day="2-digit"
-                                            hour="2-digit"
-                                            minute="2-digit">
-                                        </lightning-formatted-date-time>
-                                    </template>
-                                    <template if:false={estimatedCompletion}>
-                                        <span>Calculating...</span>
-                                    </template>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </lightning-card>
+  <div class="job-progress-container">
+    <!-- Loading State -->
+    <div if:true={isLoading} class="slds-is-relative slds-var-p-around_small">
+      <lightning-spinner
+        alternative-text="Loading job status"
+        size="small"
+      ></lightning-spinner>
     </div>
+
+    <!-- Error Message -->
+    <div
+      if:true={hasError}
+      class="slds-var-p-around_small slds-text-color_error"
+    >
+      <lightning-icon
+        icon-name="utility:error"
+        size="x-small"
+        class="slds-var-m-right_x-small"
+      ></lightning-icon>
+      <span>{error.message}</span>
+    </div>
+
+    <!-- Job Status Card -->
+    <lightning-card title="Job Progress" icon-name="standard:job_profile">
+      <div slot="actions">
+        <lightning-button-icon
+          icon-name="utility:refresh"
+          alternative-text="Refresh Status"
+          title="Refresh Status"
+          onclick={refresh}
+        >
+        </lightning-button-icon>
+      </div>
+
+      <!-- Job Status Header -->
+      <div class="slds-var-p-horizontal_medium">
+        <div class="slds-grid slds-gutters slds-var-p-bottom_small">
+          <div class="slds-col slds-size_2-of-3">
+            <div class="slds-media">
+              <div class="slds-media__figure">
+                <lightning-icon
+                  icon-name={statusIcon}
+                  size="small"
+                  class={statusClass}
+                ></lightning-icon>
+              </div>
+              <div class="slds-media__body">
+                <h3 class="slds-text-heading_small">
+                  <span class={statusClass}>{status}</span>
+                </h3>
+                <p class="slds-text-body_small slds-var-p-top_xx-small">
+                  {lastUpdateFormatted}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="slds-col slds-size_1-of-3 slds-text-align_right">
+            <div class="slds-text-title">
+              {recordsProcessed} / {totalRecords} Records
+            </div>
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="slds-var-p-bottom_medium">
+          <lightning-progress-bar
+            value={progress}
+            size="large"
+            variant={progressVariant}
+          >
+          </lightning-progress-bar>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="metrics-grid slds-var-p-bottom_medium">
+          <div class="metric-card">
+            <div class="metric-label">Records Processed</div>
+            <div class="metric-value">{recordsProcessed}</div>
+            <template if:true={showRate}>
+              <div class="slds-text-body_small">{processingRate}/min</div>
+            </template>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Duplicates Found</div>
+            <div class="metric-value">{duplicatesFound}</div>
+            <template if:true={hasDuplicatesPercentage}>
+              <div class="slds-text-body_small">
+                <lightning-formatted-number
+                  value={duplicatesPercentage}
+                  format-style="percent"
+                  maximum-fraction-digits="1"
+                ></lightning-formatted-number>
+                of records
+              </div>
+            </template>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Records Merged</div>
+            <div class="metric-value">{recordsMerged}</div>
+            <template if:true={hasMergeRate}>
+              <div class="slds-text-body_small">
+                <lightning-formatted-number
+                  value={mergeRate}
+                  format-style="percent"
+                  maximum-fraction-digits="1"
+                ></lightning-formatted-number>
+                merge rate
+              </div>
+            </template>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Progress</div>
+            <div class="metric-value">{progress}%</div>
+            <template if:true={isRunning}>
+              <div class="slds-text-body_small time-estimate">
+                <template if:true={estimatedTimeRemaining}>
+                  {estimatedTimeRemaining} remaining
+                </template>
+                <template if:false={estimatedTimeRemaining}>
+                  Calculating...
+                </template>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- Details Toggle Button -->
+        <div class="slds-text-align_center slds-var-p-bottom_small">
+          <lightning-button
+            label={detailsButtonLabel}
+            onclick={toggleDetails}
+            variant="neutral"
+            icon-name="utility:info"
+          >
+          </lightning-button>
+        </div>
+
+        <!-- Detailed Information (collapsible) -->
+        <div if:true={showDetails} class="slds-var-p-top_small">
+          <div class="slds-box slds-theme_shade slds-var-m-bottom_small">
+            <div class="slds-text-title slds-var-p-bottom_x-small">
+              Job Details
+            </div>
+
+            <div class="slds-grid slds-wrap">
+              <div class="slds-col slds-size_1-of-2 slds-var-p-bottom_x-small">
+                <div class="slds-text-body_small"><b>Job ID:</b> {jobId}</div>
+              </div>
+              <div class="slds-col slds-size_1-of-2 slds-var-p-bottom_x-small">
+                <div class="slds-text-body_small"><b>Status:</b> {status}</div>
+              </div>
+              <div class="slds-col slds-size_1-of-2 slds-var-p-bottom_x-small">
+                <div class="slds-text-body_small">
+                  <b>Start Time:</b>
+                  <lightning-formatted-date-time
+                    value={startTime}
+                    year="numeric"
+                    month="short"
+                    day="2-digit"
+                    hour="2-digit"
+                    minute="2-digit"
+                  >
+                  </lightning-formatted-date-time>
+                </div>
+              </div>
+              <div class="slds-col slds-size_1-of-2 slds-var-p-bottom_x-small">
+                <div class="slds-text-body_small">
+                  <b>Estimated Completion:</b>
+                  <template if:true={estimatedCompletion}>
+                    <lightning-formatted-date-time
+                      value={estimatedCompletion}
+                      year="numeric"
+                      month="short"
+                      day="2-digit"
+                      hour="2-digit"
+                      minute="2-digit"
+                    >
+                    </lightning-formatted-date-time>
+                  </template>
+                  <template if:false={estimatedCompletion}>
+                    <span>Calculating...</span>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </lightning-card>
+  </div>
 </template>

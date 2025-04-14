@@ -17,14 +17,14 @@ export default class DuplicationManagerScheduler extends LightningElement {
     cronExpression: "0 0 8 * * ?", // Default: Daily at 8 AM
     hour: 8,
     dayOfWeek: "MON",
-    isDryRun: true, // Default: Dry run enabled
+    isDryRun: true // Default: Dry run enabled
   };
 
   // Dropdown options
   scheduleTypeOptions = [
     { label: "Daily", value: "daily" },
     { label: "Weekly", value: "weekly" },
-    { label: "Custom (Cron Expression)", value: "custom" },
+    { label: "Custom (Cron Expression)", value: "custom" }
   ];
 
   daysOfWeekOptions = [
@@ -34,7 +34,7 @@ export default class DuplicationManagerScheduler extends LightningElement {
     { label: "Wednesday", value: "WED" },
     { label: "Thursday", value: "THU" },
     { label: "Friday", value: "FRI" },
-    { label: "Saturday", value: "SAT" },
+    { label: "Saturday", value: "SAT" }
   ];
 
   connectedCallback() {
@@ -85,7 +85,7 @@ export default class DuplicationManagerScheduler extends LightningElement {
       this.showToast(
         "Validation Error",
         "No configuration selected. Please select a configuration and try again.",
-        "error",
+        "error"
       );
       return;
     }
@@ -94,7 +94,7 @@ export default class DuplicationManagerScheduler extends LightningElement {
       this.showToast(
         "Validation Error",
         "Selected configuration is missing required information (DeveloperName)",
-        "error",
+        "error"
       );
       console.error("Setting is missing DeveloperName:", this.setting);
       return;
@@ -109,7 +109,7 @@ export default class DuplicationManagerScheduler extends LightningElement {
       this.showToast(
         "Validation Error",
         "Cron Expression is required for custom schedules",
-        "error",
+        "error"
       );
       return;
     }
@@ -122,7 +122,7 @@ export default class DuplicationManagerScheduler extends LightningElement {
         jobName: this.scheduleForm.jobName,
         cronExp: this.scheduleForm.cronExpression,
         settingDeveloperName: this.setting.DeveloperName,
-        isDryRun: this.scheduleForm.isDryRun,
+        isDryRun: this.scheduleForm.isDryRun
       };
 
       // Schedule job with Apex
@@ -132,8 +132,8 @@ export default class DuplicationManagerScheduler extends LightningElement {
           // Job scheduled successfully
           this.dispatchEvent(
             new CustomEvent("schedule", {
-              detail: { jobId: result },
-            }),
+              detail: { jobId: result }
+            })
           );
         })
         .catch((error) => {
@@ -159,8 +159,8 @@ export default class DuplicationManagerScheduler extends LightningElement {
       new ShowToastEvent({
         title: title,
         message: message,
-        variant: variant,
-      }),
+        variant: variant
+      })
     );
   }
 

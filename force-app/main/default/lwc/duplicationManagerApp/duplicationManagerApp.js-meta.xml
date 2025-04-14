@@ -1,9 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
     <apiVersion>58.0</apiVersion>
     <isExposed>true</isExposed>
     <masterLabel>duplicate Record Manager</masterLabel>
-    <description>Interface for finding and merging duplicate records in Salesforce</description>
+    <description
+  >Interface for finding and merging duplicate records in Salesforce</description>
     <targets>
         <target>lightning__AppPage</target>
         <target>lightning__RecordPage</target>

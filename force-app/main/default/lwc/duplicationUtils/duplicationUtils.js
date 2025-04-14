@@ -32,7 +32,7 @@ export const formatError = (baseMessage, error) => {
     details: errorDetails,
     timestamp: new Date().toISOString(),
     type: error && error.type ? error.type : "general",
-    id: `err-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    id: `err-${Date.now()}-${Math.floor(Math.random() * 1000)}`
   };
 };
 
@@ -71,7 +71,7 @@ export const formatDate = (date, includeTime = false) => {
   const options = {
     year: "numeric",
     month: "short",
-    day: "numeric",
+    day: "numeric"
   };
 
   if (includeTime) {
@@ -293,7 +293,7 @@ export const getTimeRangeOptions = () => {
     { label: "All Time", value: "ALL_TIME" },
     { label: "This Month", value: "THIS_MONTH" },
     { label: "This Week", value: "THIS_WEEK" },
-    { label: "Today", value: "TODAY" },
+    { label: "Today", value: "TODAY" }
   ];
 };
 
@@ -320,28 +320,28 @@ export const getObjectData = (objectApiName) => {
     Account: {
       label: "Account",
       icon: "standard:account",
-      color: "#7F8DE1",
+      color: "#7F8DE1"
     },
     Contact: {
       label: "Contact",
       icon: "standard:contact",
-      color: "#A094ED",
+      color: "#A094ED"
     },
     Lead: {
       label: "Lead",
       icon: "standard:lead",
-      color: "#F88962",
+      color: "#F88962"
     },
     Opportunity: {
       label: "Opportunity",
       icon: "standard:opportunity",
-      color: "#FCB95B",
+      color: "#FCB95B"
     },
     Case: {
       label: "Case",
       icon: "standard:case",
-      color: "#F2CF5B",
-    },
+      color: "#F2CF5B"
+    }
   };
 
   // Return data for the requested object or a generic fallback
@@ -349,7 +349,7 @@ export const getObjectData = (objectApiName) => {
     objectData[objectApiName] || {
       label: fieldNameToLabel(objectApiName),
       icon: "standard:custom_object",
-      color: "#8199AF",
+      color: "#8199AF"
     }
   );
 };

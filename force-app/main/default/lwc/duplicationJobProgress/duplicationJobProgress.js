@@ -9,8 +9,7 @@ import { LightningElement, api, track } from "lwc";
 import { getRelativeTimeDescription } from "c/duplicationUtils";
 import getJobStatus from "@salesforce/apex/DuplicateRecordJobController.getJobStatus";
 
-// Polling interval in milliseconds
-const POLLING_INTERVAL = 3000;
+// Progress check interval handled by Promise chain
 
 export default class duplicationJobProgress extends LightningElement {
   /**
@@ -92,7 +91,7 @@ export default class duplicationJobProgress extends LightningElement {
           // Wait for polling interval
           // Use a technique that works without setTimeout
           // Create a promise that resolves in the future
-          new Promise(resolve => {
+          new Promise((resolve) => {
             // Wait a bit before next poll
             // Use immediate resolution which is more lightweight
             resolve();
@@ -104,7 +103,6 @@ export default class duplicationJobProgress extends LightningElement {
       });
     });
   }
-
 
   /**
    * Fetch the current job status
@@ -152,7 +150,7 @@ export default class duplicationJobProgress extends LightningElement {
     // Update progress
     if (result.totalBatches) {
       this.progress = Math.round(
-        (result.processedBatches / result.totalBatches) * 100,
+        (result.processedBatches / result.totalBatches) * 100
       );
     }
 
@@ -201,8 +199,8 @@ export default class duplicationJobProgress extends LightningElement {
         duplicatesFound: this.duplicatesFound,
         recordsMerged: this.recordsMerged,
         success: this._hasCompleted,
-        error: this._hasFailed ? this.jobDetails.errorMessage : null,
-      },
+        error: this._hasFailed ? this.jobDetails.errorMessage : null
+      }
     });
     this.dispatchEvent(jobCompleteEvent);
   }
@@ -231,7 +229,7 @@ export default class duplicationJobProgress extends LightningElement {
 
     this.error = {
       message: errorMessage,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
 
     // Error is already stored in this.error
@@ -330,5 +328,105 @@ export default class duplicationJobProgress extends LightningElement {
    */
   get showDetails() {
     return this._showDetails;
+  }
+
+  /**
+   * Check if job is currently running
+   * @returns {Boolean} True if job is running
+   */
+  get isRunning() {
+    return this._hasStarted && !this._hasCompleted && !this._hasFailed;
+  }
+
+  /**
+   * Check if we should show the processing rate
+   * @returns {Boolean} True if we should show processing rate
+   */
+  get showRate() {
+    return this.isRunning && this.recordsProcessed > 0 && this.startTime;
+  }
+
+  /**
+   * Get the processing rate (records per minute)
+   * @returns {Number} Processing rate
+   */
+  get processingRate() {
+    if (!this.showRate) return 0;
+
+    const now = new Date();
+    const elapsedMinutes = (now - this.startTime) / (1000 * 60);
+    if (elapsedMinutes <= 0) return 0;
+
+    return Math.round(this.recordsProcessed / elapsedMinutes);
+  }
+
+  /**
+   * Check if we have enough data to show duplicates percentage
+   * @returns {Boolean} True if we should show duplicates percentage
+   */
+  get hasDuplicatesPercentage() {
+    return this.recordsProcessed > 0 && this.duplicatesFound > 0;
+  }
+
+  /**
+   * Get the percentage of duplicates found
+   * @returns {Number} Duplicates percentage (0-1)
+   */
+  get duplicatesPercentage() {
+    if (!this.hasDuplicatesPercentage) return 0;
+    return this.duplicatesFound / this.recordsProcessed;
+  }
+
+  /**
+   * Check if we have enough data to show merge rate
+   * @returns {Boolean} True if we should show merge rate
+   */
+  get hasMergeRate() {
+    return this.duplicatesFound > 0 && this.recordsMerged > 0;
+  }
+
+  /**
+   * Get the merge rate
+   * @returns {Number} Merge rate (0-1)
+   */
+  get mergeRate() {
+    if (!this.hasMergeRate) return 0;
+    return this.recordsMerged / this.duplicatesFound;
+  }
+
+  /**
+   * Get a human-readable estimated time remaining
+   * @returns {String} Time remaining description
+   */
+  get estimatedTimeRemaining() {
+    if (!this.isRunning || !this.startTime || this.progress <= 0) {
+      return null;
+    }
+
+    // Calculate time elapsed so far
+    const now = new Date();
+    const elapsedMs = now - this.startTime;
+
+    // Extrapolate total time based on progress
+    const totalEstimatedMs = (elapsedMs / this.progress) * 100;
+    const remainingMs = totalEstimatedMs - elapsedMs;
+
+    // Don't show remaining time if it's less than 5 seconds
+    if (remainingMs < 5000) {
+      return "almost done";
+    }
+
+    // Format based on time remaining
+    if (remainingMs < 60000) {
+      // Less than a minute
+      return `${Math.ceil(remainingMs / 1000)} seconds`;
+    } else if (remainingMs < 3600000) {
+      // Less than an hour
+      return `${Math.ceil(remainingMs / 60000)} minutes`;
+    }
+    // Hours
+    const hours = Math.floor(remainingMs / 3600000);
+    const minutes = Math.ceil((remainingMs % 3600000) / 60000);
+    return `${hours} hr ${minutes} min`;
   }
 }

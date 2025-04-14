@@ -176,12 +176,25 @@
         <!-- Duplicate Groups Component -->
         <template if:true={hasBatchJobId}>
           <div class="slds-var-p-around_medium">
-            <c-duplication-merge-groups
-              batch-job-id={dryRunResults.BatchJobId__c}
-              config-id={configId}
-              object-api-name={dryRunResults.ObjectApiName__c}
-            >
-            </c-duplication-merge-groups>
+            <div class="slds-text-heading_small slds-var-m-bottom_small">
+              Duplicate Groups
+            </div>
+            <div class="slds-box slds-box_x-small slds-theme_shade">
+              <p>
+                Detected {dryRunResults.DuplicatesFound__c} potential duplicates
+                that would be merged.
+              </p>
+              <p class="slds-var-m-top_small">
+                <lightning-button
+                  label="Run Merge Process"
+                  variant="brand"
+                  icon-name="utility:merge"
+                  onclick={handleRunMerge}
+                  title="Run merge process with these results"
+                >
+                </lightning-button>
+              </p>
+            </div>
           </div>
         </template>
       </template>

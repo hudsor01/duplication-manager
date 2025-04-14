@@ -4,7 +4,10 @@ import { MessageContext } from "lightning/messageService";
 import runDuplicateFinderBatch from "@salesforce/apex/DuplicateRecordController.runDuplicateFinderBatch";
 import store from "c/duplicationStore";
 import { duplicationStore } from "c/duplicationStore";
-import { subscribeToChannel, unsubscribeFromChannel } from "c/duplicationMessageService";
+import {
+  subscribeToChannel,
+  unsubscribeFromChannel
+} from "c/duplicationMessageService";
 import { MESSAGE_TYPES } from "c/duplicationConstants";
 
 /**
@@ -20,13 +23,13 @@ export default class DuplicationBatchController extends LightningElement {
     { label: "100 Records", value: 100 },
     { label: "200 Records", value: 200 },
     { label: "500 Records", value: 500 },
-    { label: "1000 Records", value: 1000 },
+    { label: "1000 Records", value: 1000 }
   ];
 
   // Get message context for LMS
   @wire(MessageContext)
   messageContext;
-  
+
   /**
    * Lifecycle hook - Called when component is inserted into the DOM
    */
@@ -77,7 +80,7 @@ export default class DuplicationBatchController extends LightningElement {
       this.showToast(
         "Warning",
         "Please select a configuration first",
-        "warning",
+        "warning"
       );
       return;
     }
@@ -95,7 +98,7 @@ export default class DuplicationBatchController extends LightningElement {
       this.showToast(
         "Warning",
         "Please select a configuration first",
-        "warning",
+        "warning"
       );
       return;
     }
@@ -109,10 +112,10 @@ export default class DuplicationBatchController extends LightningElement {
             "WARNING: This will merge duplicate records. This action cannot be undone. Continue?",
           callback: this.executeMergeAfterConfirmation.bind(
             this,
-            selectedConfig.DeveloperName,
-          ),
-        },
-      }),
+            selectedConfig.DeveloperName
+          )
+        }
+      })
     );
   }
 
@@ -134,7 +137,7 @@ export default class DuplicationBatchController extends LightningElement {
    */
   executeJob(settingDeveloperName, isDryRun) {
     console.log(
-      `Executing ${isDryRun ? "dry run" : "merge"} job for setting: ${settingDeveloperName}`,
+      `Executing ${isDryRun ? "dry run" : "merge"} job for setting: ${settingDeveloperName}`
     );
 
     // Set loading state
@@ -145,7 +148,7 @@ export default class DuplicationBatchController extends LightningElement {
     runDuplicateFinderBatch({
       settingDeveloperName: settingDeveloperName,
       isDryRun: isDryRun,
-      batchSize: this.batchSize,
+      batchSize: this.batchSize
     })
       .then((result) => {
         console.log("Job executed successfully, job ID:", result);
@@ -154,7 +157,7 @@ export default class DuplicationBatchController extends LightningElement {
         this.showToast(
           "Success",
           `${isDryRun ? "Dry run" : "Merge operation"} started successfully (Job ID: ${result})`,
-          "success",
+          "success"
         );
 
         // Notify parent to refresh jobs
@@ -163,16 +166,16 @@ export default class DuplicationBatchController extends LightningElement {
             detail: {
               jobId: result,
               isDryRun: isDryRun,
-              settingDeveloperName: settingDeveloperName,
-            },
-          }),
+              settingDeveloperName: settingDeveloperName
+            }
+          })
         );
       })
       .catch((error) => {
         console.error("Error executing job:", error);
         this.handleError(
           `Error starting ${isDryRun ? "dry run" : "merge operation"}`,
-          error,
+          error
         );
       })
       .finally(() => {
@@ -193,8 +196,8 @@ export default class DuplicationBatchController extends LightningElement {
       new ShowToastEvent({
         title: title,
         message: message,
-        variant: variant,
-      }),
+        variant: variant
+      })
     );
   }
 
@@ -222,7 +225,7 @@ export default class DuplicationBatchController extends LightningElement {
     // Add to store errors
     store.dispatch(duplicationStore.actions.ADD_ERROR, {
       message: errorMessage,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     });
 
     this.showToast("Error", errorMessage, "error");

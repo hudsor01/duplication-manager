@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
     <apiVersion>58.0</apiVersion>
     <isExposed>true</isExposed>
@@ -9,9 +9,24 @@
     </targets>
     <targetConfigs>
         <targetConfig targets="lightning__AppPage,lightning__RecordPage">
-            <property name="recordIds" type="String" label="Record IDs" description="Comma-separated IDs of records to compare"/>
-            <property name="objectApiName" type="String" label="Object API Name" description="API name of the object being compared"/>
-            <property name="groupId" type="String" label="Group ID" description="ID of the duplicate group"/>
+            <property
+        name="recordIds"
+        type="String"
+        label="Record IDs"
+        description="Comma-separated IDs of records to compare"
+      />
+            <property
+        name="objectApiName"
+        type="String"
+        label="Object API Name"
+        description="API name of the object being compared"
+      />
+            <property
+        name="groupId"
+        type="String"
+        label="Group ID"
+        description="ID of the duplicate group"
+      />
         </targetConfig>
     </targetConfigs>
 </LightningComponentBundle>

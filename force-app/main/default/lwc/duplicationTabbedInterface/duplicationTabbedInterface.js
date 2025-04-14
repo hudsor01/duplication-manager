@@ -11,7 +11,7 @@ import { MESSAGE_TYPES } from "c/duplicationConstants";
 import {
   handleError,
   ERROR_LEVELS,
-  ERROR_CATEGORIES,
+  ERROR_CATEGORIES
 } from "c/duplicationErrorService";
 
 export default class DuplicationTabbedInterface extends LightningElement {
@@ -32,7 +32,7 @@ export default class DuplicationTabbedInterface extends LightningElement {
   @track selectedGroupId;
 
   // Active tab value
-  @track activeTab = 'dashboard';
+  @track activeTab = "dashboard";
 
   // Get the message context for LMS
   @wire(MessageContext)
@@ -46,7 +46,7 @@ export default class DuplicationTabbedInterface extends LightningElement {
     { label: "Accounts", value: "Account" },
     { label: "Contacts", value: "Contact" },
     { label: "Leads", value: "Lead" },
-    { label: "Custom Objects", value: "Custom" },
+    { label: "Custom Objects", value: "Custom" }
   ];
 
   // Lifecycle hooks
@@ -141,7 +141,7 @@ export default class DuplicationTabbedInterface extends LightningElement {
       this.showToast(
         "Success",
         "Duplicate detection job completed successfully",
-        "success",
+        "success"
       );
       this.refreshJobProgress();
 
@@ -151,13 +151,13 @@ export default class DuplicationTabbedInterface extends LightningElement {
       }
 
       // Navigate to duplicate groups tab
-      this.activateTab('duplicate-groups');
+      this.activateTab("duplicate-groups");
     } else {
       this.showToast(
         "Error",
         "Duplicate detection job failed: " +
           (payload.errorMessage || "Unknown error"),
-        "error",
+        "error"
       );
     }
   }
@@ -182,7 +182,7 @@ export default class DuplicationTabbedInterface extends LightningElement {
       this.compareRecordIds = payload.recordIds;
       this.selectedGroupId = payload.groupId;
       this.hideCompareTab = false;
-      this.activateTab('compare');
+      this.activateTab("compare");
     }
   }
 
@@ -191,7 +191,7 @@ export default class DuplicationTabbedInterface extends LightningElement {
     if (payload && payload.previewData) {
       this.masterRecordId = payload.request.masterId;
       this.hideMergePreviewTab = false;
-      this.activateTab('preview');
+      this.activateTab("preview");
     }
   }
 
@@ -199,17 +199,17 @@ export default class DuplicationTabbedInterface extends LightningElement {
   handleViewChange(payload) {
     if (payload && payload.view) {
       switch (payload.view) {
-        case 'list':
-          this.activateTab('duplication-groups');
+        case "list":
+          this.activateTab("duplication-groups");
           break;
-        case 'compare':
+        case "compare":
           if (!this.hideCompareTab) {
-            this.activateTab('compare');
+            this.activateTab("compare");
           }
           break;
-        case 'preview':
+        case "preview":
           if (!this.hideMergePreviewTab) {
-            this.activateTab('preview');
+            this.activateTab("preview");
           }
           break;
         default:
@@ -226,17 +226,15 @@ export default class DuplicationTabbedInterface extends LightningElement {
       this.hideMergePreviewTab = true;
 
       // Navigate back to duplicate groups
-      this.activateTab('duplication-groups');
+      this.activateTab("duplication-groups");
 
       // Show success message
-      this.showToast(
-        "Success",
-        "Records merged successfully",
-        "success"
-      );
+      this.showToast("Success", "Records merged successfully", "success");
 
       // Refresh duplicate groups component
-      const groupsComponent = this.template.querySelector('c-duplication-merge-groups');
+      const groupsComponent = this.template.querySelector(
+        "c-duplication-merge-groups"
+      );
       if (groupsComponent) {
         groupsComponent.refreshGroups();
       }
@@ -249,17 +247,20 @@ export default class DuplicationTabbedInterface extends LightningElement {
     this.activeTab = tabName;
 
     // Find the tabset and activate the tab
-    const tabset = this.template.querySelector('lightning-tabset');
+    const tabset = this.template.querySelector("lightning-tabset");
     if (tabset) {
       // NOTE: This may need to be adjusted based on the structure of lightning-tabset
       // Some implementations may require additional handling
-      const tabs = tabset.querySelectorAll('lightning-tab');
+      const tabs = tabset.querySelectorAll("lightning-tab");
       if (tabs) {
-        tabs.forEach(tab => {
-          if (tab.value === tabName || tab.label.toLowerCase().replace(/\s+/g, '-') === tabName) {
-            tab.classList.add('slds-is-active');
+        tabs.forEach((tab) => {
+          if (
+            tab.value === tabName ||
+            tab.label.toLowerCase().replace(/\s+/g, "-") === tabName
+          ) {
+            tab.classList.add("slds-is-active");
           } else {
-            tab.classList.remove('slds-is-active');
+            tab.classList.remove("slds-is-active");
           }
         });
       }
@@ -280,14 +281,14 @@ export default class DuplicationTabbedInterface extends LightningElement {
     this.dispatchEvent(
       new CustomEvent("objecttypechange", {
         detail: {
-          objectType: this.selectedObjectType,
-        },
-      }),
+          objectType: this.selectedObjectType
+        }
+      })
     );
 
     // Also publish via LMS for other components
     sendMessage(MESSAGE_TYPES.OBJECT_TYPE_CHANGED, {
-      objectType: this.selectedObjectType,
+      objectType: this.selectedObjectType
     });
   }
 
@@ -297,7 +298,7 @@ export default class DuplicationTabbedInterface extends LightningElement {
     // Publish config selection via LMS
     sendMessage(MESSAGE_TYPES.CONFIG_SELECTED, {
       configId: this.selectedConfigId,
-      objectType: this.selectedObjectType,
+      objectType: this.selectedObjectType
     });
   }
 
@@ -316,13 +317,13 @@ export default class DuplicationTabbedInterface extends LightningElement {
     // Notify that job is starting
     sendMessage(MESSAGE_TYPES.JOB_STARTING, {
       objectType: objectApiName,
-      configId: this.selectedConfigId,
+      configId: this.selectedConfigId
     });
 
     runDuplicateDetection({
       objectApiName: objectApiName,
       fieldApiNames: fieldApiNames,
-      batchSize: batchSize,
+      batchSize: batchSize
     })
       .then((result) => {
         this.jobId = result;
@@ -331,11 +332,11 @@ export default class DuplicationTabbedInterface extends LightningElement {
         sendMessage(MESSAGE_TYPES.JOB_STARTED, {
           jobId: this.jobId,
           objectType: objectApiName,
-          configId: this.selectedConfigId,
+          configId: this.selectedConfigId
         });
 
         // Navigate to job progress tab
-        this.activateTab('dashboard');
+        this.activateTab("dashboard");
 
         // Show toast notification
         this.showToast(
@@ -350,7 +351,7 @@ export default class DuplicationTabbedInterface extends LightningElement {
         // Notify about job failure
         sendMessage(MESSAGE_TYPES.JOB_ERROR, {
           error: error.message || "Unknown error",
-          objectType: objectApiName,
+          objectType: objectApiName
         });
       })
       .finally(() => {
@@ -379,7 +380,7 @@ export default class DuplicationTabbedInterface extends LightningElement {
 
   refreshJobProgress() {
     const jobProgress = this.template.querySelector(
-      "c-duplication-job-progress",
+      "c-duplication-job-progress"
     );
     if (jobProgress) {
       jobProgress.refreshJobs();
@@ -391,8 +392,8 @@ export default class DuplicationTabbedInterface extends LightningElement {
       new ShowToastEvent({
         title: title,
         message: message,
-        variant: variant,
-      }),
+        variant: variant
+      })
     );
   }
 

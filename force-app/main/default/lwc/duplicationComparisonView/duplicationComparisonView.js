@@ -9,7 +9,7 @@ import { MESSAGE_TYPES } from "c/duplicationConstants";
 import {
   handleError,
   ERROR_LEVELS,
-  ERROR_CATEGORIES,
+  ERROR_CATEGORIES
 } from "c/duplicationErrorService";
 
 import getRecordsForComparison from "@salesforce/apex/DuplicateRecordController.getRecordsForComparison";
@@ -85,9 +85,9 @@ export default class DuplicationComparisonView extends LightningElement {
             detail: {
               recordIds: message.payload.recordIds,
               objectApiName: message.payload.objectApiName,
-              groupId: message.payload.groupId,
-            },
-          }),
+              groupId: message.payload.groupId
+            }
+          })
         );
 
         // Use local variables instead of reassigning @api properties
@@ -99,7 +99,7 @@ export default class DuplicationComparisonView extends LightningElement {
         this.loadRecordsForComparison(
           newRecordIds,
           newObjectApiName,
-          newGroupId,
+          newGroupId
         );
       }
     } else if (message.type === MESSAGE_TYPES.VIEW_CHANGE && message.payload) {
@@ -136,7 +136,7 @@ export default class DuplicationComparisonView extends LightningElement {
       // Get records for comparison
       getRecordsForComparison({
         recordIds: recordIdsToUse,
-        objectApiName: objectApiNameToUse,
+        objectApiName: objectApiNameToUse
       }),
 
       // Get fields for comparison
@@ -178,13 +178,16 @@ export default class DuplicationComparisonView extends LightningElement {
 
     // Create a map of records by ID for easy access
     this.recordsById = {};
-    records.forEach(record => {
+    records.forEach((record) => {
       this.recordsById[record.Id] = record;
     });
 
     // Set master record to the first one with highest match score by default
     // or use the previously selected master record if it's still in the list
-    if (!this.masterRecordId || !records.find(r => r.Id === this.masterRecordId)) {
+    if (
+      !this.masterRecordId ||
+      !records.find((r) => r.Id === this.masterRecordId)
+    ) {
       // Find record with highest match score
       const sortedRecords = [...records].sort((a, b) => {
         const scoreA = a.MatchScore__c || 0;
@@ -260,13 +263,13 @@ export default class DuplicationComparisonView extends LightningElement {
                   value: value,
                   isDifferent: isDifferent,
                   isSelected: this.fieldSelections[apiName] === dupRecord.id,
-                  class: isDifferent ? "field-different" : "",
+                  class: isDifferent ? "field-different" : ""
                 };
               });
 
               // Determine if field has differences
               const hasDifferences = duplicateValues.some(
-                (dv) => dv.isDifferent,
+                (dv) => dv.isDifferent
               );
 
               // Define field metadata for rendering
@@ -317,7 +320,7 @@ export default class DuplicationComparisonView extends LightningElement {
    * Get a display name for a record
    */
   getRecordName(record) {
-    if (!record) return '';
+    if (!record) return "";
 
     if (record.Name) {
       return record.Name;
@@ -327,9 +330,8 @@ export default class DuplicationComparisonView extends LightningElement {
       return record.LastName;
     } else if (record.Subject) {
       return record.Subject;
-    } else {
-      return record.Id;
     }
+    return record.Id;
   }
 
   /**
@@ -355,10 +357,10 @@ export default class DuplicationComparisonView extends LightningElement {
    * Format field API name to a more user-friendly label
    */
   formatFieldName(fieldName) {
-    if (!fieldName) return '';
+    if (!fieldName) return "";
 
     // Split by underscore or camel case
-    const words = fieldName.replace(/_/g, ' ').split(/(?=[A-Z])/);
+    const words = fieldName.replace(/_/g, " ").split(/(?=[A-Z])/);
 
     // Capitalize first letter of each word
     for (let i = 0; i < words.length; i++) {
@@ -367,7 +369,7 @@ export default class DuplicationComparisonView extends LightningElement {
       }
     }
 
-    return words.join(' ').replace('__c', '');
+    return words.join(" ").replace("__c", "");
   }
 
   /**
@@ -384,8 +386,8 @@ export default class DuplicationComparisonView extends LightningElement {
       {
         level: ERROR_LEVELS.ERROR,
         category: ERROR_CATEGORIES.DATA,
-        notify: true,
-      },
+        notify: true
+      }
     );
 
     // Show toast message
@@ -393,8 +395,8 @@ export default class DuplicationComparisonView extends LightningElement {
       new ShowToastEvent({
         title: "Error Loading Records",
         message: this.error.message,
-        variant: "error",
-      }),
+        variant: "error"
+      })
     );
   }
 
@@ -425,7 +427,9 @@ export default class DuplicationComparisonView extends LightningElement {
     // Move the master record to the recordsById
     if (this.masterRecordId) {
       // If master is in duplicate records, move it back to records by ID
-      const masterIndex = this.duplicateRecords.findIndex(r => r.id === this.masterRecordId);
+      const masterIndex = this.duplicateRecords.findIndex(
+        (r) => r.id === this.masterRecordId
+      );
       if (masterIndex >= 0) {
         const masterDuplicate = this.duplicateRecords[masterIndex];
         this.recordsById[masterDuplicate.id] = masterDuplicate.record;
@@ -436,7 +440,10 @@ export default class DuplicationComparisonView extends LightningElement {
 
       // Add previous master to duplicates if it's not already there
       const previousMaster = this.recordsById[this.masterRecordId];
-      if (previousMaster && !this.duplicateRecords.find(r => r.id === previousMaster.Id)) {
+      if (
+        previousMaster &&
+        !this.duplicateRecords.find((r) => r.id === previousMaster.Id)
+      ) {
         this.duplicateRecords.push({
           id: previousMaster.Id,
           name: this.getRecordName(previousMaster),
@@ -490,8 +497,8 @@ export default class DuplicationComparisonView extends LightningElement {
     if (!recordId) return;
 
     // Update all field selections to use this record
-    this.fieldGroups.forEach(group => {
-      group.fields.forEach(field => {
+    this.fieldGroups.forEach((group) => {
+      group.fields.forEach((field) => {
         if (field.hasDifferences) {
           this.fieldSelections[field.apiName] = recordId;
         }
@@ -518,8 +525,8 @@ export default class DuplicationComparisonView extends LightningElement {
     // For each field that has differences, select the non-empty value
     let changedCount = 0;
 
-    this.fieldGroups.forEach(group => {
-      group.fields.forEach(field => {
+    this.fieldGroups.forEach((group) => {
+      group.fields.forEach((field) => {
         if (field.hasDifferences) {
           // Get master value
           const masterValue = field.masterValue;
@@ -530,7 +537,7 @@ export default class DuplicationComparisonView extends LightningElement {
           if (isMasterEmpty) {
             // Find first non-empty duplicate value
             const nonEmptyDuplicate = field.duplicateValues.find(
-              dv => dv.value !== null && dv.value !== ""
+              (dv) => dv.value !== null && dv.value !== ""
             );
 
             if (nonEmptyDuplicate) {
@@ -587,7 +594,7 @@ export default class DuplicationComparisonView extends LightningElement {
       masterId: this.masterRecordId,
       duplicateIds: this.duplicateRecords.map((record) => record.id),
       objectApiName: this.objectApiName,
-      fieldSelections: this.fieldSelections,
+      fieldSelections: this.fieldSelections
     };
 
     // Call Apex to preview merge
@@ -597,7 +604,7 @@ export default class DuplicationComparisonView extends LightningElement {
         sendMessage(MESSAGE_TYPES.MERGE_PREVIEW, {
           previewData: result,
           request: previewRequest,
-          groupId: this.groupId,
+          groupId: this.groupId
         });
 
         // Dispatch preview event
@@ -605,9 +612,9 @@ export default class DuplicationComparisonView extends LightningElement {
           new CustomEvent("preview", {
             detail: {
               previewData: result,
-              request: previewRequest,
-            },
-          }),
+              request: previewRequest
+            }
+          })
         );
 
         this.isLoading = false;
@@ -624,8 +631,8 @@ export default class DuplicationComparisonView extends LightningElement {
           {
             level: ERROR_LEVELS.ERROR,
             category: ERROR_CATEGORIES.DATA,
-            notify: true,
-          },
+            notify: true
+          }
         );
 
         // Show toast message
@@ -633,8 +640,8 @@ export default class DuplicationComparisonView extends LightningElement {
           new ShowToastEvent({
             title: "Error Previewing Merge",
             message: handledError.message,
-            variant: "error",
-          }),
+            variant: "error"
+          })
         );
       });
   }
@@ -654,8 +661,8 @@ export default class DuplicationComparisonView extends LightningElement {
    * Check if we have any field differences
    */
   get hasDifferences() {
-    return this.fieldGroups.some(group =>
-      group.fields.some(field => field.hasDifferences)
+    return this.fieldGroups.some((group) =>
+      group.fields.some((field) => field.hasDifferences)
     );
   }
 
@@ -665,8 +672,8 @@ export default class DuplicationComparisonView extends LightningElement {
   get differencesCount() {
     let count = 0;
 
-    this.fieldGroups.forEach(group => {
-      group.fields.forEach(field => {
+    this.fieldGroups.forEach((group) => {
+      group.fields.forEach((field) => {
         if (field.hasDifferences) {
           count++;
         }
@@ -680,9 +687,9 @@ export default class DuplicationComparisonView extends LightningElement {
    * Get master record display name
    */
   get masterRecordName() {
-    return this.masterRecordId ?
-      this.getRecordName(this.recordsById[this.masterRecordId]) :
-      'No master record selected';
+    return this.masterRecordId
+      ? this.getRecordName(this.recordsById[this.masterRecordId])
+      : "No master record selected";
   }
 
   /**
@@ -700,6 +707,6 @@ export default class DuplicationComparisonView extends LightningElement {
     if (record && record.MatchScore__c) {
       return `${Math.round(record.MatchScore__c * 100)}%`;
     }
-    return 'N/A';
+    return "N/A";
   }
 }

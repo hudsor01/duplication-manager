@@ -6,9 +6,9 @@ import { MessageContext } from "lightning/messageService";
 import {
   sendMessage,
   subscribeToChannel,
-  unsubscribeFromChannel,
-  MESSAGE_TYPES,
+  unsubscribeFromChannel
 } from "c/duplicationMessageService";
+import { MESSAGE_TYPES } from "c/duplicationConstants";
 
 export default class duplicationMergeGroups extends LightningElement {
   @api
@@ -27,7 +27,7 @@ export default class duplicationMergeGroups extends LightningElement {
           isSelected: false,
           isProcessing: false,
           isMerged: false,
-          error: null,
+          error: null
         };
       });
     }
@@ -79,7 +79,7 @@ export default class duplicationMergeGroups extends LightningElement {
    */
   get selectedGroups() {
     return this.groups.filter((group) =>
-      this.selectedGroupIds.includes(group.id),
+      this.selectedGroupIds.includes(group.id)
     );
   }
 
@@ -184,18 +184,18 @@ export default class duplicationMergeGroups extends LightningElement {
     // Notify that we're loading groups
     sendMessage(MESSAGE_TYPES.GROUPS_LOADING, {
       objectType: this.objectApiName,
-      configId: this.configId,
+      configId: this.configId
     });
 
     // Real implementation would load groups from an Apex method
     // For now, we'll immediately mark as loaded
     this.isLoading = false;
-    
+
     // Notify that groups are loaded
     sendMessage(MESSAGE_TYPES.GROUPS_LOADED, {
       objectType: this.objectApiName,
       configId: this.configId,
-      groupCount: this.groups ? this.groups.length : 0,
+      groupCount: this.groups ? this.groups.length : 0
     });
   }
 
@@ -222,7 +222,7 @@ export default class duplicationMergeGroups extends LightningElement {
       }
     } else {
       this.selectedGroupIds = this.selectedGroupIds.filter(
-        (id) => id !== groupId,
+        (id) => id !== groupId
       );
     }
 
@@ -257,7 +257,7 @@ export default class duplicationMergeGroups extends LightningElement {
       this.showToast(
         "Error",
         "Please select at least one group to merge",
-        "error",
+        "error"
       );
       return;
     }
@@ -268,7 +268,7 @@ export default class duplicationMergeGroups extends LightningElement {
     sendMessage(MESSAGE_TYPES.BULK_MERGE_STARTING, {
       objectType: this.objectApiName,
       configId: this.configId,
-      groupCount: this.selectedGroups.length,
+      groupCount: this.selectedGroups.length
     });
 
     // Process each selected group sequentially
@@ -289,7 +289,7 @@ export default class duplicationMergeGroups extends LightningElement {
         objectType: this.objectApiName,
         configId: this.configId,
         groupsProcessed: this.selectedGroups.length,
-        success: true,
+        success: true
       });
 
       return;
@@ -305,7 +305,7 @@ export default class duplicationMergeGroups extends LightningElement {
       groupId: group.id,
       objectType: this.objectApiName,
       recordCount: group.recordCount,
-      masterRecordId: group.masterRecordId,
+      masterRecordId: group.masterRecordId
     });
 
     // Process the group
@@ -320,7 +320,7 @@ export default class duplicationMergeGroups extends LightningElement {
           objectType: this.objectApiName,
           masterRecordId: group.masterRecordId,
           success: true,
-          result: result,
+          result: result
         });
 
         // Process next group
@@ -336,7 +336,7 @@ export default class duplicationMergeGroups extends LightningElement {
           groupId: group.id,
           objectType: this.objectApiName,
           masterRecordId: group.masterRecordId,
-          error: errorMessage,
+          error: errorMessage
         });
 
         // Process next group
@@ -359,17 +359,17 @@ export default class duplicationMergeGroups extends LightningElement {
         objectType: this.objectApiName,
         masterRecordId: group.masterRecordId,
         recordIds: group.duplicateRecordIds,
-        status: "starting",
+        status: "starting"
       },
       {
-        correlationId: correlationId,
-      },
+        correlationId: correlationId
+      }
     );
 
     return mergeDuplicateRecords({
       masterRecordId: group.masterRecordId,
       duplicateRecordIds: group.duplicateRecordIds,
-      objectApiName: this.objectApiName,
+      objectApiName: this.objectApiName
     })
       .then((result) => {
         // Send success message with same correlation ID
@@ -381,11 +381,11 @@ export default class duplicationMergeGroups extends LightningElement {
             masterRecordId: group.masterRecordId,
             recordIds: group.duplicateRecordIds,
             status: "completed",
-            result: result,
+            result: result
           },
           {
-            correlationId: correlationId,
-          },
+            correlationId: correlationId
+          }
         );
 
         return result;
@@ -400,11 +400,11 @@ export default class duplicationMergeGroups extends LightningElement {
             masterRecordId: group.masterRecordId,
             recordIds: group.duplicateRecordIds,
             status: "error",
-            error: error.message || "Unknown error",
+            error: error.message || "Unknown error"
           },
           {
-            correlationId: correlationId,
-          },
+            correlationId: correlationId
+          }
         );
 
         throw error;
@@ -421,7 +421,7 @@ export default class duplicationMergeGroups extends LightningElement {
         var r = (Math.random() * 16) | 0,
           v = c === "x" ? r : (r & 0x3) | 0x8;
         return v.toString(16);
-      },
+      }
     );
   }
 
@@ -475,7 +475,7 @@ export default class duplicationMergeGroups extends LightningElement {
       // Notify about modal opening via LMS
       sendMessage(MESSAGE_TYPES.COMPARISON_MODAL_OPENED, {
         groupId: groupId,
-        objectType: this.objectApiName,
+        objectType: this.objectApiName
       });
     }
   }
@@ -490,7 +490,7 @@ export default class duplicationMergeGroups extends LightningElement {
     if (this.groupForComparison) {
       sendMessage(MESSAGE_TYPES.COMPARISON_MODAL_CLOSED, {
         groupId: this.groupForComparison.id,
-        objectType: this.objectApiName,
+        objectType: this.objectApiName
       });
     }
 
@@ -512,7 +512,7 @@ export default class duplicationMergeGroups extends LightningElement {
       sendMessage(MESSAGE_TYPES.MASTER_PREVIEW_MODAL_OPENED, {
         groupId: groupId,
         objectType: this.objectApiName,
-        masterRecordId: group.masterRecordId,
+        masterRecordId: group.masterRecordId
       });
     }
   }
@@ -527,7 +527,7 @@ export default class duplicationMergeGroups extends LightningElement {
     if (this.groupForComparison) {
       sendMessage(MESSAGE_TYPES.MASTER_PREVIEW_MODAL_CLOSED, {
         groupId: this.groupForComparison.id,
-        objectType: this.objectApiName,
+        objectType: this.objectApiName
       });
     }
 
@@ -551,7 +551,7 @@ export default class duplicationMergeGroups extends LightningElement {
       // Notify about modal opening via LMS
       sendMessage(MESSAGE_TYPES.NOTE_PREVIEW_MODAL_OPENED, {
         groupId: groupId,
-        objectType: this.objectApiName,
+        objectType: this.objectApiName
       });
     }
   }
@@ -566,7 +566,7 @@ export default class duplicationMergeGroups extends LightningElement {
     if (this.groupForComparison) {
       sendMessage(MESSAGE_TYPES.NOTE_PREVIEW_MODAL_CLOSED, {
         groupId: this.groupForComparison.id,
-        objectType: this.objectApiName,
+        objectType: this.objectApiName
       });
     }
 
@@ -588,7 +588,6 @@ export default class duplicationMergeGroups extends LightningElement {
                 <p>Match Score: ${group.matchScore}%</p>`;
   }
 
-
   /**
    * Show toast notification
    */
@@ -597,15 +596,15 @@ export default class duplicationMergeGroups extends LightningElement {
       new ShowToastEvent({
         title,
         message,
-        variant,
-      }),
+        variant
+      })
     );
 
     // Also send toast message via LMS for components that might need to know
     sendMessage(MESSAGE_TYPES.TOAST_NOTIFICATION, {
       title,
       message,
-      variant,
+      variant
     });
   }
 }

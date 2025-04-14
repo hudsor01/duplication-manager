@@ -1,8 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
     <apiVersion>58.0</apiVersion>
     <isExposed>true</isExposed>
-    <masterLabel>duplicate Dry Run Result</masterLabel>
+    <masterLabel>duplicationDryRunResult</masterLabel>
     <description>Displays results from a duplicate dry run</description>
     <targets>
         <target>lightning__AppPage</target>
@@ -10,8 +10,16 @@
         <target>lightning__HomePage</target>
     </targets>
     <targetConfigs>
-        <targetConfig targets="lightning__AppPage,lightning__HomePage,lightning__RecordPage">
-            <property name="configId" type="String" label="Configuration ID" description="ID of the duplicate configuration" required="false" />
+        <targetConfig
+      targets="lightning__AppPage,lightning__HomePage,lightning__RecordPage"
+    >
+            <property
+        name="configId"
+        type="String"
+        label="Configuration ID"
+        description="ID of the duplicate configuration"
+        required="false"
+      />
         </targetConfig>
     </targetConfigs>
 </LightningComponentBundle>

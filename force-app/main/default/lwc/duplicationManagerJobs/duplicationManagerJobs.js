@@ -12,6 +12,26 @@ import { duplicationStore } from "c/duplicationStore";
  * @component
  */
 export default class DuplicationManagerJobs extends LightningElement {
+  // Event handling methods for quick action buttons
+  handleFindDuplicatesClick() {
+    // Create event to show batch job form
+    const event = new CustomEvent("showbatchform", {
+      detail: {
+        source: "emptyState"
+      }
+    });
+    this.dispatchEvent(event);
+  }
+
+  handleScheduleJobClick() {
+    // Create event to show schedule job form
+    const event = new CustomEvent("showscheduleform", {
+      detail: {
+        source: "emptyState"
+      }
+    });
+    this.dispatchEvent(event);
+  }
   @api
   get jobs() {
     return this._jobsValue || [];
@@ -25,7 +45,7 @@ export default class DuplicationManagerJobs extends LightningElement {
     pageSize: 10,
     currentPage: 1,
     totalRecords: 0,
-    totalPages: 1,
+    totalPages: 1
   };
 
   @track deleteInProgress = false;
@@ -39,7 +59,7 @@ export default class DuplicationManagerJobs extends LightningElement {
     duplicatesFound: 0,
     totalRecords: 0,
     objectApiName: "",
-    configName: "",
+    configName: ""
   };
   @track dryRunDuplicateGroups = [];
   @track selectedJobForResults = null;
@@ -111,8 +131,8 @@ export default class DuplicationManagerJobs extends LightningElement {
         jobId: jobId,
         title: "Confirm Deletion",
         message: "Are you sure you want to delete this scheduled job?",
-        callback: this.deleteJobAfterConfirmation.bind(this),
-      },
+        callback: this.deleteJobAfterConfirmation.bind(this)
+      }
     });
     this.dispatchEvent(confirmEvent);
   }
@@ -141,8 +161,8 @@ export default class DuplicationManagerJobs extends LightningElement {
           // Notify parent of successful deletion
           this.dispatchEvent(
             new CustomEvent("delete", {
-              detail: { jobId: jobId },
-            }),
+              detail: { jobId: jobId }
+            })
           );
 
           // Update store by removing the job
@@ -207,13 +227,13 @@ export default class DuplicationManagerJobs extends LightningElement {
       pageSize,
       totalRecords,
       totalPages,
-      currentPage,
+      currentPage
     };
 
     // Update store pagination
     store.dispatch(
       duplicationStore.actions.UPDATE_PAGINATION,
-      this.paginationInfo,
+      this.paginationInfo
     );
   }
 
@@ -242,7 +262,7 @@ export default class DuplicationManagerJobs extends LightningElement {
       status: jobStatus,
       recordsProcessed: parseInt(jobRecords, 10) || 0,
       objectApiName: jobObject,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
 
     // Store selected job for results modal
@@ -258,8 +278,8 @@ export default class DuplicationManagerJobs extends LightningElement {
     // Dispatch event to parent
     this.dispatchEvent(
       new CustomEvent("jobcomplete", {
-        detail: jobResult,
-      }),
+        detail: jobResult
+      })
     );
   }
 
@@ -269,7 +289,7 @@ export default class DuplicationManagerJobs extends LightningElement {
   handlePrevious() {
     if (this.paginationInfo.currentPage > 1) {
       this.handlePageChange({
-        detail: { page: this.paginationInfo.currentPage - 1 },
+        detail: { page: this.paginationInfo.currentPage - 1 }
       });
     }
   }
@@ -280,7 +300,7 @@ export default class DuplicationManagerJobs extends LightningElement {
   handleNext() {
     if (this.paginationInfo.currentPage < this.paginationInfo.totalPages) {
       this.handlePageChange({
-        detail: { page: this.paginationInfo.currentPage + 1 },
+        detail: { page: this.paginationInfo.currentPage + 1 }
       });
     }
   }
@@ -296,19 +316,19 @@ export default class DuplicationManagerJobs extends LightningElement {
       // Update local pagination
       this.paginationInfo = {
         ...this.paginationInfo,
-        currentPage: page,
+        currentPage: page
       };
 
       // Update store pagination
       store.dispatch(duplicationStore.actions.UPDATE_PAGINATION, {
-        currentPage: page,
+        currentPage: page
       });
 
       // Notify parent
       this.dispatchEvent(
         new CustomEvent("pagechange", {
-          detail: { page: page },
-        }),
+          detail: { page: page }
+        })
       );
     }
   }
@@ -324,8 +344,8 @@ export default class DuplicationManagerJobs extends LightningElement {
       new ShowToastEvent({
         title: title,
         message: message,
-        variant: variant,
-      }),
+        variant: variant
+      })
     );
   }
 
@@ -356,14 +376,14 @@ export default class DuplicationManagerJobs extends LightningElement {
     this.error = {
       message: baseMessage,
       details: errorDetails,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
 
     // Add to store errors
     store.dispatch(duplicationStore.actions.ADD_ERROR, {
       message: errorMessage,
       type: "job",
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     });
 
     this.showToast("Error", errorMessage, "error");
@@ -394,7 +414,7 @@ export default class DuplicationManagerJobs extends LightningElement {
     // Add isBeingDeleted property to each job
     return this.jobs.slice(startIndex, endIndex).map((job) => ({
       ...job,
-      isBeingDeleted: this.deleteInProgress && this.selectedJobId === job.Id,
+      isBeingDeleted: this.deleteInProgress && this.selectedJobId === job.Id
     }));
   }
 
@@ -429,7 +449,7 @@ export default class DuplicationManagerJobs extends LightningElement {
   get jobsStatsMessage() {
     const total = this.jobs.length;
     const completed = this.jobs.filter(
-      (job) => job.Status === "Completed",
+      (job) => job.Status === "Completed"
     ).length;
     const running = this.jobs.filter((job) => job.Status === "Running").length;
 
@@ -455,7 +475,7 @@ export default class DuplicationManagerJobs extends LightningElement {
     const job = this.jobs.find((j) => j.Id === jobId);
     if (!job) {
       this.handleError("Job not found", {
-        message: "Could not find job details",
+        message: "Could not find job details"
       });
       this.isLoadingDryRunResults = false;
       return;
@@ -465,7 +485,7 @@ export default class DuplicationManagerJobs extends LightningElement {
     getDuplicateRunResults({
       batchJobId: jobId,
       pageSize: 10,
-      pageNumber: 1,
+      pageNumber: 1
     })
       .then((result) => {
         // Process summary data
@@ -475,7 +495,7 @@ export default class DuplicationManagerJobs extends LightningElement {
             duplicatesFound: summary.duplicatesFound || 0,
             totalRecords: summary.recordsProcessed || 0,
             objectApiName: summary.objectApiName || "",
-            configName: summary.configName || "",
+            configName: summary.configName || ""
           };
         }
 
@@ -490,7 +510,7 @@ export default class DuplicationManagerJobs extends LightningElement {
               matchScore: group.matchScore / 100, // Convert to decimal format for the UI
               objectName: group.objectName,
               duplicateRecordIds: group.duplicateRecordIds,
-              masterRecordId: group.masterRecordId,
+              masterRecordId: group.masterRecordId
             };
           });
         } else {
@@ -526,8 +546,8 @@ export default class DuplicationManagerJobs extends LightningElement {
         title: "Confirm Merge Operation",
         message:
           "WARNING: This will merge the selected duplicate records. This action cannot be undone. Continue?",
-        callback: this.processMergeAfterConfirmation.bind(this),
-      },
+        callback: this.processMergeAfterConfirmation.bind(this)
+      }
     });
     this.dispatchEvent(confirmEvent);
   }
@@ -553,7 +573,7 @@ export default class DuplicationManagerJobs extends LightningElement {
         this.showToast(
           "Success",
           "Merge operation completed successfully",
-          "success",
+          "success"
         );
         this.closeDryRunResultsModal();
 
@@ -562,9 +582,9 @@ export default class DuplicationManagerJobs extends LightningElement {
           new CustomEvent("mergecomplete", {
             detail: {
               jobId: this.selectedJobForResults,
-              groupsProcessed: groupsToMerge.length,
-            },
-          }),
+              groupsProcessed: groupsToMerge.length
+            }
+          })
         );
       })
       .catch((error) => {
@@ -589,7 +609,7 @@ export default class DuplicationManagerJobs extends LightningElement {
     const group = groups[index];
     const masterRecordId = group.masterRecordId || group.duplicateRecordIds[0];
     const duplicateIds = group.duplicateRecordIds.filter(
-      (id) => id !== masterRecordId,
+      (id) => id !== masterRecordId
     );
 
     // Skip groups with no duplicates
@@ -601,7 +621,7 @@ export default class DuplicationManagerJobs extends LightningElement {
     return mergeDuplicateRecords({
       masterRecordId: masterRecordId,
       duplicateRecordIds: duplicateIds,
-      objectApiName: group.objectName,
+      objectApiName: group.objectName
     })
       .then(() => {
         // Process next group
@@ -632,7 +652,7 @@ export default class DuplicationManagerJobs extends LightningElement {
         label: "Object",
         fieldName: "objectName",
         type: "text",
-        hideDefaultActions: true,
+        hideDefaultActions: true
       },
       {
         label: "Record Count",
@@ -640,15 +660,15 @@ export default class DuplicationManagerJobs extends LightningElement {
         type: "number",
         hideDefaultActions: true,
         cellAttributes: {
-          alignment: "right",
-        },
+          alignment: "right"
+        }
       },
       {
         label: "Field Values",
         fieldName: "fieldValues",
         type: "text",
         hideDefaultActions: true,
-        wrapText: true,
+        wrapText: true
       },
       {
         label: "Match Score",
@@ -656,13 +676,13 @@ export default class DuplicationManagerJobs extends LightningElement {
         type: "percent",
         hideDefaultActions: true,
         cellAttributes: {
-          alignment: "right",
+          alignment: "right"
         },
         typeAttributes: {
           minimumFractionDigits: 0,
-          maximumFractionDigits: 0,
-        },
-      },
+          maximumFractionDigits: 0
+        }
+      }
     ];
   }
 }

@@ -52,7 +52,7 @@ export default class DuplicationSideBySideCompare extends LightningElement {
         // Load master record and duplicate record in parallel
         return Promise.all([
           this.loadRecord(this.masterRecordId, fieldsToRetrieve),
-          this.loadRecord(this.duplicateRecordId, fieldsToRetrieve),
+          this.loadRecord(this.duplicateRecordId, fieldsToRetrieve)
         ]);
       })
       .then(([masterData, duplicateData]) => {
@@ -79,7 +79,7 @@ export default class DuplicationSideBySideCompare extends LightningElement {
   loadRecord(recordId, fields) {
     return getRecordData({
       recordId: recordId,
-      fields: fields,
+      fields: fields
     });
   }
 
@@ -103,7 +103,7 @@ export default class DuplicationSideBySideCompare extends LightningElement {
         "BillingCity",
         "BillingState",
         "BillingPostalCode",
-        "BillingCountry",
+        "BillingCountry"
       ],
       Contact: [
         "FirstName",
@@ -115,7 +115,7 @@ export default class DuplicationSideBySideCompare extends LightningElement {
         "MailingStreet",
         "MailingCity",
         "MailingState",
-        "MailingPostalCode",
+        "MailingPostalCode"
       ],
       Lead: [
         "FirstName",
@@ -127,7 +127,7 @@ export default class DuplicationSideBySideCompare extends LightningElement {
         "Street",
         "City",
         "State",
-        "PostalCode",
+        "PostalCode"
       ],
       Opportunity: [
         "Name",
@@ -135,8 +135,8 @@ export default class DuplicationSideBySideCompare extends LightningElement {
         "Amount",
         "CloseDate",
         "Type",
-        "LeadSource",
-      ],
+        "LeadSource"
+      ]
     };
 
     // Get standard fields for this object, or take first 10 fields
@@ -145,7 +145,7 @@ export default class DuplicationSideBySideCompare extends LightningElement {
       Object.keys(allFields)
         .filter(
           (field) =>
-            !field.startsWith("_") && field !== "Id" && field !== "OwnerId",
+            !field.startsWith("_") && field !== "Id" && field !== "OwnerId"
         )
         .slice(0, 10);
 
@@ -173,8 +173,8 @@ export default class DuplicationSideBySideCompare extends LightningElement {
     const allFieldNames = [
       ...new Set([
         ...Object.keys(masterFields),
-        ...Object.keys(duplicateFields),
-      ]),
+        ...Object.keys(duplicateFields)
+      ])
     ];
 
     // Build compare fields
@@ -217,7 +217,7 @@ export default class DuplicationSideBySideCompare extends LightningElement {
         isDifferent: isDifferent,
         selected: true, // Default to master record field
         duplicateSelected: false,
-        radioName: `${fieldName}-radio`,
+        radioName: `${fieldName}-radio`
       });
 
       // Track conflicts for note creation
@@ -226,7 +226,7 @@ export default class DuplicationSideBySideCompare extends LightningElement {
           fieldName: fieldName,
           fieldLabel: fieldLabel,
           masterValue: masterDisplayValue || "",
-          duplicateValue: duplicateDisplayValue || "",
+          duplicateValue: duplicateDisplayValue || ""
         });
       }
     });
@@ -242,7 +242,7 @@ export default class DuplicationSideBySideCompare extends LightningElement {
         nonMergeable.push({
           fieldName: rel.relationshipName,
           fieldLabel: `${rel.childObjectLabel} Records`,
-          description: `Related ${rel.childObjectLabel} records will need to be manually reassigned after merge.`,
+          description: `Related ${rel.childObjectLabel} records will need to be manually reassigned after merge.`
         });
       });
     }
@@ -276,8 +276,8 @@ export default class DuplicationSideBySideCompare extends LightningElement {
       new ShowToastEvent({
         title: "Error",
         message: errorMessage,
-        variant: "error",
-      }),
+        variant: "error"
+      })
     );
   }
 
@@ -295,7 +295,7 @@ export default class DuplicationSideBySideCompare extends LightningElement {
       this.conflictData.forEach((conflict) => {
         // Only include conflicts where master value was chosen (others were already merged)
         const field = this.compareFields.find(
-          (f) => f.fieldName === conflict.fieldName,
+          (f) => f.fieldName === conflict.fieldName
         );
         if (field && field.selected) {
           noteContent += `${conflict.fieldLabel}: ${conflict.duplicateValue} (from duplicate record)\n`;
@@ -342,13 +342,13 @@ export default class DuplicationSideBySideCompare extends LightningElement {
           return {
             ...field,
             selected: true,
-            duplicateSelected: false,
+            duplicateSelected: false
           };
         }
         return {
           ...field,
           selected: false,
-          duplicateSelected: true,
+          duplicateSelected: true
         };
       }
       return field;
@@ -365,7 +365,7 @@ export default class DuplicationSideBySideCompare extends LightningElement {
         return {
           ...field,
           selected: false,
-          duplicateSelected: true,
+          duplicateSelected: true
         };
       }
       return field;
@@ -402,7 +402,7 @@ export default class DuplicationSideBySideCompare extends LightningElement {
         throw new Error(
           result.errors
             ? result.errors.join(", ")
-            : "Unknown error during merge",
+            : "Unknown error during merge"
         );
       })
       .then(() => {
@@ -410,8 +410,8 @@ export default class DuplicationSideBySideCompare extends LightningElement {
           new ShowToastEvent({
             title: "Success",
             message: "Records merged successfully",
-            variant: "success",
-          }),
+            variant: "success"
+          })
         );
 
         // Dispatch event to notify parent component
@@ -419,9 +419,9 @@ export default class DuplicationSideBySideCompare extends LightningElement {
           new CustomEvent("mergesuccess", {
             detail: {
               masterRecordId: this.masterRecordId,
-              mergedRecordIds: [this.duplicateRecordId],
-            },
-          }),
+              mergedRecordIds: [this.duplicateRecordId]
+            }
+          })
         );
       })
       .catch((error) => {
@@ -441,7 +441,7 @@ export default class DuplicationSideBySideCompare extends LightningElement {
       (field) =>
         this.objectInfo.fields[field.fieldName]?.required &&
         !field.selected &&
-        !field.duplicateSelected,
+        !field.duplicateSelected
     );
 
     if (requiredFields.length > 0) {
@@ -450,8 +450,8 @@ export default class DuplicationSideBySideCompare extends LightningElement {
         new ShowToastEvent({
           title: "Error",
           message: `Required fields must be selected: ${fieldLabels}`,
-          variant: "error",
-        }),
+          variant: "error"
+        })
       );
       return false;
     }
@@ -480,7 +480,7 @@ export default class DuplicationSideBySideCompare extends LightningElement {
       objectApiName: this.objectApiName,
       // These would be used in a real field-level merge implementation
       masterFields: masterSelectedFields,
-      duplicateFields: duplicateSelectedFields,
+      duplicateFields: duplicateSelectedFields
     };
   }
 
@@ -492,9 +492,9 @@ export default class DuplicationSideBySideCompare extends LightningElement {
     const noteContent = this.generateNoteContent();
 
     // Mock the note creation instead of calling the Apex method
-    console.log('Would create note on record:', targetId);
-    console.log('Title: Data preserved from merged records');
-    console.log('Content:', noteContent);
+    console.log("Would create note on record:", targetId);
+    console.log("Title: Data preserved from merged records");
+    console.log("Content:", noteContent);
 
     // Return a mock success response
     return Promise.resolve({ success: true });
@@ -510,29 +510,33 @@ export default class DuplicationSideBySideCompare extends LightningElement {
     const mockInfo = {
       apiName: objectApiName,
       label: objectApiName,
-      labelPlural: objectApiName + 's',
+      labelPlural: objectApiName + "s",
       fields: {},
       childRelationships: []
     };
 
     // Add some mock fields based on the object type
     const fieldsByObject = {
-      Account: ['Name', 'Phone', 'Website', 'Industry', 'BillingCity'],
-      Contact: ['FirstName', 'LastName', 'Email', 'Phone', 'Title'],
-      Lead: ['FirstName', 'LastName', 'Company', 'Email', 'Phone'],
-      Opportunity: ['Name', 'StageName', 'Amount', 'CloseDate']
+      Account: ["Name", "Phone", "Website", "Industry", "BillingCity"],
+      Contact: ["FirstName", "LastName", "Email", "Phone", "Title"],
+      Lead: ["FirstName", "LastName", "Company", "Email", "Phone"],
+      Opportunity: ["Name", "StageName", "Amount", "CloseDate"]
     };
 
     // Get fields for this object or use a generic set
-    const fields = fieldsByObject[objectApiName] || ['Name', 'CreatedDate', 'LastModifiedDate'];
+    const fields = fieldsByObject[objectApiName] || [
+      "Name",
+      "CreatedDate",
+      "LastModifiedDate"
+    ];
 
     // Create mock field metadata
-    fields.forEach(fieldName => {
+    fields.forEach((fieldName) => {
       mockInfo.fields[fieldName] = {
         apiName: fieldName,
-        label: fieldName.replace(/([A-Z])/g, ' $1').trim(),
-        type: 'STRING',
-        required: fieldName === 'Name',
+        label: fieldName.replace(/([A-Z])/g, " $1").trim(),
+        type: "STRING",
+        required: fieldName === "Name",
         updateable: true
       };
     });

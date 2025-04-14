@@ -183,10 +183,10 @@ export default class DuplicationStatsSummary extends LightningElement {
         objectApiName: this.objectApiName,
         timeRange: this.timeRange,
         statistics: result,
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString()
       },
       bubbles: false,
-      composed: false,
+      composed: false
     });
 
     // Dispatch the event
@@ -223,7 +223,7 @@ export default class DuplicationStatsSummary extends LightningElement {
       details: errorDetails,
       timestamp: new Date().toISOString(),
       type: "statistics",
-      id: `err-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      id: `err-${Date.now()}-${Math.floor(Math.random() * 1000)}`
     };
 
     // Set local error state

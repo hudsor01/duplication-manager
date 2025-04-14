@@ -15,15 +15,19 @@ The Duplication Manager follows a layered architecture with clear separation of 
 ## Key Design Patterns
 
 ### Factory Pattern
+
 The `DuplicationMatcherRegistry` uses the Factory pattern to create and provide specialized matchers based on field types.
 
 ### Template Method Pattern
+
 The `DuplicationBaseBatch` defines a template for batch processes, with specific steps implemented by subclasses.
 
 ### Service Layer Pattern
+
 Services like `DuplicationServicesUtil`, `DuplicationStatisticsService`, and `DuplicationMergeService` encapsulate business logic.
 
 ### Observer Pattern
+
 The `duplicationMessageService` implements an observer pattern for loosely coupled component communication.
 
 ## Core Components

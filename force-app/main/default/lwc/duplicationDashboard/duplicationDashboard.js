@@ -22,7 +22,7 @@ export default class DuplicationDashboard extends LightningElement {
     totalDuplicates: 0,
     totalMerged: 0,
     byObject: {},
-    recentMerges: [],
+    recentMerges: []
   };
 
   // Data and display state
@@ -36,6 +36,12 @@ export default class DuplicationDashboard extends LightningElement {
   // UI state
   @track debounceTimeout = null;
   @track showTableView = true; // Always show table view instead of chart
+
+  // Table sorting and filtering state
+  @track _sortField = "totalDuplicates";
+  @track _sortDirection = "desc";
+  @track _filterField = null;
+  @track _filterValue = null;
 
   // Store subscriptions
   subscriptions = [];
@@ -53,7 +59,14 @@ export default class DuplicationDashboard extends LightningElement {
 
     // Show loading indicator
     this.isLoading = true;
-    store.dispatch(duplicationStore.actions.SET_LOADING, true);
+    try {
+      // Use store actions in a try-catch to handle initialization issues
+      if (duplicationStore.actions && duplicationStore.actions.SET_LOADING) {
+        store.dispatch(duplicationStore.actions.SET_LOADING, true);
+      }
+    } catch (error) {
+      console.error("Error dispatching store action:", error);
+    }
 
     // Load statistics from server
     this.loadStatistics();
@@ -153,7 +166,6 @@ export default class DuplicationDashboard extends LightningElement {
     }
   }
 
-
   /**
    * Load statistics from server
    */
@@ -169,20 +181,29 @@ export default class DuplicationDashboard extends LightningElement {
       this.lastPeriodStats = {
         totalDuplicates: this.statistics.totalDuplicates,
         totalMerged: this.statistics.totalMerged,
-        mergeRate: this.mergeRate,
+        mergeRate: this.mergeRate
       };
     }
 
     // Notify that statistics are loading via LMS
     sendMessage(MESSAGE_TYPES.STATISTICS_LOADING, {
-      timeRange: this.timeRange,
+      timeRange: this.timeRange
     });
 
     // Use Apex method to get detailed statistics
     getDetailedStatistics({ timeRange: this.timeRange })
       .then((result) => {
         // Update store with statistics
-        store.dispatch(duplicationStore.actions.UPDATE_STATISTICS, result);
+        try {
+          if (
+            duplicationStore.actions &&
+            duplicationStore.actions.UPDATE_STATISTICS
+          ) {
+            store.dispatch(duplicationStore.actions.UPDATE_STATISTICS, result);
+          }
+        } catch (error) {
+          console.error("Error dispatching UPDATE_STATISTICS action:", error);
+        }
         this.lastRefresh = new Date();
 
         // Initialize from store after updating it
@@ -192,7 +213,7 @@ export default class DuplicationDashboard extends LightningElement {
         sendMessage(MESSAGE_TYPES.STATISTICS_LOADED, {
           timeRange: this.timeRange,
           statistics: result,
-          timestamp: new Date().toISOString(),
+          timestamp: new Date().toISOString()
         });
       })
       .catch((error) => {
@@ -202,13 +223,22 @@ export default class DuplicationDashboard extends LightningElement {
         sendMessage(MESSAGE_TYPES.STATISTICS_LOAD_ERROR, {
           timeRange: this.timeRange,
           error: error.message || "Unknown error",
-          timestamp: new Date().toISOString(),
+          timestamp: new Date().toISOString()
         });
       })
       .finally(() => {
         // Stop loading
         this.isLoading = false;
-        store.dispatch(duplicationStore.actions.SET_LOADING, false);
+        try {
+          if (
+            duplicationStore.actions &&
+            duplicationStore.actions.SET_LOADING
+          ) {
+            store.dispatch(duplicationStore.actions.SET_LOADING, false);
+          }
+        } catch (error) {
+          console.error("Error dispatching SET_LOADING action:", error);
+        }
       });
   }
 
@@ -229,7 +259,7 @@ export default class DuplicationDashboard extends LightningElement {
           mergeRate:
             objStats.totalDuplicates > 0
               ? (objStats.totalMerged || 0) / objStats.totalDuplicates
-              : 0,
+              : 0
         });
       });
     }
@@ -253,16 +283,30 @@ export default class DuplicationDashboard extends LightningElement {
     Promise.resolve().then(() => {
       // Set loading state
       this.isLoading = true;
-      store.dispatch(duplicationStore.actions.SET_LOADING, true);
+      try {
+        if (duplicationStore.actions && duplicationStore.actions.SET_LOADING) {
+          store.dispatch(duplicationStore.actions.SET_LOADING, true);
+        }
 
-      // Invalidate cache
-      store.dispatch(duplicationStore.actions.INVALIDATE_CACHE, "statistics");
+        // Invalidate cache
+        if (
+          duplicationStore.actions &&
+          duplicationStore.actions.INVALIDATE_CACHE
+        ) {
+          store.dispatch(
+            duplicationStore.actions.INVALIDATE_CACHE,
+            "statistics"
+          );
+        }
+      } catch (error) {
+        console.error("Error dispatching store actions in refresh:", error);
+      }
 
       // Notify that refresh is happening via LMS
       sendMessage(MESSAGE_TYPES.REFRESH_STARTED, {
         component: "dashboard",
         type: "statistics",
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString()
       });
 
       // Load fresh data
@@ -279,7 +323,7 @@ export default class DuplicationDashboard extends LightningElement {
     // Notify other components about the time range change via LMS
     sendMessage(MESSAGE_TYPES.TIME_RANGE_CHANGED, {
       timeRange: this.timeRange,
-      source: "dashboard",
+      source: "dashboard"
     });
 
     this.handleRefresh();
@@ -348,16 +392,22 @@ export default class DuplicationDashboard extends LightningElement {
     this.error = {
       message: baseMessage,
       details: errorDetails,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
 
     // Add to store errors with sanitized info
-    store.dispatch(duplicationStore.actions.ADD_ERROR, {
-      message: baseMessage,
-      details: errorDetails,
-      type: "statistics",
-      timestamp: new Date().toISOString(),
-    });
+    try {
+      if (duplicationStore.actions && duplicationStore.actions.ADD_ERROR) {
+        store.dispatch(duplicationStore.actions.ADD_ERROR, {
+          message: baseMessage,
+          details: errorDetails,
+          type: "statistics",
+          timestamp: new Date().toISOString()
+        });
+      }
+    } catch (error) {
+      console.error("Error dispatching ADD_ERROR action:", error);
+    }
 
     // Notify about error via LMS
     sendMessage(MESSAGE_TYPES.ERROR_OCCURRED, {
@@ -365,7 +415,7 @@ export default class DuplicationDashboard extends LightningElement {
       details: errorDetails,
       type: "statistics",
       source: "dashboard",
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     });
   }
 
@@ -384,7 +434,7 @@ export default class DuplicationDashboard extends LightningElement {
     return strMessage
       .replace(
         /Bearer [a-zA-Z0-9\-_]+\.[a-zA-Z0-9\-_]+\.[a-zA-Z0-9\-_]+/g,
-        "Bearer [REDACTED]",
+        "Bearer [REDACTED]"
       )
       .replace(/[a-zA-Z0-9]{20,}/g, "[REDACTED_ID]")
       .replace(/password(=|:).+?($|&|"|')/gi, "password=[REDACTED]$1")
@@ -404,7 +454,7 @@ export default class DuplicationDashboard extends LightningElement {
       { label: "Last 30 Days", value: TIME_RANGES.LAST_30_DAYS },
       { label: "Last 90 Days", value: TIME_RANGES.LAST_90_DAYS },
       { label: "This Year", value: TIME_RANGES.THIS_YEAR },
-      { label: "All Time", value: "ALL" },
+      { label: "All Time", value: "ALL" }
     ];
   }
 
@@ -424,7 +474,8 @@ export default class DuplicationDashboard extends LightningElement {
   get hasStatistics() {
     return (
       this.statistics &&
-      (this.statistics.totalDuplicates > 0 || this.statistics.totalMerged > 0) &&
+      (this.statistics.totalDuplicates > 0 ||
+        this.statistics.totalMerged > 0) &&
       // Make sure we have real data and not just default values
       this.statistics.byObject &&
       Object.keys(this.statistics.byObject).length > 0
@@ -466,16 +517,100 @@ export default class DuplicationDashboard extends LightningElement {
         const mergeRate =
           totalDuplicates > 0 ? totalMerged / totalDuplicates : 0;
 
+        // Calculate merge rate percentage for progress bar
+        const mergeRatePercent = Math.round(mergeRate * 100);
+
+        // Create style for merge rate progress bar
+        let progressBarColor = "#1589ee"; // Default blue
+        if (mergeRate >= 0.7) {
+          progressBarColor = "#04844b"; // Green for high merge rate
+        } else if (mergeRate >= 0.4) {
+          progressBarColor = "#ffb75d"; // Yellow/orange for medium merge rate
+        } else if (mergeRate > 0) {
+          progressBarColor = "#c23934"; // Red for low merge rate
+        }
+
+        const mergeRateStyle = `background: ${progressBarColor}; width: ${mergeRatePercent}%;`;
+
         statsList.push({
           name: objName,
           totalDuplicates: totalDuplicates,
           totalMerged: totalMerged,
           mergeRate: mergeRate,
+          mergeRatePercent: mergeRatePercent,
+          mergeRateStyle: mergeRateStyle
         });
       });
 
-      // Sort by total duplicates
-      statsList.sort((a, b) => b.totalDuplicates - a.totalDuplicates);
+      // Apply default sort if no sort field is selected
+      if (!this._sortField) {
+        this._sortField = "totalDuplicates";
+        this._sortDirection = "desc";
+      }
+
+      // Apply current sort
+      this.sortStatsList(statsList);
+    }
+
+    return statsList;
+  }
+
+  /**
+   * Sort the stats list based on current sort field and direction
+   * @param {Array} list - List to sort
+   * @returns {Array} Sorted list
+   */
+  sortStatsList(list) {
+    const sortField = this._sortField || "totalDuplicates";
+    const sortDirection = this._sortDirection || "desc";
+
+    return list.sort((a, b) => {
+      let compareValueA = a[sortField];
+      let compareValueB = b[sortField];
+
+      // Handle string fields
+      if (sortField === "name") {
+        compareValueA = compareValueA.toLowerCase();
+        compareValueB = compareValueB.toLowerCase();
+      }
+
+      // Compare values
+      if (compareValueA < compareValueB) {
+        return sortDirection === "asc" ? -1 : 1;
+      }
+      if (compareValueA > compareValueB) {
+        return sortDirection === "asc" ? 1 : -1;
+      }
+      return 0;
+    });
+  }
+
+  /**
+   * Get filtered and sorted object statistics list
+   * @returns {Array} Filtered and sorted list
+   */
+  get filteredObjectStatsList() {
+    const statsList = this.objectStatsList;
+
+    // If filter is active, apply it
+    if (this._filterField && this._filterValue) {
+      return statsList.filter((stat) => {
+        // Apply filtering logic based on filter field
+        switch (this._filterField) {
+          case "highDuplicates":
+            return stat.totalDuplicates > 100;
+          case "highMergeRate":
+            return stat.mergeRate > 0.7;
+          case "lowMergeRate":
+            return stat.mergeRate < 0.3;
+          case "hasMerges":
+            return stat.totalMerged > 0;
+          case "noMerges":
+            return stat.totalMerged === 0;
+          default:
+            return true;
+        }
+      });
     }
 
     return statsList;
@@ -719,7 +854,6 @@ export default class DuplicationDashboard extends LightningElement {
     return this.error !== null;
   }
 
-
   /**
    * Get CSS class for dashboard container
    * @returns {String} CSS class string
@@ -728,5 +862,307 @@ export default class DuplicationDashboard extends LightningElement {
     return this.isLoading
       ? "dashboard-container loading"
       : "dashboard-container";
+  }
+
+  /**
+   * Handles find duplicates button click from empty state
+   */
+  handleFindDuplicates() {
+    // Send message to change to the batch jobs tab
+    sendMessage(MESSAGE_TYPES.CHANGE_TAB, {
+      tabName: "batchjobs",
+      source: "dashboard"
+    });
+  }
+
+  /**
+   * Handles configure settings button click from empty state
+   */
+  handleConfigureSettings() {
+    // Send message to open settings modal
+    sendMessage(MESSAGE_TYPES.OPEN_SETTINGS, {
+      source: "dashboard"
+    });
+  }
+
+  /**
+   * Handle find duplicates for a specific object
+   * @param {Event} event - Click event
+   */
+  handleFindObjectDuplicates(event) {
+    const objectName = event.currentTarget.dataset.object;
+    if (!objectName) return;
+
+    // Send message to start duplicate finder for this object
+    sendMessage(MESSAGE_TYPES.QUICK_FIND_DUPLICATES, {
+      objectName: objectName,
+      source: "dashboard"
+    });
+
+    // Change to batch jobs tab
+    sendMessage(MESSAGE_TYPES.CHANGE_TAB, {
+      tabName: "batchjobs",
+      source: "dashboard"
+    });
+  }
+
+  /**
+   * Handle merge duplicates for a specific object
+   * @param {Event} event - Click event
+   */
+  handleMergeObjectDuplicates(event) {
+    const objectName = event.currentTarget.dataset.object;
+    if (!objectName) return;
+
+    // Send message to open merge interface for this object
+    sendMessage(MESSAGE_TYPES.QUICK_MERGE_DUPLICATES, {
+      objectName: objectName,
+      source: "dashboard"
+    });
+
+    // Change to merge tab
+    sendMessage(MESSAGE_TYPES.CHANGE_TAB, {
+      tabName: "compare",
+      source: "dashboard"
+    });
+  }
+
+  /**
+   * Handle quick find button click
+   */
+  handleQuickFind() {
+    // Send message to open quick find modal
+    sendMessage(MESSAGE_TYPES.OPEN_QUICK_FIND, {
+      source: "dashboard"
+    });
+  }
+
+  /**
+   * Export table data to CSV
+   */
+  exportToCsv() {
+    const data = this.filteredObjectStatsList;
+    if (!data || data.length === 0) return;
+
+    // Create CSV header row
+    const headers = [
+      "Object",
+      "Duplicates Found",
+      "Records Merged",
+      "Merge Rate"
+    ];
+
+    // Create CSV data rows
+    const csvData = data.map((stat) => [
+      stat.name,
+      stat.totalDuplicates,
+      stat.totalMerged,
+      (stat.mergeRate * 100).toFixed(1) + "%"
+    ]);
+
+    // Combine header and data
+    const csv = [headers, ...csvData].map((row) => row.join(",")).join("\n");
+
+    // Create download link
+    const a = document.createElement("a");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+
+    a.href = url;
+    a.download = `duplicate-stats-${timestamp}.csv`;
+    a.click();
+
+    // Clean up
+    window.URL.revokeObjectURL(url);
+  }
+
+  /**
+   * Handle filter change
+   * @param {Event} event - Change event
+   */
+  handleFilterChange(event) {
+    this._filterField = event.detail.value;
+    this._filterValue = true;
+  }
+
+  /**
+   * Clear current filter
+   */
+  clearFilter() {
+    this._filterField = null;
+    this._filterValue = null;
+  }
+
+  /**
+   * Handle sort direction change
+   */
+  handleSortDirectionChange() {
+    this._sortDirection = this._sortDirection === "asc" ? "desc" : "asc";
+  }
+
+  /**
+   * Handle sort by name
+   */
+  handleSortByName() {
+    if (this._sortField === "name") {
+      this._sortDirection = this._sortDirection === "asc" ? "desc" : "asc";
+    } else {
+      this._sortField = "name";
+      this._sortDirection = "asc";
+    }
+  }
+
+  /**
+   * Handle sort by duplicates
+   */
+  handleSortByDuplicates() {
+    if (this._sortField === "totalDuplicates") {
+      this._sortDirection = this._sortDirection === "asc" ? "desc" : "asc";
+    } else {
+      this._sortField = "totalDuplicates";
+      this._sortDirection = "desc";
+    }
+  }
+
+  /**
+   * Handle sort by merged
+   */
+  handleSortByMerged() {
+    if (this._sortField === "totalMerged") {
+      this._sortDirection = this._sortDirection === "asc" ? "desc" : "asc";
+    } else {
+      this._sortField = "totalMerged";
+      this._sortDirection = "desc";
+    }
+  }
+
+  /**
+   * Handle sort by merge rate
+   */
+  handleSortByMergeRate() {
+    if (this._sortField === "mergeRate") {
+      this._sortDirection = this._sortDirection === "asc" ? "desc" : "asc";
+    } else {
+      this._sortField = "mergeRate";
+      this._sortDirection = "desc";
+    }
+  }
+
+  /**
+   * Check if current sort is by name
+   * @returns {Boolean} True if sorted by name
+   */
+  get isSortedByName() {
+    return this._sortField === "name";
+  }
+
+  /**
+   * Check if current sort is by duplicates
+   * @returns {Boolean} True if sorted by duplicates
+   */
+  get isSortedByDuplicates() {
+    return this._sortField === "totalDuplicates";
+  }
+
+  /**
+   * Check if current sort is by merged
+   * @returns {Boolean} True if sorted by merged
+   */
+  get isSortedByMerged() {
+    return this._sortField === "totalMerged";
+  }
+
+  /**
+   * Check if current sort is by merge rate
+   * @returns {Boolean} True if sorted by merge rate
+   */
+  get isSortedByMergeRate() {
+    return this._sortField === "mergeRate";
+  }
+
+  /**
+   * Get icon name for name sort
+   * @returns {String} Icon name
+   */
+  get sortIconName() {
+    return this._sortDirection === "asc"
+      ? "utility:arrowup"
+      : "utility:arrowdown";
+  }
+
+  /**
+   * Get icon name for duplicates sort
+   * @returns {String} Icon name
+   */
+  get sortIconDuplicates() {
+    return this._sortDirection === "asc"
+      ? "utility:arrowup"
+      : "utility:arrowdown";
+  }
+
+  /**
+   * Get icon name for merged sort
+   * @returns {String} Icon name
+   */
+  get sortIconMerged() {
+    return this._sortDirection === "asc"
+      ? "utility:arrowup"
+      : "utility:arrowdown";
+  }
+
+  /**
+   * Get icon name for merge rate sort
+   * @returns {String} Icon name
+   */
+  get sortIconMergeRate() {
+    return this._sortDirection === "asc"
+      ? "utility:arrowup"
+      : "utility:arrowdown";
+  }
+
+  /**
+   * Get icon for sort direction toggle
+   * @returns {String} Icon name
+   */
+  get sortDirectionIcon() {
+    return this._sortDirection === "asc"
+      ? "utility:arrowup"
+      : "utility:arrowdown";
+  }
+
+  /**
+   * Check if filtering is active
+   * @returns {Boolean} True if filtering is active
+   */
+  get isFiltered() {
+    return !!this._filterField;
+  }
+
+  /**
+   * Get display name of current filter
+   * @returns {String} Filter display name
+   */
+  get filterFieldLabel() {
+    if (!this._filterField) return "";
+
+    const option = this.filterOptions.find(
+      (opt) => opt.value === this._filterField
+    );
+    return option ? option.label : "";
+  }
+
+  /**
+   * Get filter options
+   * @returns {Array} Filter options
+   */
+  get filterOptions() {
+    return [
+      { label: "High Duplicates (>100)", value: "highDuplicates" },
+      { label: "High Merge Rate (>70%)", value: "highMergeRate" },
+      { label: "Low Merge Rate (<30%)", value: "lowMergeRate" },
+      { label: "Has Merges", value: "hasMerges" },
+      { label: "No Merges", value: "noMerges" }
+    ];
   }
 }

@@ -5,8 +5,9 @@
       <lightning-tab label="Dashboard" icon-name="utility:dashboard">
         <div class="slds-var-p-around_medium">
           <c-duplication-stats-summary
-                      object-api-name={selectedObjectType}
-                      time-range="ALL_TIME">
+            object-api-name={selectedObjectType}
+            time-range="ALL_TIME"
+          >
           </c-duplication-stats-summary>
 
           <div class="slds-var-m-top_large">
@@ -18,41 +19,50 @@
       <!-- Duplicate Management Tab -->
       <lightning-tab
         label="Manage Duplicates"
-        icon-name="utility:record_lookup">
+        icon-name="utility:record_lookup"
+      >
         <div class="slds-var-p-around_medium">
           <div class="slds-grid slds-gutters slds-wrap">
             <!-- Object Type Selection -->
             <div
-              class="slds-col slds-size_1-of-1 slds-medium-size_4-of-12 slds-var-m-bottom_medium">
+              class="slds-col slds-size_1-of-1 slds-medium-size_4-of-12 slds-var-m-bottom_medium"
+            >
               <lightning-combobox
-                              label="Object Type"
-                              value={selectedObjectType}
-                              options={objectTypeOptions}
-                              onchange={handleObjectTypeChange}>
+                label="Object Type"
+                value={selectedObjectType}
+                options={objectTypeOptions}
+                onchange={handleObjectTypeChange}
+              >
               </lightning-combobox>
             </div>
 
             <!-- Configuration Selection -->
             <div
-              class="slds-col slds-size_1-of-1 slds-medium-size_4-of-12 slds-var-m-bottom_medium">
+              class="slds-col slds-size_1-of-1 slds-medium-size_4-of-12 slds-var-m-bottom_medium"
+            >
               <c-duplication-config-selector
-                              object-api-name={selectedObjectType}
-                              onselect={handleConfigSelect}>
+                object-api-name={selectedObjectType}
+                onselect={handleConfigSelect}
+              >
               </c-duplication-config-selector>
             </div>
 
             <!-- Run Button -->
             <div
-              class="slds-col slds-size_1-of-1 slds-medium-size_4-of-12 slds-var-m-bottom_medium">
+              class="slds-col slds-size_1-of-1 slds-medium-size_4-of-12 slds-var-m-bottom_medium"
+            >
               <div class="slds-form-element">
-                <label class="slds-form-element__label slds-assistive-text">Actions</label>
+                <label class="slds-form-element__label slds-assistive-text"
+                  >Actions</label
+                >
                 <div class="slds-form-element__control slds-var-p-top_large">
                   <lightning-button
-                                      label="Run Duplicate Detection"
-                                      icon-name="utility:search"
-                                      variant="brand"
-                                      onclick={handleRunDuplicateDetection}
-                                      disabled={isRunButtonDisabled}>
+                    label="Run Duplicate Detection"
+                    icon-name="utility:search"
+                    variant="brand"
+                    onclick={handleRunDuplicateDetection}
+                    disabled={isRunButtonDisabled}
+                  >
                   </lightning-button>
                 </div>
               </div>
@@ -62,8 +72,9 @@
           <!-- Duplication Manager Results -->
           <div class="slds-var-m-top_medium">
             <c-duplication-manager-app
-                          object-api-name={selectedObjectType}
-                          active-config-id={selectedConfigId}>
+              object-api-name={selectedObjectType}
+              active-config-id={selectedConfigId}
+            >
             </c-duplication-manager-app>
           </div>
         </div>
@@ -75,7 +86,8 @@
           <c-duplication-merge-groups
             object-api-name={selectedObjectType}
             job-id={jobId}
-            show-filters="true">
+            show-filters="true"
+          >
           </c-duplication-merge-groups>
         </div>
       </lightning-tab>
@@ -85,12 +97,14 @@
         label="Compare Records"
         icon-name="utility:side_list"
         value="compare"
-        hidden={hideCompareTab}>
+        hidden={hideCompareTab}
+      >
         <div class="slds-var-p-around_medium">
           <c-duplication-comparison-view
             record-ids={compareRecordIds}
             object-api-name={selectedObjectType}
-            group-id={selectedGroupId}>
+            group-id={selectedGroupId}
+          >
           </c-duplication-comparison-view>
         </div>
       </lightning-tab>
@@ -100,10 +114,10 @@
         label="Merge Preview"
         icon-name="utility:merge"
         value="preview"
-        hidden={hideMergePreviewTab}>
+        hidden={hideMergePreviewTab}
+      >
         <div class="slds-var-p-around_medium">
-          <c-duplication-merge-preview
-            record-id={masterRecordId}>
+          <c-duplication-merge-preview record-id={masterRecordId}>
           </c-duplication-merge-preview>
         </div>
       </lightning-tab>

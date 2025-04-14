@@ -2,7 +2,8 @@
  * Centralized data service for Duplication Manager
  * Provides standardized data access methods for all components
  */
-import { sendMessage, MESSAGE_TYPES } from "c/duplicationMessageService";
+import { sendMessage } from "c/duplicationMessageService";
+import { MESSAGE_TYPES } from "c/duplicationConstants";
 import { handleError } from "c/duplicationErrorService";
 
 // Apex methods
@@ -33,7 +34,7 @@ const CACHE_TTL = {
   FIELDS: 1000 * 60 * 15, // 15 minutes
   STATISTICS: 1000 * 60 * 5, // 5 minutes
   JOBS: 1000 * 60 * 2, // 2 minutes
-  GROUPS: 1000 * 60 * 5, // 5 minutes
+  GROUPS: 1000 * 60 * 5 // 5 minutes
 };
 
 /**
@@ -98,7 +99,7 @@ export function getAvailableDuplicateRules(objectName) {
       // Update cache
       cache.duplicateRules[objectName] = {
         data: result,
-        timestamp: Date.now(),
+        timestamp: Date.now()
       };
       return result;
     })
@@ -132,7 +133,7 @@ export function getAvailableFields(objectName) {
       // Update cache
       cache.fields[objectName] = {
         data: result,
-        timestamp: Date.now(),
+        timestamp: Date.now()
       };
       return result;
     })
@@ -154,7 +155,7 @@ export function getAvailableFields(objectName) {
 export function getStatistics(timeRange) {
   // Broadcast that statistics are loading
   sendMessage(MESSAGE_TYPES.STATISTICS_LOADING, {
-    timeRange: timeRange,
+    timeRange: timeRange
   });
 
   // Check cache (if not forced refresh)
@@ -168,7 +169,7 @@ export function getStatistics(timeRange) {
       timeRange: timeRange,
       statistics: cache.statistics.data,
       timestamp: new Date().toISOString(),
-      fromCache: true,
+      fromCache: true
     });
 
     return Promise.resolve(cache.statistics.data);
@@ -181,14 +182,14 @@ export function getStatistics(timeRange) {
       cache.statistics = {
         data: result,
         timeRange: timeRange,
-        timestamp: Date.now(),
+        timestamp: Date.now()
       };
 
       // Broadcast that statistics are loaded
       sendMessage(MESSAGE_TYPES.STATISTICS_LOADED, {
         timeRange: timeRange,
         statistics: result,
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString()
       });
 
       return result;
@@ -204,7 +205,7 @@ export function getStatistics(timeRange) {
       sendMessage(MESSAGE_TYPES.STATISTICS_LOAD_ERROR, {
         timeRange: timeRange,
         error: formattedError.message,
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString()
       });
 
       return Promise.reject(formattedError);
@@ -217,10 +218,7 @@ export function getStatistics(timeRange) {
  */
 export function getRecentDuplicationJobs() {
   // Check cache
-  if (
-    cache.jobs &&
-    cache.jobsTimestamp > Date.now() - CACHE_TTL.JOBS
-  ) {
+  if (cache.jobs && cache.jobsTimestamp > Date.now() - CACHE_TTL.JOBS) {
     return Promise.resolve(cache.jobs.data);
   }
 
@@ -230,7 +228,7 @@ export function getRecentDuplicationJobs() {
       // Update cache
       cache.jobs = {
         data: result,
-        timestamp: Date.now(),
+        timestamp: Date.now()
       };
       return result;
     })
@@ -259,7 +257,7 @@ export function runDuplication(config) {
       sendMessage(MESSAGE_TYPES.JOB_STARTED, {
         jobId: jobId,
         config: config,
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString()
       });
 
       return jobId;
@@ -294,7 +292,7 @@ export function checkJobStatus(jobId) {
         sendMessage(MESSAGE_TYPES.JOB_COMPLETED, {
           jobId: jobId,
           status: status,
-          timestamp: new Date().toISOString(),
+          timestamp: new Date().toISOString()
         });
       }
 
@@ -330,7 +328,7 @@ export function getDuplicateGroupsForResult(runResultId) {
       // Update cache
       cache.duplicateGroups[runResultId] = {
         data: result,
-        timestamp: Date.now(),
+        timestamp: Date.now()
       };
       return result;
     })
@@ -353,7 +351,7 @@ export function getDuplicateGroupsForResult(runResultId) {
 export function getMergeConflictsForRecords(masterId, duplicateIds) {
   return getMergeConflicts({
     masterId: masterId,
-    duplicateIds: duplicateIds,
+    duplicateIds: duplicateIds
   })
     .then((result) => {
       return result;
@@ -379,7 +377,7 @@ export function mergeDuplicateRecords(masterId, duplicateIds, fieldSelections) {
   return mergeDuplicates({
     masterId: masterId,
     duplicateIds: duplicateIds,
-    fieldSelections: fieldSelections,
+    fieldSelections: fieldSelections
   })
     .then((result) => {
       // Clear caches that might be affected
@@ -392,7 +390,7 @@ export function mergeDuplicateRecords(masterId, duplicateIds, fieldSelections) {
         masterId: masterId,
         duplicateIds: duplicateIds,
         result: result,
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString()
       });
 
       return result;
@@ -409,7 +407,7 @@ export function mergeDuplicateRecords(masterId, duplicateIds, fieldSelections) {
         masterId: masterId,
         duplicateIds: duplicateIds,
         error: formattedError.message,
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString()
       });
 
       return Promise.reject(formattedError);

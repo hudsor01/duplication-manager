@@ -3,9 +3,14 @@ import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import { MessageContext } from "lightning/messageService";
 import getScheduledJobs from "@salesforce/apex/DuplicateRecordJobController.getScheduledJobs";
 import deleteScheduledJob from "@salesforce/apex/DuplicateRecordJobController.deleteScheduledJob";
+import { refreshApex } from "@salesforce/apex";
 import store from "c/duplicationStore";
 import { duplicationStore } from "c/duplicationStore";
-import { subscribeToChannel, unsubscribeFromChannel, MESSAGE_TYPES } from "c/duplicationMessageService";
+import {
+  subscribeToChannel,
+  unsubscribeFromChannel
+} from "c/duplicationMessageService";
+import { MESSAGE_TYPES } from "c/duplicationConstants";
 
 /**
  * Component for managing duplicate job scheduling and monitoring
@@ -14,12 +19,12 @@ import { subscribeToChannel, unsubscribeFromChannel, MESSAGE_TYPES } from "c/dup
 export default class DuplicationJobManager extends LightningElement {
   isLoading = true;
   error = null;
-  refreshTimerId = null;
   autoRefreshEnabled = true;
   autoRefreshInterval = 30000; // 30 seconds
   selectedJobId = null;
   selectedJob = null;
   isJobDetailModalOpen = false;
+  wiredJobsResult; // Store the wired result for refreshApex
 
   // Get message context for LMS
   @wire(MessageContext)
@@ -29,28 +34,38 @@ export default class DuplicationJobManager extends LightningElement {
    * Lifecycle hook - Called when component is inserted into the DOM
    */
   connectedCallback() {
-    // Subscribe to store changes
-    this.subscription = subscribeToChannel((message) => {
-      if (message.type === MESSAGE_TYPES.STORE_UPDATED) {
-        this.handleStoreChange(message.payload);
-      }
-    });
+    try {
+      // Subscribe to store changes
+      this.subscription = subscribeToChannel((message) => {
+        if (message.type === MESSAGE_TYPES.STORE_UPDATED) {
+          this.handleStoreChange(message.payload);
+        }
+      });
 
-    // Start auto-refresh timer
-    this.startAutoRefresh();
+      // Start auto-refresh timer if enabled
+      if (this.autoRefreshEnabled) {
+        this.startAutoRefresh();
+      }
+    } catch (error) {
+      this.handleError("Error initializing component", error);
+    }
   }
 
   /**
    * Lifecycle hook - Called when component is removed from the DOM
    */
   disconnectedCallback() {
-    // Unsubscribe from channel
-    if (this.subscription) {
-      unsubscribeFromChannel(this.subscription);
-    }
+    try {
+      // Unsubscribe from channel
+      if (this.subscription) {
+        unsubscribeFromChannel(this.subscription);
+      }
 
-    // Clear auto-refresh timer
-    this.stopAutoRefresh();
+      // Clear auto-refresh timer
+      this.stopAutoRefresh();
+    } catch (error) {
+      console.error("Error cleaning up component:", error);
+    }
   }
 
   /**
@@ -58,19 +73,20 @@ export default class DuplicationJobManager extends LightningElement {
    */
   handleStoreChange() {
     // handle store changes if needed
+    // No need to update local state since we're using the store getter
   }
 
   /**
    * Wire method to get scheduled jobs
    */
   @wire(getScheduledJobs)
-  wiredJobs({ error, data }) {
+  wiredJobs(result) {
+    this.wiredJobsResult = result;
+    const { error, data } = result;
     this.isLoading = false;
 
     if (data) {
       try {
-        // Jobs loaded successfully
-
         // Update store with scheduled jobs
         store.dispatch(duplicationStore.actions.UPDATE_SCHEDULED_JOBS, data);
 
@@ -90,7 +106,7 @@ export default class DuplicationJobManager extends LightningElement {
   }
 
   /**
-   * Start auto-refresh timer using Promise-based polling
+   * Start auto-refresh timer using setTimeout
    */
   startAutoRefresh() {
     if (this.autoRefreshEnabled && !this._isPolling) {
@@ -102,7 +118,7 @@ export default class DuplicationJobManager extends LightningElement {
   }
 
   /**
-   * Promise-based polling function that replaces setInterval
+   * Promise-based polling function using setTimeout
    */
   _pollForUpdates() {
     // If polling is stopped or component is being destroyed, don't continue
@@ -111,23 +127,35 @@ export default class DuplicationJobManager extends LightningElement {
       return;
     }
 
-    // Execute refresh jobs
-    this.refreshJobs().finally(() => {
-      // Schedule next poll with minimal overhead
-      new Promise(resolve => {
-        // Using immediate resolution
-        resolve();
-      }).then(() => {
-        // Check again if we should continue polling
+    // Use refreshApex to refresh the wired data
+    if (this.wiredJobsResult) {
+      refreshApex(this.wiredJobsResult)
+        .catch((error) => {
+          // Silently handle refresh errors to prevent freezing
+          console.error("Error refreshing jobs:", error);
+        })
+        .finally(() => {
+          // Schedule next poll using a real delay (30 seconds)
+          setTimeout(() => {
+            // Check again if we should continue polling
+            if (!this._stopPolling) {
+              this._pollForUpdates();
+            } else {
+              this._isPolling = false;
+            }
+          }, this.autoRefreshInterval);
+        });
+    } else {
+      // If no wired result yet, try again after delay
+      setTimeout(() => {
         if (!this._stopPolling) {
           this._pollForUpdates();
         } else {
           this._isPolling = false;
         }
-      });
-    });
+      }, this.autoRefreshInterval);
+    }
   }
-
 
   /**
    * Stop auto-refresh polling
@@ -157,21 +185,37 @@ export default class DuplicationJobManager extends LightningElement {
    * Manually refresh jobs
    */
   refreshJobs() {
-    // Refresh jobs
-
+    // Use refreshApex to refresh wired data
     this.isLoading = true;
-    return getScheduledJobs()
-      .then((result) => {
-        // Jobs refreshed successfully
-        store.dispatch(duplicationStore.actions.UPDATE_SCHEDULED_JOBS, result);
-      })
-      .catch((error) => {
-        // Error occurred while refreshing jobs
-        this.handleError("Error refreshing jobs", error);
-      })
-      .finally(() => {
-        this.isLoading = false;
-      });
+    if (this.wiredJobsResult) {
+      return refreshApex(this.wiredJobsResult)
+        .catch((error) => {
+          this.handleError("Error refreshing jobs", error);
+        })
+        .finally(() => {
+          this.isLoading = false;
+        });
+    } 
+      // If no wired result yet
+      this.isLoading = false;
+      return Promise.resolve();
+    
+  }
+
+  /**
+   * Get formatted properties for the selected job
+   */
+  get jobTypeLabel() {
+    if (!this.selectedJob) return "";
+    return this.getJobTypeLabel(this.selectedJob);
+  }
+
+  /**
+   * Get the created by name for the selected job
+   */
+  get selectedJobCreatedBy() {
+    if (!this.selectedJob || !this.selectedJob.CreatedBy) return "System";
+    return this.selectedJob.CreatedBy.Name || "Unknown";
   }
 
   /**
@@ -195,8 +239,8 @@ export default class DuplicationJobManager extends LightningElement {
         jobId: jobId,
         title: "Confirm Deletion",
         message: "Are you sure you want to delete this scheduled job?",
-        callback: this.deleteJobAfterConfirmation.bind(this),
-      },
+        callback: this.deleteJobAfterConfirmation.bind(this)
+      }
     });
     this.dispatchEvent(confirmEvent);
   }
@@ -288,8 +332,8 @@ export default class DuplicationJobManager extends LightningElement {
       new ShowToastEvent({
         title: title,
         message: message,
-        variant: variant,
-      }),
+        variant: variant
+      })
     );
   }
 
@@ -317,7 +361,7 @@ export default class DuplicationJobManager extends LightningElement {
     // Add to store errors
     store.dispatch(duplicationStore.actions.ADD_ERROR, {
       message: errorMessage,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     });
 
     this.showToast("Error", errorMessage, "error");
@@ -399,7 +443,7 @@ export default class DuplicationJobManager extends LightningElement {
         month: "short",
         day: "numeric",
         hour: "2-digit",
-        minute: "2-digit",
+        minute: "2-digit"
       }).format(date);
     } catch (error) {
       // Error formatting date

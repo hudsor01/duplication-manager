@@ -4,7 +4,8 @@
  */
 import { LightningElement, wire, track } from "lwc";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
-import { sendMessage } from "c/duplicationMessageService";
+import { MessageContext } from "lightning/messageService";
+import { sendMessage, setMessageContext } from "c/duplicationMessageService";
 import { MESSAGE_TYPES } from "c/duplicationConstants";
 import { subscribeMigrated, unsubscribeMigrated } from "c/duplicationLmsHelper";
 import getActiveSettings from "@salesforce/apex/DuplicateRecordController.getActiveSettings";
@@ -29,7 +30,7 @@ export default class DuplicationManagerApp extends LightningElement {
     pageSize: 10,
     currentPage: 1,
     totalRecords: 0,
-    totalPages: 1,
+    totalPages: 1
   };
 
   // Use regular properties for primitives or simple values
@@ -51,6 +52,12 @@ export default class DuplicationManagerApp extends LightningElement {
   @track showRunJobModal = false;
 
   /**
+   * Wire the MessageContext for LMS
+   */
+  @wire(MessageContext)
+  messageContext;
+
+  /**
    * Lifecycle hook - Called when component is inserted into the DOM
    */
   connectedCallback() {
@@ -59,8 +66,14 @@ export default class DuplicationManagerApp extends LightningElement {
 
     // Subscribe to store changes using LMS helper
     this._subscriptions = subscribeMigrated(this, {
-      duplicationStoreChange: this.handleStoreChange,
+      duplicationStoreChange: this.handleStoreChange
     });
+
+    // Set the message context for the messaging service
+    setMessageContext(this.messageContext);
+
+    // Initialize store with MessageContext
+    store.initialize(this.messageContext);
 
     // Initialize from store
     this.syncFromStore();
@@ -77,6 +90,16 @@ export default class DuplicationManagerApp extends LightningElement {
 
     // Unsubscribe using LMS helper
     unsubscribeMigrated(this._subscriptions);
+  }
+
+  /**
+   * Lifecycle hook - Called after component renders or re-renders
+   */
+  renderedCallback() {
+    // Ensure message context is set after rendering
+    if (this.messageContext) {
+      setMessageContext(this.messageContext);
+    }
   }
 
   /**
@@ -102,7 +125,6 @@ export default class DuplicationManagerApp extends LightningElement {
    * @param {Object} message - Message from LMS channel
    */
   handleChannelMessage = (message) => {
-
     switch (message.type) {
       case MESSAGE_TYPES.JOB_COMPLETED:
         if (message.payload) {
@@ -115,7 +137,7 @@ export default class DuplicationManagerApp extends LightningElement {
       case MESSAGE_TYPES.CONFIG_SELECTED:
         if (message.payload && message.payload.configId) {
           this.handleSettingChange({
-            detail: { value: message.payload.configId },
+            detail: { value: message.payload.configId }
           });
         }
         break;
@@ -153,7 +175,6 @@ export default class DuplicationManagerApp extends LightningElement {
   // Wire methods to get data from server
   @wire(getActiveSettings)
   wiredSettings({ error, data }) {
-
     // Set loading state in store
     store.dispatch(duplicationStore.actions.SET_LOADING, true);
 
@@ -164,14 +185,14 @@ export default class DuplicationManagerApp extends LightningElement {
           const configurations = Array.isArray(data) ? data : [];
           store.dispatch(
             duplicationStore.actions.SET_CONFIGURATIONS,
-            configurations,
+            configurations
           );
 
           if (configurations.length === 0) {
             this.handleError("No active settings found", {
               message:
                 "Please verify duplicate Settings are active in your org",
-              type: "configuration",
+              type: "configuration"
             });
           }
         }
@@ -193,7 +214,7 @@ export default class DuplicationManagerApp extends LightningElement {
     // Mark cache as pending
     store.dispatch(duplicationStore.actions.SET_CACHE_PENDING, {
       section: "jobs",
-      status: true,
+      status: true
     });
 
     if (data) {
@@ -215,20 +236,20 @@ export default class DuplicationManagerApp extends LightningElement {
         // Find setting in store
         const state = store.getState();
         const selectedSetting = state.configurations.find(
-          (setting) => setting.DeveloperName === settingName,
+          (setting) => setting.DeveloperName === settingName
         );
 
         // Update store with selected setting
         if (selectedSetting) {
           store.dispatch(
             duplicationStore.actions.SELECT_CONFIGURATION,
-            selectedSetting,
+            selectedSetting
           );
         } else {
           this.showToast(
             "Warning",
             "Selected setting could not be found",
-            "warning",
+            "warning"
           );
         }
       } else {
@@ -250,7 +271,7 @@ export default class DuplicationManagerApp extends LightningElement {
       this.showToast(
         "Error",
         "Cannot proceed due to critical health check issues. Please address the issues first.",
-        "error",
+        "error"
       );
       return;
     }
@@ -269,7 +290,7 @@ export default class DuplicationManagerApp extends LightningElement {
           this.showToast(
             "Success",
             "Dry run started successfully (Job ID: " + result + ")",
-            "success",
+            "success"
           );
 
           // Save job information for results display
@@ -278,7 +299,7 @@ export default class DuplicationManagerApp extends LightningElement {
             objectApiName: this.selectedSetting.ObjectApiName,
             configName: this.selectedSetting.MasterLabel,
             isDryRun: true,
-            timestamp: new Date().toISOString(),
+            timestamp: new Date().toISOString()
           };
 
           // Store in session storage for results display
@@ -297,7 +318,7 @@ export default class DuplicationManagerApp extends LightningElement {
           // Send message via LMS
           sendMessage(MESSAGE_TYPES.DRY_RUN_COMPLETE, {
             jobId: result,
-            configId: this.selectedSetting.DeveloperName,
+            configId: this.selectedSetting.DeveloperName
           });
         })
         .catch((error) => {
@@ -331,7 +352,7 @@ export default class DuplicationManagerApp extends LightningElement {
       this.showToast(
         "Warning",
         "Critical health check issues found. Please review and address the issues before proceeding.",
-        "warning",
+        "warning"
       );
     }
   }
@@ -357,7 +378,7 @@ export default class DuplicationManagerApp extends LightningElement {
       this.showToast(
         "Error",
         "Cannot proceed due to critical health check issues. Please address the issues first.",
-        "error",
+        "error"
       );
       return;
     }
@@ -376,14 +397,14 @@ export default class DuplicationManagerApp extends LightningElement {
           this.showToast(
             "Success",
             "Merge operation started successfully (Job ID: " + result + ")",
-            "success",
+            "success"
           );
 
           // Additional information toast
           this.showToast(
             "Information",
             "Refresh the jobs list to check status. Records will be merged when the job completes.",
-            "info",
+            "info"
           );
 
           // Invalidate jobs cache to trigger refresh
@@ -404,7 +425,7 @@ export default class DuplicationManagerApp extends LightningElement {
           sendMessage(MESSAGE_TYPES.JOB_STARTED, {
             jobId: result,
             configId: this.selectedSetting.DeveloperName,
-            isDryRun: false,
+            isDryRun: false
           });
         })
         .catch((error) => {
@@ -454,7 +475,7 @@ export default class DuplicationManagerApp extends LightningElement {
         this.showToast(
           "Information",
           "Job completed with zero duplicate records found",
-          "info",
+          "info"
         );
       } else {
         // Normal success message
@@ -462,7 +483,7 @@ export default class DuplicationManagerApp extends LightningElement {
         this.showToast(
           "Success",
           `Job completed successfully. ${actionText} ${jobResult.recordsProcessed} records.`,
-          "success",
+          "success"
         );
 
         // Update statistics with job result
@@ -470,7 +491,7 @@ export default class DuplicationManagerApp extends LightningElement {
           id: jobResult.id,
           objectApiName: jobResult.objectApiName,
           count: jobResult.recordsProcessed,
-          isDryRun: isDryRun,
+          isDryRun: isDryRun
         });
 
         // Publish job completed event via LMS
@@ -498,22 +519,21 @@ export default class DuplicationManagerApp extends LightningElement {
         isDryRun: false,
         batchSize: 200
       })
-      .then(result => {
-        this.showToast(
-          "Success",
-          "Merge operation started successfully (Job ID: " + result + ")",
-          "success"
-        );
-        store.dispatch(duplicationStore.actions.SET_LOADING, false);
-        this.refreshJobs();
-      })
-      .catch(error => {
-        this.handleError("Error starting merge", error);
-        store.dispatch(duplicationStore.actions.SET_LOADING, false);
-      });
+        .then((result) => {
+          this.showToast(
+            "Success",
+            "Merge operation started successfully (Job ID: " + result + ")",
+            "success"
+          );
+          store.dispatch(duplicationStore.actions.SET_LOADING, false);
+          this.refreshJobs();
+        })
+        .catch((error) => {
+          this.handleError("Error starting merge", error);
+          store.dispatch(duplicationStore.actions.SET_LOADING, false);
+        });
     }
   }
-
 
   refreshJobs() {
     // Set loading and error states
@@ -551,14 +571,14 @@ export default class DuplicationManagerApp extends LightningElement {
         this.refreshError = {
           message: errorMessage,
           details: errorDetails,
-          timestamp: new Date().toISOString(),
+          timestamp: new Date().toISOString()
         };
 
         // Add to global error store
         store.dispatch(duplicationStore.actions.ADD_ERROR, {
           message: `${errorMessage}: ${errorDetails}`,
           type: "refresh",
-          timestamp: new Date().toISOString(),
+          timestamp: new Date().toISOString()
         });
 
         // Show toast with retry option
@@ -567,8 +587,8 @@ export default class DuplicationManagerApp extends LightningElement {
             title: "Error refreshing jobs",
             message: errorDetails,
             variant: "error",
-            mode: "sticky",
-          }),
+            mode: "sticky"
+          })
         );
       })
       .finally(() => {
@@ -597,7 +617,7 @@ export default class DuplicationManagerApp extends LightningElement {
       pageSize,
       totalRecords,
       totalPages,
-      currentPage,
+      currentPage
     });
   }
 
@@ -611,7 +631,7 @@ export default class DuplicationManagerApp extends LightningElement {
     if (pageNumber && pageNumber !== this.paginationInfo.currentPage) {
       // Update pagination in store
       store.dispatch(duplicationStore.actions.UPDATE_PAGINATION, {
-        currentPage: pageNumber,
+        currentPage: pageNumber
       });
     }
   }
@@ -626,7 +646,7 @@ export default class DuplicationManagerApp extends LightningElement {
         objectApiName: this.selectedSetting.ObjectApiName,
         configName: this.selectedSetting.MasterLabel,
         status: "Running",
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString()
       };
 
       // Notify statistics
@@ -707,8 +727,8 @@ export default class DuplicationManagerApp extends LightningElement {
       new ShowToastEvent({
         title: title,
         message: message,
-        variant: variant,
-      }),
+        variant: variant
+      })
     );
   }
 
@@ -735,7 +755,7 @@ export default class DuplicationManagerApp extends LightningElement {
       message: baseMessage,
       details: errorDetails,
       timestamp: new Date().toISOString(),
-      type: error && error.type ? error.type : "general",
+      type: error && error.type ? error.type : "general"
     };
 
     // Add to store
@@ -823,7 +843,7 @@ export default class DuplicationManagerApp extends LightningElement {
           }
           return {
             label: `${setting.MasterLabel || "Unknown"} (${setting.ObjectApiName || "Unknown"})`,
-            value: setting.DeveloperName,
+            value: setting.DeveloperName
           };
         })
         .filter((option) => option !== null);
@@ -849,7 +869,7 @@ export default class DuplicationManagerApp extends LightningElement {
       configName: this.selectedSetting.MasterLabel,
       batchSize: this.selectedSetting.BatchSize,
       matchFields: this.selectedSetting.MatchFields,
-      lastModified: new Date().toISOString(),
+      lastModified: new Date().toISOString()
     };
 
     // Save to store
@@ -857,7 +877,7 @@ export default class DuplicationManagerApp extends LightningElement {
     this.showToast(
       "Information",
       "Your configuration has been saved as a draft",
-      "info",
+      "info"
     );
   }
 
@@ -871,21 +891,21 @@ export default class DuplicationManagerApp extends LightningElement {
 
     // Find the configuration in the settings
     const configToLoad = this.settings.find(
-      (setting) => setting.DeveloperName === this.draftJob.configId,
+      (setting) => setting.DeveloperName === this.draftJob.configId
     );
 
     if (configToLoad) {
       // Select the configuration
       store.dispatch(
         duplicationStore.actions.SELECT_CONFIGURATION,
-        configToLoad,
+        configToLoad
       );
       this.showToast("Success", "Draft job loaded successfully", "success");
     } else {
       this.showToast(
         "Warning",
         "Could not find the configuration for this draft job",
-        "warning",
+        "warning"
       );
     }
   }
@@ -943,7 +963,7 @@ export default class DuplicationManagerApp extends LightningElement {
     this.showToast(
       "Success",
       `Job "${details.jobName}" scheduled successfully`,
-      "success",
+      "success"
     );
   }
 
@@ -954,7 +974,7 @@ export default class DuplicationManagerApp extends LightningElement {
     this.showToast(
       "Success",
       `Job started with ID: ${details.jobId}`,
-      "success",
+      "success"
     );
 
     // Switch to logs tab

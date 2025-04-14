@@ -1,18 +1,33 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
     <apiVersion>58.0</apiVersion>
     <isExposed>true</isExposed>
-    <masterLabel>duplicate Job Progress</masterLabel>
-    <description>Displays real-time progress of duplicate finder jobs</description>
+    <masterLabel>duplicationJobProgress</masterLabel>
+    <description
+  >Displays real-time progress of duplicate finder jobs</description>
     <targets>
         <target>lightning__AppPage</target>
         <target>lightning__RecordPage</target>
         <target>lightning__HomePage</target>
     </targets>
     <targetConfigs>
-        <targetConfig targets="lightning__AppPage,lightning__HomePage,lightning__RecordPage">
-            <property name="jobId" type="String" label="Job ID" description="ID of the job to monitor" required="true" />
-            <property name="autoRefresh" type="Boolean" label="Auto Refresh" description="Whether to automatically refresh the status" default="true" />
+        <targetConfig
+      targets="lightning__AppPage,lightning__HomePage,lightning__RecordPage"
+    >
+            <property
+        name="jobId"
+        type="String"
+        label="Job ID"
+        description="ID of the job to monitor"
+        required="true"
+      />
+            <property
+        name="autoRefresh"
+        type="Boolean"
+        label="Auto Refresh"
+        description="Whether to automatically refresh the status"
+        default="true"
+      />
         </targetConfig>
     </targetConfigs>
 </LightningComponentBundle>

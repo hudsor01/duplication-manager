@@ -50,10 +50,10 @@ export default class DuplicationMasterPreview extends LightningElement {
       "BillingStreet",
       "BillingCity",
       "BillingState",
-      "BillingPostalCode",
+      "BillingPostalCode"
     ],
     Contact: ["FirstName", "LastName", "Email", "Phone", "Title", "Department"],
-    Lead: ["FirstName", "LastName", "Email", "Phone", "Company", "Title"],
+    Lead: ["FirstName", "LastName", "Email", "Phone", "Company", "Title"]
   };
 
   // Selected fields for display
@@ -128,7 +128,7 @@ export default class DuplicationMasterPreview extends LightningElement {
         status: this.fieldStatuses[fieldName] || "unchanged",
         iconName: this.getStatusIcon(fieldName),
         iconVariant: this.getStatusIconVariant(fieldName),
-        statusLabel: this.getStatusLabel(fieldName),
+        statusLabel: this.getStatusLabel(fieldName)
       };
     });
   }
@@ -166,12 +166,12 @@ export default class DuplicationMasterPreview extends LightningElement {
   loadRecord(recordId) {
     // Get fields to retrieve
     const fieldsToRetrieve = this.selectedFields.map(
-      (field) => `${this.objectApiName}.${field}`,
+      (field) => `${this.objectApiName}.${field}`
     );
 
     getRecordData({
       recordId: recordId,
-      fields: fieldsToRetrieve,
+      fields: fieldsToRetrieve
     })
       .then((result) => {
         this.processRecordData(result);
@@ -191,7 +191,7 @@ export default class DuplicationMasterPreview extends LightningElement {
     // Extract field values
     const recordValues = {
       id: recordData.id,
-      fields: {},
+      fields: {}
     };
 
     // For each selected field, extract the value
@@ -201,12 +201,12 @@ export default class DuplicationMasterPreview extends LightningElement {
           value: recordData.fields[field].value,
           displayValue:
             recordData.fields[field].displayValue ||
-            recordData.fields[field].value,
+            recordData.fields[field].value
         };
       } else {
         recordValues.fields[field] = {
           value: null,
-          displayValue: "",
+          displayValue: ""
         };
       }
     });
@@ -240,7 +240,7 @@ export default class DuplicationMasterPreview extends LightningElement {
 
       return {
         ...record,
-        isMaster,
+        isMaster
       };
     });
 
@@ -280,7 +280,7 @@ export default class DuplicationMasterPreview extends LightningElement {
         bestValue = {
           value: masterRecord.fields[field].value,
           displayValue: masterRecord.fields[field].displayValue,
-          sourceRecordId: masterRecord.id,
+          sourceRecordId: masterRecord.id
         };
       }
 
@@ -295,7 +295,7 @@ export default class DuplicationMasterPreview extends LightningElement {
             bestValue = {
               value: record.fields[field].value,
               displayValue: record.fields[field].displayValue,
-              sourceRecordId: record.id,
+              sourceRecordId: record.id
             };
 
             status = "filled";
@@ -323,7 +323,7 @@ export default class DuplicationMasterPreview extends LightningElement {
             conflictingValues.push({
               value: recordValue,
               displayValue: recordDisplayValue,
-              recordId: record.id,
+              recordId: record.id
             });
           }
         }
@@ -348,7 +348,7 @@ export default class DuplicationMasterPreview extends LightningElement {
           fieldName: field,
           fieldLabel: fieldLabel,
           masterValue: masterValue,
-          duplicateValue: duplicateValues,
+          duplicateValue: duplicateValues
         });
       }
 
@@ -406,8 +406,8 @@ export default class DuplicationMasterPreview extends LightningElement {
       new ShowToastEvent({
         title: "Error",
         message: errorMessage,
-        variant: "error",
-      }),
+        variant: "error"
+      })
     );
   }
 
@@ -421,7 +421,7 @@ export default class DuplicationMasterPreview extends LightningElement {
       const field = this.objectInfo.fields[fieldName];
       return {
         label: field.label,
-        value: fieldName,
+        value: fieldName
       };
     });
   }
@@ -438,7 +438,7 @@ export default class DuplicationMasterPreview extends LightningElement {
    */
   get hasFieldConflicts() {
     return Object.values(this.fieldStatuses).some(
-      (status) => status === "conflict",
+      (status) => status === "conflict"
     );
   }
 

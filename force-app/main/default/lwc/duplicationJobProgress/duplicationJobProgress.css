@@ -1,8 +1,118 @@
 .job-progress-container {
   padding: 8px;
+  position: relative;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.job-progress-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 lightning-progress-bar {
   --slds-c-progress-bar-color-background: #f3f3f3;
   --slds-c-progress-bar-color-background-fill: #0176d3;
+  transition: width 0.5s ease;
+}
+
+lightning-progress-bar.success {
+  --slds-c-progress-bar-color-background-fill: #04844b;
+}
+
+lightning-progress-bar.warning {
+  --slds-c-progress-bar-color-background-fill: #ffb75d;
+}
+
+lightning-progress-bar.error {
+  --slds-c-progress-bar-color-background-fill: #c23934;
+}
+
+.status-success {
+  --sds-c-icon-color-foreground-default: #04844b;
+  color: #04844b;
+}
+
+.status-error {
+  --sds-c-icon-color-foreground-default: #c23934;
+  color: #c23934;
+}
+
+.status-warning {
+  --sds-c-icon-color-foreground-default: #ffb75d;
+  color: #ffb75d;
+}
+
+.status-info {
+  --sds-c-icon-color-foreground-default: #0176d3;
+  color: #0176d3;
+}
+
+.status-running {
+  --sds-c-icon-color-foreground-default: #0176d3;
+  color: #0176d3;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
+}
+
+.metric-card {
+  padding: 0.75rem;
+  border-radius: 0.25rem;
+  background-color: #f3f3f3;
+  text-align: center;
+  transition: transform 0.2s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.metric-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+}
+
+.metric-label {
+  font-size: 0.75rem;
+  color: #706e6b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.time-estimate {
+  font-style: italic;
+  color: #706e6b;
+}
+
+/* Responsive design for different screen sizes */
+@media (max-width: 768px) {
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
 }

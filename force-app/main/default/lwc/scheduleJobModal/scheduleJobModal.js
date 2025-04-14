@@ -14,7 +14,7 @@ export default class ScheduleJobModal extends LightningElement {
     return [
       { label: "Daily", value: "Daily" },
       { label: "Weekly", value: "Weekly" },
-      { label: "Custom (Cron)", value: "Custom" },
+      { label: "Custom (Cron)", value: "Custom" }
     ];
   }
 
@@ -24,13 +24,12 @@ export default class ScheduleJobModal extends LightningElement {
   }
 
   async handleSubmit() {
-
     // Validate each field individually to provide more specific error messages
     if (!this.jobName && !this.configId) {
       this.showToast(
         "Validation Error",
         "Job Name and Setting are required.",
-        "error",
+        "error"
       );
       return;
     } else if (!this.jobName) {
@@ -40,7 +39,7 @@ export default class ScheduleJobModal extends LightningElement {
       this.showToast(
         "Validation Error",
         "No configuration selected. Please select a configuration and try again.",
-        "error",
+        "error"
       );
       return;
     }
@@ -53,7 +52,7 @@ export default class ScheduleJobModal extends LightningElement {
         this.showToast(
           "Validation Error",
           "Run Hour must be a number between 0 and 23",
-          "error",
+          "error"
         );
         return;
       }
@@ -63,9 +62,9 @@ export default class ScheduleJobModal extends LightningElement {
       // Pass parameters to match the Apex method signature
 
       await scheduleTestJob({
-        configId: this.configId, 
-        cronExpression: cronExp, 
-        jobName: this.jobName, 
+        configId: this.configId,
+        cronExpression: cronExp,
+        jobName: this.jobName,
         isDryRun: this.isDryRun,
         batchSize: 200
       });

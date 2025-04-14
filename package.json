@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "description": "Salesforce App for managing duplications",
   "scripts": {
-    "lint": "eslint **/{aura,lwc}/**/*.js",
+    "lint": "eslint **/lwc/**/*.js",
+    "lint:fix": "eslint **/lwc/**/*.js --fix",
     "test": "npm run test:unit",
     "test:unit": "sfdx-lwc-jest",
     "test:unit:watch": "sfdx-lwc-jest --watch",
@@ -16,15 +17,15 @@
     "lwc:dev": "sf lightning lwc start"
   },
   "devDependencies": {
-    "@lwc/eslint-plugin-lwc": "3.0.0",
+    "@lwc/eslint-plugin-lwc": "^2.0.0",
     "@prettier/plugin-xml": "3.4.1",
-    "@salesforce/eslint-config-lwc": "4.0.0",
-    "@salesforce/eslint-plugin-lightning": "2.0.0",
+    "@salesforce/eslint-config-lwc": "^3.4.0",
+    "@salesforce/eslint-plugin-lightning": "^1.0.0",
     "@salesforce/lwc-dev-server": "2.11.0",
     "@salesforce/sfdx-lwc-jest": "7.1.0",
-    "eslint": "9.24.0",
-    "eslint-plugin-import": "2.31.0",
-    "eslint-plugin-jest": "28.11.0",
+    "eslint": "^8.0.0",
+    "eslint-plugin-import": "^2.28.0",
+    "eslint-plugin-jest": "^26.9.0",
     "husky": "9.1.7",
     "lint-staged": "15.5.1",
     "prettier": "3.5.3",
@@ -35,7 +36,7 @@
       "prettier --write"
     ],
     "**/{aura,lwc}/**/*.js": [
-      "eslint"
+      "eslint --fix"
     ]
   },
   "packageManager": "npm@10.9.2",

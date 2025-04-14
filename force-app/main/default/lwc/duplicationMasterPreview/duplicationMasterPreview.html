@@ -130,18 +130,12 @@
                   <template for:each={conflictingFields} for:item="conflict">
                     <tr key={conflict.fieldName} class="slds-hint-parent">
                       <td>
-                        <div
-                          class="slds-truncate"
-                          title={conflict.fieldLabel}
-                        >
+                        <div class="slds-truncate" title={conflict.fieldLabel}>
                           {conflict.fieldLabel}
                         </div>
                       </td>
                       <td>
-                        <div
-                          class="slds-truncate"
-                          title={conflict.masterValue}
-                        >
+                        <div class="slds-truncate" title={conflict.masterValue}>
                           {conflict.masterValue}
                         </div>
                       </td>

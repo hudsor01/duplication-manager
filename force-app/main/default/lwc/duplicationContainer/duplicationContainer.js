@@ -2,9 +2,9 @@ import { LightningElement, track, wire } from "lwc";
 import {
   subscribeToChannel,
   unsubscribeFromChannel,
-  sendMessage,
-  MESSAGE_TYPES,
+  sendMessage
 } from "c/duplicationMessageService";
+import { MESSAGE_TYPES } from "c/duplicationConstants";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import getUserSettings from "@salesforce/apex/DuplicateRecordController.getUserSettings";
 import saveUserSettings from "@salesforce/apex/DuplicateRecordController.saveUserSettings";
@@ -15,48 +15,48 @@ export default class duplicationContainer extends LightningElement {
     {
       name: "dashboard",
       label: "Dashboard",
-      icon: "utility:chart",
+      icon: "utility:dashboard",
       selected: true,
       tabindex: 0,
       class: "slds-tabs_default__item slds-is-active",
-      customClass: "slds-tabs_default__item slds-is-active custom-tab active",
+      customClass: "slds-tabs_default__item slds-is-active custom-tab active"
     },
     {
       name: "batchjobs",
       label: "Batch Jobs",
-      icon: "utility:recycle",
+      icon: "utility:refresh",
       selected: false,
       tabindex: -1,
       class: "slds-tabs_default__item",
-      customClass: "slds-tabs_default__item custom-tab",
+      customClass: "slds-tabs_default__item custom-tab"
     },
     {
       name: "compare",
       label: "Compare",
-      icon: "utility:side_by_side",
+      icon: "utility:display_text",
       selected: false,
       tabindex: -1,
       class: "slds-tabs_default__item",
-      customClass: "slds-tabs_default__item custom-tab",
+      customClass: "slds-tabs_default__item custom-tab"
     },
     {
       name: "jobs",
       label: "Scheduled Jobs",
-      icon: "utility:clock",
+      icon: "utility:event",
       selected: false,
       tabindex: -1,
       class: "slds-tabs_default__item",
-      customClass: "slds-tabs_default__item custom-tab",
+      customClass: "slds-tabs_default__item custom-tab"
     },
     {
       name: "logs",
       label: "Audit Logs",
-      icon: "utility:list",
+      icon: "utility:record",
       selected: false,
       tabindex: -1,
       class: "slds-tabs_default__item",
-      customClass: "slds-tabs_default__item custom-tab",
-    },
+      customClass: "slds-tabs_default__item custom-tab"
+    }
   ];
 
   @track activeTab = "dashboard";
@@ -64,12 +64,16 @@ export default class duplicationContainer extends LightningElement {
   @track selectedRecordIds = [];
   @track selectedObjectApiName = "";
   @track selectedGroupId = "";
+  @track isLoading = false;
+
+  // Property to track loading timeout
+  loadingTimeout;
 
   @track metrics = {
     duplicatesFound: 0,
     recordsMerged: 0,
     duplicatesTrend: 0,
-    mergesTrend: 0,
+    mergesTrend: 0
   };
 
   @track userSettings = {
@@ -78,12 +82,12 @@ export default class duplicationContainer extends LightningElement {
     defaultBatchSize: 200,
     timeRange: "LAST_30_DAYS",
     notificationsEnabled: true,
-    defaultView: "dashboard",
+    defaultView: "dashboard"
   };
 
   displayOptions = [
     { label: "Show all fields in comparison view", value: "showAllFields" },
-    { label: "Auto-refresh job status", value: "autoRefresh" },
+    { label: "Auto-refresh job status", value: "autoRefresh" }
   ];
 
   timeRangeOptions = [
@@ -94,18 +98,18 @@ export default class duplicationContainer extends LightningElement {
     { label: "Last Month", value: "LAST_MONTH" },
     { label: "Last 30 Days", value: "LAST_30_DAYS" },
     { label: "This Year", value: "THIS_YEAR" },
-    { label: "All Time", value: "ALL_TIME" },
+    { label: "All Time", value: "ALL_TIME" }
   ];
 
   viewOptions = [
     { label: "Dashboard", value: "dashboard" },
     { label: "Batch Jobs", value: "batchjobs" },
     { label: "Scheduled Jobs", value: "jobs" },
-    { label: "Audit Logs", value: "logs" },
+    { label: "Audit Logs", value: "logs" }
   ];
 
   notificationOptions = [
-    { label: "Job completion notifications", value: "notificationsEnabled" },
+    { label: "Job completion notifications", value: "notificationsEnabled" }
   ];
 
   subscription;
@@ -145,7 +149,7 @@ export default class duplicationContainer extends LightningElement {
         "Error",
         "Could not load user settings: " +
           (error.body?.message || error.message || "Unknown error"),
-        "error",
+        "error"
       );
     }
   }
@@ -154,6 +158,21 @@ export default class duplicationContainer extends LightningElement {
     // Unsubscribe from channel
     if (this.subscription) {
       unsubscribeFromChannel(this.subscription);
+      this.subscription = null;
+    }
+
+    // Clear any pending timeouts
+    if (this.loadingTimeout) {
+      window.clearTimeout(this.loadingTimeout);
+      this.loadingTimeout = null;
+    }
+
+    // Ensure all event listeners are properly removed
+    const elements = this.template.querySelectorAll("button, a, [data-id]");
+    if (elements) {
+      elements.forEach((element) => {
+        element.onclick = null;
+      });
     }
   }
 
@@ -196,26 +215,55 @@ export default class duplicationContainer extends LightningElement {
    * Show loading state for a specific tab
    */
   showLoading(tabName) {
+    this.isLoading = true;
+
+    // Add transition class to content element
     const contentEl = this.template.querySelector(
-      `[aria-labelledby="${tabName}-tab"]`,
+      `[aria-labelledby="${tabName}"]`
     );
     if (contentEl) {
       contentEl.classList.add("tab-content-hide");
       contentEl.classList.remove("tab-content-show");
     }
+
+    // Use a timer to ensure smooth transitions
+    window.clearTimeout(this.loadingTimeout);
+    this.loadingTimeout = window.setTimeout(() => {
+      this.isLoading = false;
+    }, 600); // Slightly longer than transition time
   }
 
   /**
    * Hide loading state
    */
   hideLoading() {
+    // Add transition class to content element
     const contentEl = this.template.querySelector(
-      `[aria-labelledby="${this.activeTab}-tab"]`,
+      `[aria-labelledby="${this.activeTab}"]`
     );
+
     if (contentEl) {
-      contentEl.classList.add("tab-content-show");
-      contentEl.classList.remove("tab-content-hide");
+      // Slight delay to ensure DOM updates have occurred
+      window.setTimeout(() => {
+        contentEl.classList.add("tab-content-show");
+        contentEl.classList.remove("tab-content-hide");
+
+        // Add fade-in class to child elements
+        const childElements = contentEl.querySelectorAll(
+          ".component-container"
+        );
+        childElements.forEach((el, index) => {
+          el.classList.add("fade-in-element");
+          el.style.animationDelay = `${index * 0.1}s`;
+        });
+      }, 50);
     }
+
+    // Set loading state to false
+    window.clearTimeout(this.loadingTimeout);
+    this.loadingTimeout = window.setTimeout(() => {
+      this.isLoading = false;
+    }, 300);
   }
 
   /**
@@ -223,11 +271,24 @@ export default class duplicationContainer extends LightningElement {
    */
   handleTabClick(event) {
     const tabName = event.currentTarget.dataset.id;
+
+    // Do nothing if we're already on this tab or loading
+    if (tabName === this.activeTab || this.isLoading) {
+      return;
+    }
+
+    // Show loading state
     this.showLoading(tabName);
-    Promise.resolve().then(() => {
+
+    // Use setTimeout to create a smoother transition
+    setTimeout(() => {
       this.switchTab(tabName);
-      this.hideLoading();
-    });
+
+      // Slight delay before hiding loading to ensure smooth animation
+      setTimeout(() => {
+        this.hideLoading();
+      }, 250);
+    }, 150);
   }
 
   /**
@@ -246,12 +307,25 @@ export default class duplicationContainer extends LightningElement {
           : "slds-tabs_default__item",
         customClass: isActive
           ? "slds-tabs_default__item slds-is-active custom-tab active"
-          : "slds-tabs_default__item custom-tab",
+          : "slds-tabs_default__item custom-tab"
       };
     });
 
     // Set active tab
     this.activeTab = tabName;
+
+    // Notify about tab change through message service
+    try {
+      if (typeof sendMessage === "function") {
+        sendMessage(MESSAGE_TYPES.VIEW_CHANGE, {
+          view: tabName,
+          action: "switch",
+          timestamp: new Date().toISOString()
+        });
+      }
+    } catch (error) {
+      console.error("Error sending tab change message:", error);
+    }
   }
 
   /**
@@ -264,6 +338,41 @@ export default class duplicationContainer extends LightningElement {
   }
 
   /**
+   * Get dashboard tab class
+   */
+  get dashboardTabClass() {
+    return this.getTabContentClass("dashboard");
+  }
+
+  /**
+   * Get batch jobs tab class
+   */
+  get batchjobsTabClass() {
+    return this.getTabContentClass("batchjobs");
+  }
+
+  /**
+   * Get compare tab class
+   */
+  get compareTabClass() {
+    return this.getTabContentClass("compare");
+  }
+
+  /**
+   * Get jobs tab class
+   */
+  get jobsTabClass() {
+    return this.getTabContentClass("jobs");
+  }
+
+  /**
+   * Get logs tab class
+   */
+  get logsTabClass() {
+    return this.getTabContentClass("logs");
+  }
+
+  /**
    * Handle refresh button click
    */
   handleRefresh() {
@@ -273,7 +382,7 @@ export default class duplicationContainer extends LightningElement {
     // Publish refresh message
     sendMessage(MESSAGE_TYPES.VIEW_CHANGE, {
       action: "refresh",
-      view: this.activeTab,
+      view: this.activeTab
     });
 
     // Reload metrics if on dashboard
@@ -305,24 +414,70 @@ export default class duplicationContainer extends LightningElement {
    * Save settings
    */
   saveSettings() {
-    saveUserSettings({ settingsJson: JSON.stringify(this.userSettings) })
-      .then((result) => {
-        if (result) {
-          this.showToast("Success", "Settings saved successfully", "success");
+    // Capture current settings to send to server
+    const settingsToSave = { ...this.userSettings };
 
-          // Apply settings to current session
-          this.applySettings();
-          this.showSettings = false;
+    try {
+      // Close the modal immediately to avoid Lightning Modal issues
+      this.showSettings = false;
+
+      // Execute in next microtask to ensure the modal is fully closed
+      Promise.resolve().then(() => {
+        // Convert settings to JSON, handling potential circular references
+        let settingsJson;
+        try {
+          settingsJson = JSON.stringify(settingsToSave);
+        } catch (jsonError) {
+          console.error("Error stringifying settings:", jsonError);
+          this.showToast("Error", "Could not process settings data", "error");
+          return;
         }
-      })
-      .catch((error) => {
-        this.showToast(
-          "Error",
-          "Error saving settings: " +
-            (error.body?.message || error.message || "Unknown error"),
-          "error",
-        );
+
+        // Send to server using Apex
+        saveUserSettings({ settingsJson: settingsJson })
+          .then((result) => {
+            // Success handling
+            if (result) {
+              this.showToast(
+                "Success",
+                "Settings saved successfully",
+                "success"
+              );
+
+              // Apply settings for current session
+              try {
+                this.applySettings();
+              } catch (applyError) {
+                console.error("Error applying settings:", applyError);
+              }
+            }
+          })
+          .catch((error) => {
+            // Error handling with detailed logging
+            console.error("Server error saving settings:", error);
+
+            // Create simplified error message
+            let errorMsg = "Unable to save settings";
+            if (error && typeof error === "object") {
+              // Avoid accessing properties that might not exist
+              errorMsg =
+                "Error: " +
+                (error.body && typeof error.body.message === "string"
+                  ? error.body.message
+                  : typeof error.message === "string"
+                    ? error.message
+                    : "Unknown server error");
+            }
+
+            // Show toast with safe message
+            this.showToast("Error", errorMsg, "error");
+          });
       });
+    } catch (error) {
+      console.error("Unexpected error in saveSettings function:", error);
+      this.showSettings = false;
+      this.showToast("Error", "Unexpected error occurred", "error");
+    }
   }
 
   /**
@@ -333,8 +488,8 @@ export default class duplicationContainer extends LightningElement {
       new ShowToastEvent({
         title: title,
         message: message,
-        variant: variant,
-      }),
+        variant: variant
+      })
     );
   }
 
@@ -356,7 +511,7 @@ export default class duplicationContainer extends LightningElement {
       sendMessage(MESSAGE_TYPES.CONFIG_SELECTED, {
         configId: config.id,
         objectApiName: config.objectApiName,
-        configName: config.name,
+        configName: config.name
       });
 
       // Refresh the relevant views
@@ -460,7 +615,7 @@ export default class duplicationContainer extends LightningElement {
   handleNotificationOptionsChange(event) {
     const selectedOptions = event.detail.value;
     this.userSettings.notificationsEnabled = selectedOptions.includes(
-      "notificationsEnabled",
+      "notificationsEnabled"
     );
   }
 
@@ -470,7 +625,7 @@ export default class duplicationContainer extends LightningElement {
   applySettings() {
     // Broadcast settings change
     sendMessage(MESSAGE_TYPES.CONFIG_CHANGED, {
-      settings: this.userSettings,
+      settings: this.userSettings
     });
 
     // Apply default view if needed
@@ -501,7 +656,7 @@ export default class duplicationContainer extends LightningElement {
           "Error",
           "Could not load metrics: " +
             (error.body?.message || error.message || "Unknown error"),
-          "warning",
+          "warning"
         );
       });
   }

@@ -11,7 +11,8 @@
               Duplication Manager
             </div>
             <p class="slds-text-body_regular app-description">
-              Identify, analyze, and merge duplicate records with Duplication Manager
+              Identify, analyze, and merge duplicate records with Duplication
+              Manager
             </p>
           </div>
           <div class="slds-col slds-size_1-of-4">
@@ -86,38 +87,69 @@
         <!-- Main Content Column -->
         <div class="slds-col slds-size_9-of-12 main-column">
           <div class="slds-is-relative">
-            <!-- Tab Content -->
+            <!-- Loading Spinner -->
+            <template if:true={isLoading}>
+              <div
+                class="slds-spinner_container"
+                style="background: rgba(255, 255, 255, 0.6)"
+              >
+                <div
+                  role="status"
+                  class="slds-spinner slds-spinner_medium slds-spinner_brand"
+                >
+                  <span class="slds-assistive-text">Loading</span>
+                  <div class="slds-spinner__dot-a"></div>
+                  <div class="slds-spinner__dot-b"></div>
+                </div>
+              </div>
+            </template>
+
+            <!-- Tab Content with Transitions -->
             <div
               class={dashboardTabClass}
               role="tabpanel"
               aria-labelledby="dashboard"
             >
-              <c-duplication-dashboard></c-duplication-dashboard>
+              <div class="component-container">
+                <c-duplication-dashboard></c-duplication-dashboard>
+              </div>
             </div>
+
             <div
               class={batchjobsTabClass}
               role="tabpanel"
               aria-labelledby="batchjobs"
             >
-              <c-duplication-batch-controller></c-duplication-batch-controller>
+              <div class="component-container">
+                <c-duplication-batch-controller></c-duplication-batch-controller>
+              </div>
             </div>
+
             <div
               class={compareTabClass}
               role="tabpanel"
               aria-labelledby="compare"
             >
-              <c-duplication-comparison-view
-                record-ids={selectedRecordIds}
-                object-api-name={selectedObjectApiName}
-                group-id={selectedGroupId}
-              >
-              </c-duplication-comparison-view>
+              <div class="component-container">
+                <c-duplication-comparison-view
+                  record-ids={selectedRecordIds}
+                  object-api-name={selectedObjectApiName}
+                  group-id={selectedGroupId}
+                >
+                </c-duplication-comparison-view>
+              </div>
             </div>
+
             <div class={jobsTabClass} role="tabpanel" aria-labelledby="jobs">
-              <c-duplication-job-manager></c-duplication-job-manager>
+              <div class="component-container">
+                <c-duplication-job-manager></c-duplication-job-manager>
+              </div>
             </div>
+
             <div class={logsTabClass} role="tabpanel" aria-labelledby="logs">
-              <c-duplication-audit-logs></c-duplication-audit-logs>
+              <div class="component-container">
+                <c-duplication-audit-logs></c-duplication-audit-logs>
+              </div>
             </div>
           </div>
         </div>
@@ -125,26 +157,32 @@
         <!-- Sidebar Column -->
         <div class="slds-col slds-size_3-of-12 sidebar-column">
           <!-- Configuration Selector (always visible) -->
-          <div class="slds-var-p-around_medium card-container slds-var-m-bottom_medium">
+          <div
+            class="slds-var-p-around_medium card-container slds-var-m-bottom_medium sidebar-component-container fade-in-element"
+          >
             <c-duplication-config-selector onselected={handleConfigSelected}>
             </c-duplication-config-selector>
           </div>
 
           <!-- Health Check Panel -->
-          <div class="slds-var-p-around_medium card-container slds-var-m-bottom_medium">
+          <div
+            class="slds-var-p-around_medium card-container slds-var-m-bottom_medium sidebar-component-container fade-in-element"
+            style="animation-delay: 0.1s"
+          >
             <c-duplication-health-check></c-duplication-health-check>
           </div>
 
           <!-- Metrics (Dashboard Tab Only) -->
           <template if:true={isDashboardTab}>
             <div
-              class="slds-var-p-around_medium card-container slds-var-m-bottom_medium metrics-container"
+              class="slds-var-p-around_medium card-container slds-var-m-bottom_medium metrics-container sidebar-component-container fade-in-element"
+              style="animation-delay: 0.2s"
             >
               <c-duplication-metrics-card
                 title="Duplicates Found"
                 value={metrics.duplicatesFound}
                 subtitle="Last 30 days"
-                icon-name="utility:record_lookup"
+                icon-name="utility:search"
                 show-trend="true"
                 trend={metrics.duplicatesTrend}
                 variant="default"
@@ -153,13 +191,14 @@
             </div>
 
             <div
-              class="slds-var-p-around_medium card-container slds-var-m-bottom_medium metrics-container"
+              class="slds-var-p-around_medium card-container slds-var-m-bottom_medium metrics-container sidebar-component-container fade-in-element"
+              style="animation-delay: 0.3s"
             >
               <c-duplication-metrics-card
                 title="Records Merged"
                 value={metrics.recordsMerged}
                 subtitle="Last 30 days"
-                icon-name="utility:merge"
+                icon-name="utility:join"
                 show-trend="true"
                 trend={metrics.mergesTrend}
                 variant="success"
@@ -168,7 +207,10 @@
             </div>
 
             <!-- Statistics Summary -->
-            <div class="slds-var-p-around_medium card-container">
+            <div
+              class="slds-var-p-around_medium card-container sidebar-component-container fade-in-element"
+              style="animation-delay: 0.4s"
+            >
               <c-duplication-stats-summary
                 time-range="LAST_30_DAYS"
               ></c-duplication-stats-summary>
@@ -177,7 +219,10 @@
 
           <!-- Job Progress (Batch Jobs Tab Only) -->
           <template if:true={isBatchJobsTab}>
-            <div class="slds-var-p-around_medium card-container">
+            <div
+              class="slds-var-p-around_medium card-container sidebar-component-container fade-in-element"
+              style="animation-delay: 0.2s"
+            >
               <c-duplication-job-progress></c-duplication-job-progress>
             </div>
           </template>
@@ -185,12 +230,16 @@
           <!-- Compare Tab Components -->
           <template if:true={isCompareTab}>
             <div
-              class="slds-var-p-around_medium card-container slds-var-m-bottom_medium"
+              class="slds-var-p-around_medium card-container slds-var-m-bottom_medium sidebar-component-container fade-in-element"
+              style="animation-delay: 0.2s"
             >
               <c-duplication-dry-run-result></c-duplication-dry-run-result>
             </div>
 
-            <div class="slds-var-p-around_medium card-container">
+            <div
+              class="slds-var-p-around_medium card-container sidebar-component-container fade-in-element"
+              style="animation-delay: 0.3s"
+            >
               <c-duplication-merge-preview></c-duplication-merge-preview>
             </div>
           </template>
@@ -201,114 +250,126 @@
 
   <!-- Settings Modal -->
   <template if:true={showSettings}>
-    <section
-      role="dialog"
-      tabindex="-1"
-      class="slds-modal slds-fade-in-open slds-modal_medium settings-modal"
-    >
-      <div class="slds-modal__container">
-        <header class="slds-modal__header">
-          <button
-            class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse modern-button"
-            onclick={closeSettings}
-          >
-            <lightning-icon
-              icon-name="utility:close"
-              size="small"
-            ></lightning-icon>
-          </button>
-          <h2 class="slds-modal__title slds-hyphenate">Settings</h2>
-        </header>
-        <div class="slds-modal__content slds-var-p-around_medium">
-          <div class="slds-form slds-form_stacked">
-            <div class="slds-form-element">
-              <label class="slds-form-element__label" for="defaultBatchSize"
-                >Default Batch Size</label
-              >
-              <div class="slds-form-element__control">
-                <lightning-slider
-                  label="Batch Size"
-                  variant="label-hidden"
-                  min="50"
-                  max="2000"
-                  step="50"
-                  value={userSettings.defaultBatchSize}
-                  onchange={handleBatchSizeChange}
+    <div class="custom-modal">
+      <section
+        role="dialog"
+        tabindex="-1"
+        class="slds-modal slds-fade-in-open slds-modal_medium settings-modal"
+        aria-labelledby="modal-heading-01"
+      >
+        <div class="slds-modal__container">
+          <header class="slds-modal__header">
+            <button
+              class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse modern-button"
+              onclick={closeSettings}
+              title="Close"
+            >
+              <lightning-icon
+                icon-name="utility:close"
+                alternative-text="Close"
+                size="small"
+                variant="inverse"
+              ></lightning-icon>
+              <span class="slds-assistive-text">Close</span>
+            </button>
+            <h2 id="modal-heading-01" class="slds-modal__title slds-hyphenate">
+              Settings
+            </h2>
+          </header>
+          <div class="slds-modal__content slds-var-p-around_medium">
+            <div class="slds-form slds-form_stacked">
+              <div class="slds-form-element">
+                <label class="slds-form-element__label" for="defaultBatchSize"
+                  >Default Batch Size</label
                 >
-                </lightning-slider>
-                <div class="slds-text-body_small slds-text-align_right">
-                  {userSettings.defaultBatchSize} records
+                <div class="slds-form-element__control">
+                  <lightning-slider
+                    label="Batch Size"
+                    variant="label-hidden"
+                    min="50"
+                    max="2000"
+                    step="50"
+                    value={userSettings.defaultBatchSize}
+                    onchange={handleBatchSizeChange}
+                  >
+                  </lightning-slider>
+                  <div class="slds-text-body_small slds-text-align_right">
+                    {userSettings.defaultBatchSize} records
+                  </div>
+                </div>
+              </div>
+
+              <div class="slds-form-element">
+                <label class="slds-form-element__label">Data Display</label>
+                <div class="slds-form-element__control">
+                  <lightning-checkbox-group
+                    options={displayOptions}
+                    value={selectedDisplayOptions}
+                    onchange={handleDisplayOptionsChange}
+                  >
+                  </lightning-checkbox-group>
+                </div>
+              </div>
+
+              <div class="slds-form-element">
+                <label class="slds-form-element__label"
+                  >Default Time Range</label
+                >
+                <div class="slds-form-element__control">
+                  <lightning-combobox
+                    name="timeRange"
+                    value={userSettings.timeRange}
+                    options={timeRangeOptions}
+                    onchange={handleTimeRangeChange}
+                  >
+                  </lightning-combobox>
+                </div>
+              </div>
+
+              <div class="slds-form-element">
+                <label class="slds-form-element__label">Default View</label>
+                <div class="slds-form-element__control">
+                  <lightning-combobox
+                    name="defaultView"
+                    value={userSettings.defaultView}
+                    options={viewOptions}
+                    onchange={handleDefaultViewChange}
+                  >
+                  </lightning-combobox>
+                </div>
+              </div>
+
+              <div class="slds-form-element">
+                <label class="slds-form-element__label">Notifications</label>
+                <div class="slds-form-element__control">
+                  <lightning-checkbox-group
+                    options={notificationOptions}
+                    value={selectedNotificationOptions}
+                    onchange={handleNotificationOptionsChange}
+                  >
+                  </lightning-checkbox-group>
                 </div>
               </div>
             </div>
-
-            <div class="slds-form-element">
-              <label class="slds-form-element__label">Data Display</label>
-              <div class="slds-form-element__control">
-                <lightning-checkbox-group
-                  options={displayOptions}
-                  value={selectedDisplayOptions}
-                  onchange={handleDisplayOptionsChange}
-                >
-                </lightning-checkbox-group>
-              </div>
-            </div>
-
-            <div class="slds-form-element">
-              <label class="slds-form-element__label">Default Time Range</label>
-              <div class="slds-form-element__control">
-                <lightning-combobox
-                  name="timeRange"
-                  value={userSettings.timeRange}
-                  options={timeRangeOptions}
-                  onchange={handleTimeRangeChange}
-                >
-                </lightning-combobox>
-              </div>
-            </div>
-
-            <div class="slds-form-element">
-              <label class="slds-form-element__label">Default View</label>
-              <div class="slds-form-element__control">
-                <lightning-combobox
-                  name="defaultView"
-                  value={userSettings.defaultView}
-                  options={viewOptions}
-                  onchange={handleDefaultViewChange}
-                >
-                </lightning-combobox>
-              </div>
-            </div>
-
-            <div class="slds-form-element">
-              <label class="slds-form-element__label">Notifications</label>
-              <div class="slds-form-element__control">
-                <lightning-checkbox-group
-                  options={notificationOptions}
-                  value={selectedNotificationOptions}
-                  onchange={handleNotificationOptionsChange}
-                >
-                </lightning-checkbox-group>
-              </div>
-            </div>
           </div>
+          <footer class="slds-modal__footer">
+            <lightning-button
+              label="Cancel"
+              variant="neutral"
+              class="slds-var-m-right_x-small"
+              onclick={closeSettings}
+            >
+            </lightning-button>
+            <lightning-button
+              label="Save"
+              variant="brand"
+              onclick={saveSettings}
+            >
+            </lightning-button>
+          </footer>
         </div>
-        <footer class="slds-modal__footer">
-          <button
-            class="slds-button slds-button_neutral modern-button"
-            onclick={closeSettings}
-          >
-            Cancel
-          </button>
-          <button
-            class="slds-button slds-button_brand modern-button"
-            onclick={saveSettings}
-          >
-            Save
-          </button>
-        </footer>
-      </div>
-    </section>
-    <div class="slds-backdrop slds-backdrop_open"></div>
+      </section>
+      <div class="slds-backdrop slds-backdrop_open"></div>
+    </div>
   </template>
 </template>

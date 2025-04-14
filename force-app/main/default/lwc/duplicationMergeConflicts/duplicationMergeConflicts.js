@@ -14,17 +14,17 @@ export default class DuplicationMergeConflicts extends LightningElement {
    * @description Master record to keep
    * @type {Object}
    */
-  @api 
+  @api
   get masterRecord() {
     return this._masterRecord;
   }
   set masterRecord(value) {
     // Handle both object and string (JSON) inputs
-    if (typeof value === 'string') {
+    if (typeof value === "string") {
       try {
         this._masterRecord = JSON.parse(value);
       } catch (e) {
-        console.error('Error parsing masterRecord string:', e);
+        console.error("Error parsing masterRecord string:", e);
         this._masterRecord = null;
       }
     } else {
@@ -37,17 +37,17 @@ export default class DuplicationMergeConflicts extends LightningElement {
    * @description Duplicate records to merge
    * @type {Array}
    */
-  @api 
+  @api
   get duplicateRecords() {
     return this._duplicateRecords || [];
   }
   set duplicateRecords(value) {
     // Handle both array and string (JSON) inputs
-    if (typeof value === 'string') {
+    if (typeof value === "string") {
       try {
         this._duplicateRecords = JSON.parse(value);
       } catch (e) {
-        console.error('Error parsing duplicateRecords string:', e);
+        console.error("Error parsing duplicateRecords string:", e);
         this._duplicateRecords = [];
       }
     } else {
@@ -64,15 +64,25 @@ export default class DuplicationMergeConflicts extends LightningElement {
 
   /**
    * @api
-   * @description Fields to display
-   * @type {Array}
+   * @description Fields to display (comma-separated list or array)
+   * @type {String|Array}
    */
   @api
   get fields() {
     return this._fieldsValue || [];
   }
   set fields(value) {
-    this._fieldsValue = value;
+    // Handle string input (comma-separated list)
+    if (typeof value === "string" && value.trim()) {
+      this._fieldsValue = value.split(",").map((f) => f.trim());
+    } else {
+      this._fieldsValue = value || [];
+    }
+
+    // Update fields list if initialized
+    if (this._isInitialized) {
+      this.identifyConflicts();
+    }
   }
 
   // Tracked properties for component state
@@ -119,7 +129,7 @@ export default class DuplicationMergeConflicts extends LightningElement {
 
       // Map records by ID for easy access
       this._recordMap = {
-        [this.masterRecord.Id]: this.masterRecord,
+        [this.masterRecord.Id]: this.masterRecord
       };
 
       this.duplicateRecords.forEach((record) => {
@@ -186,7 +196,7 @@ export default class DuplicationMergeConflicts extends LightningElement {
           value: this.formatValue(masterValue),
           recordId: this.masterRecord.Id,
           recordName: this.getRecordName(this.masterRecord),
-          isMaster: true,
+          isMaster: true
         });
 
         // Default selection to master value
@@ -207,7 +217,7 @@ export default class DuplicationMergeConflicts extends LightningElement {
             value: this.formatValue(duplicateValue),
             recordId: record.Id,
             recordName: this.getRecordName(record),
-            isMaster: false,
+            isMaster: false
           });
 
           // If master doesn't have a value, default to this one
@@ -222,7 +232,7 @@ export default class DuplicationMergeConflicts extends LightningElement {
         this.conflicts.push({
           field: field,
           fieldLabel: fieldNameToLabel(field),
-          values: valueOptions,
+          values: valueOptions
         });
       }
     });
@@ -319,6 +329,28 @@ export default class DuplicationMergeConflicts extends LightningElement {
   }
 
   /**
+   * Compute the className property for each value option
+   * This getter is used by the template
+   */
+  get computedValues() {
+    return this.conflicts.map((conflict) => {
+      return {
+        ...conflict,
+        values: conflict.values.map((valueOption) => {
+          return {
+            ...valueOption,
+            className: this.getValueOptionClass(conflict.field, valueOption),
+            isSelected: this.isValueSelected(
+              conflict.field,
+              valueOption.recordId
+            )
+          };
+        })
+      };
+    });
+  }
+
+  /**
    * Get unique ID for a value option
    * @param {String} field - Field API name
    * @param {String} recordId - Record ID
@@ -348,8 +380,8 @@ export default class DuplicationMergeConflicts extends LightningElement {
     const selectionEvent = new CustomEvent("selectionchange", {
       detail: {
         selections: this.fieldSelections,
-        fieldValues: fieldValues,
-      },
+        fieldValues: fieldValues
+      }
     });
     this.dispatchEvent(selectionEvent);
   }
@@ -461,7 +493,7 @@ export default class DuplicationMergeConflicts extends LightningElement {
 
     this.error = {
       message: errorMessage,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
 
     console.error(errorMessage, error);

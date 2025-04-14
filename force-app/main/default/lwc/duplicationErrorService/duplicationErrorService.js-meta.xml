@@ -1,6 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
     <apiVersion>58.0</apiVersion>
     <isExposed>false</isExposed>
-    <description>Provides centralized error handling services for duplicate Manager components</description>
+    <description
+  >Provides centralized error handling services for duplicate Manager components</description>
 </LightningComponentBundle>

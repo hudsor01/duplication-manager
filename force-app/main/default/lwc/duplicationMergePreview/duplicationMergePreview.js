@@ -9,7 +9,7 @@ import { MESSAGE_TYPES } from "c/duplicationConstants";
 import {
   handleError,
   ERROR_LEVELS,
-  ERROR_CATEGORIES,
+  ERROR_CATEGORIES
 } from "c/duplicationErrorService";
 import mergeDuplicateRecords from "@salesforce/apex/DuplicateRecordController.mergeDuplicateRecords";
 import createNote from "@salesforce/apex/DRCNote.createNote";
@@ -83,7 +83,7 @@ export default class DuplicationMergePreview extends LightningElement {
     mergeDuplicateRecords({
       masterRecordId: this.mergeRequest.masterId,
       duplicateRecordIds: this.mergeRequest.duplicateIds,
-      objectApiName: this.mergeRequest.objectApiName,
+      objectApiName: this.mergeRequest.objectApiName
     })
       .then((result) => {
         if (result.success) {
@@ -98,7 +98,7 @@ export default class DuplicationMergePreview extends LightningElement {
         }
         throw new Error(
           "Merge operation failed: " +
-            (result.errors ? result.errors.join(", ") : "Unknown error"),
+            (result.errors ? result.errors.join(", ") : "Unknown error")
         );
       })
       .then(() => {
@@ -109,7 +109,7 @@ export default class DuplicationMergePreview extends LightningElement {
         sendMessage(MESSAGE_TYPES.DUPLICATES_MERGED, {
           masterId: this.mergeRequest.masterId,
           mergedIds: this.mergeRequest.duplicateIds,
-          objectApiName: this.mergeRequest.objectApiName,
+          objectApiName: this.mergeRequest.objectApiName
         });
 
         // Reset state
@@ -125,8 +125,8 @@ export default class DuplicationMergePreview extends LightningElement {
           {
             level: ERROR_LEVELS.ERROR,
             category: ERROR_CATEGORIES.DATA,
-            notify: true,
-          },
+            notify: true
+          }
         );
 
         // Show error toast
@@ -175,7 +175,7 @@ export default class DuplicationMergePreview extends LightningElement {
     return createNote({
       parentId: this.mergeRequest.masterId,
       title: noteTitle,
-      body: finalNoteBody,
+      body: finalNoteBody
     });
   }
 
@@ -199,8 +199,8 @@ export default class DuplicationMergePreview extends LightningElement {
       new ShowToastEvent({
         title: title,
         message: message,
-        variant: variant,
-      }),
+        variant: variant
+      })
     );
   }
 
@@ -280,7 +280,7 @@ export default class DuplicationMergePreview extends LightningElement {
   get fieldList() {
     return this.previewData && this.previewData.fieldData
       ? this.previewData.fieldData.filter(
-          (field) => field.value !== null && field.value !== "",
+          (field) => field.value !== null && field.value !== ""
         )
       : [];
   }

@@ -1,9 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
     <apiVersion>58.0</apiVersion>
     <isExposed>true</isExposed>
     <masterLabel>duplicate Side By Side Compare</masterLabel>
-    <description>Side-by-side comparison of duplicate records for merging</description>
+    <description
+  >Side-by-side comparison of duplicate records for merging</description>
     <targets>
         <target>lightning__AppPage</target>
         <target>lightning__RecordPage</target>
@@ -11,9 +12,27 @@
     </targets>
     <targetConfigs>
         <targetConfig targets="lightning__FlowScreen">
-            <property name="masterRecordId" type="String" label="Master Record ID" description="ID of the master record" required="true" />
-            <property name="duplicateRecordId" type="String" label="Duplicate Record ID" description="ID of the duplicate record to compare" required="true" />
-            <property name="objectApiName" type="String" label="Object API Name" description="API name of the object (e.g., Account)" required="true" />
+            <property
+        name="masterRecordId"
+        type="String"
+        label="Master Record ID"
+        description="ID of the master record"
+        required="true"
+      />
+            <property
+        name="duplicateRecordId"
+        type="String"
+        label="Duplicate Record ID"
+        description="ID of the duplicate record to compare"
+        required="true"
+      />
+            <property
+        name="objectApiName"
+        type="String"
+        label="Object API Name"
+        description="API name of the object (e.g., Account)"
+        required="true"
+      />
         </targetConfig>
     </targetConfigs>
 </LightningComponentBundle>

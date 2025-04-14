@@ -5,7 +5,7 @@ import getDetailedStatistics from "@salesforce/apex/DRSCDetailed.getDetailedStat
 
 // Register the Apex wire adapter
 const getDetailedStatisticsAdapter = registerApexTestWireAdapter(
-  getDetailedStatistics,
+  getDetailedStatistics
 );
 
 // Mock the store
@@ -20,12 +20,12 @@ jest.mock("c/duplicationStore", () => {
           byObject: {
             Account: {
               totalDuplicates: 60,
-              totalMerged: 45,
+              totalMerged: 45
             },
             Contact: {
               totalDuplicates: 40,
-              totalMerged: 30,
-            },
+              totalMerged: 30
+            }
           },
           recentMerges: [
             {
@@ -34,7 +34,7 @@ jest.mock("c/duplicationStore", () => {
               configName: "Standard",
               count: 5,
               isDryRun: false,
-              timestamp: "2025-05-01T12:00:00Z",
+              timestamp: "2025-05-01T12:00:00Z"
             },
             {
               id: "002",
@@ -42,22 +42,22 @@ jest.mock("c/duplicationStore", () => {
               configName: "Standard",
               count: 10,
               isDryRun: true,
-              timestamp: "2025-04-28T10:00:00Z",
-            },
-          ],
-        },
+              timestamp: "2025-04-28T10:00:00Z"
+            }
+          ]
+        }
       })),
       dispatch: jest.fn(),
-      subscribe: jest.fn(() => jest.fn()),
+      subscribe: jest.fn(() => jest.fn())
     },
     duplicationStore: {
       actions: {
         SET_LOADING: "SET_LOADING",
         UPDATE_STATISTICS: "UPDATE_STATISTICS",
         INVALIDATE_CACHE: "INVALIDATE_CACHE",
-        ADD_ERROR: "ADD_ERROR",
-      },
-    },
+        ADD_ERROR: "ADD_ERROR"
+      }
+    }
   };
 });
 
@@ -77,15 +77,15 @@ jest.mock("c/duplicationMessageService", () => {
       STATISTICS_LOADED: "statistics.loaded",
       STATISTICS_LOAD_ERROR: "statistics.load.error",
       REFRESH_STARTED: "refresh.started",
-      ERROR_OCCURRED: "error.occurred",
-    },
+      ERROR_OCCURRED: "error.occurred"
+    }
   };
 });
 
 // Mock the loadScript function
 jest.mock("lightning/platformResourceLoader", () => {
   return {
-    loadScript: jest.fn(() => Promise.resolve()),
+    loadScript: jest.fn(() => Promise.resolve())
   };
 });
 
@@ -97,12 +97,12 @@ const MOCK_STATISTICS = {
   byObject: {
     Account: {
       totalDuplicates: 70,
-      totalMerged: 50,
+      totalMerged: 50
     },
     Contact: {
       totalDuplicates: 50,
-      totalMerged: 30,
-    },
+      totalMerged: 30
+    }
   },
   recentMerges: [
     {
@@ -111,10 +111,10 @@ const MOCK_STATISTICS = {
       configName: "Standard",
       count: 5,
       isDryRun: false,
-      timestamp: "2025-05-01T12:00:00Z",
-    },
+      timestamp: "2025-05-01T12:00:00Z"
+    }
   ],
-  timeRange: "LAST_30_DAYS",
+  timeRange: "LAST_30_DAYS"
 };
 
 describe("c-duplicate-dashboard", () => {
@@ -123,7 +123,7 @@ describe("c-duplicate-dashboard", () => {
   // Helper function that creates the dashboard component
   const createDashboard = () => {
     element = createElement("c-duplicate-dashboard", {
-      is: duplicateDashboard,
+      is: duplicateDashboard
     });
     document.body.appendChild(element);
 
@@ -168,7 +168,7 @@ describe("c-duplicate-dashboard", () => {
 
       // Should show the correct number of duplicates
       const duplicatesValue = element.shadowRoot.querySelector(
-        ".stats-card.primary .stats-value",
+        ".stats-card.primary .stats-value"
       );
       expect(duplicatesValue.textContent).toContain("120");
     });
@@ -197,7 +197,7 @@ describe("c-duplicate-dashboard", () => {
     element.error = {
       message: "Test Error",
       details: "This is a test error",
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
 
     // Return a promise to wait for any asynchronous DOM updates
@@ -219,7 +219,7 @@ describe("c-duplicate-dashboard", () => {
       totalDuplicates: 0,
       totalMerged: 0,
       byObject: {},
-      recentMerges: [],
+      recentMerges: []
     };
 
     // Return a promise to wait for any asynchronous DOM updates
@@ -230,7 +230,7 @@ describe("c-duplicate-dashboard", () => {
 
       const firstEmptyState = emptyStates[0];
       expect(firstEmptyState.textContent).toContain(
-        "No duplicate statistics available yet",
+        "No duplicate statistics available yet"
       );
     });
   });
@@ -242,14 +242,14 @@ describe("c-duplicate-dashboard", () => {
     // Set statistics with trend data
     element.statistics = {
       totalDuplicates: 120,
-      totalMerged: 80,
+      totalMerged: 80
     };
 
     // Set previous period data for trend calculation
     element.lastPeriodStats = {
       totalDuplicates: 100,
       totalMerged: 70,
-      mergeRate: 0.7,
+      mergeRate: 0.7
     };
 
     // Return a promise to wait for any asynchronous DOM updates
@@ -275,26 +275,26 @@ describe("c-duplicate-dashboard", () => {
     const testCases = [
       {
         input: "Error with token=abc123xyz",
-        expected: "Error with token=[REDACTED]",
+        expected: "Error with token=[REDACTED]"
       },
       {
         input: "Password:secret123",
-        expected: "Password=[REDACTED]",
+        expected: "Password=[REDACTED]"
       },
       {
         input: "API key=sk_test_12345",
-        expected: "key=[REDACTED]",
+        expected: "key=[REDACTED]"
       },
       {
         input:
           "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
-        expected: "Bearer [REDACTED]",
-      },
+        expected: "Bearer [REDACTED]"
+      }
     ];
 
     testCases.forEach((testCase) => {
       expect(element.sanitizeErrorMessage(testCase.input)).toBe(
-        testCase.expected,
+        testCase.expected
       );
     });
   });

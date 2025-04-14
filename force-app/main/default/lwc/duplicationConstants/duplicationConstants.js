@@ -7,13 +7,13 @@ export const DUPLICATE_STATUS = {
   NEW: "New",
   REVIEWED: "Reviewed",
   MERGED: "Merged",
-  IGNORED: "Ignored",
+  IGNORED: "Ignored"
 };
 
 // Types of merge operations
 export const MERGE_TYPES = {
   AUTOMATIC: "Automatic",
-  MANUAL: "Manual",
+  MANUAL: "Manual"
 };
 
 // Status values for jobs
@@ -97,9 +97,16 @@ export const MESSAGE_TYPES = {
   // Notification events
   TOAST_NOTIFICATION: "TOAST_NOTIFICATION",
 
+  // UI control events
+  OPEN_SETTINGS: "OPEN_SETTINGS",
+  OPEN_QUICK_FIND: "OPEN_QUICK_FIND",
+  OPEN_QUICK_MERGE: "OPEN_QUICK_MERGE",
+  QUICK_FIND_DUPLICATES: "QUICK_FIND_DUPLICATES",
+  QUICK_MERGE_DUPLICATES: "QUICK_MERGE_DUPLICATES",
+
   // Error events
   ERROR_OCCURRED: "ERROR_OCCURRED",
-  ERROR_CLEARED: "ERROR_CLEARED",
+  ERROR_CLEARED: "ERROR_CLEARED"
 };
 
 // Time range options for filtering
@@ -125,7 +132,7 @@ export const TIME_RANGES = {
 export const MATCH_TYPES = {
   EXACT: "Exact",
   FUZZY: "Fuzzy",
-  PHONETIC: "Phonetic",
+  PHONETIC: "Phonetic"
 };
 
 // Field selection strategies for merges
@@ -133,7 +140,7 @@ export const FIELD_SELECTION = {
   MASTER_WINS: "MasterWins",
   MOST_RECENT: "MostRecent",
   NON_BLANK: "NonBlank",
-  MANUAL: "Manual",
+  MANUAL: "Manual"
 };
 
 // Batch job sizes
@@ -141,102 +148,108 @@ export const BATCH_SIZES = [
   { label: "Small (200 records)", value: 200 },
   { label: "Medium (500 records)", value: 500 },
   { label: "Large (1000 records)", value: 1000 },
-  { label: "Very Large (2000 records)", value: 2000 },
+  { label: "Very Large (2000 records)", value: 2000 }
 ];
 
 // Duplicate matching strategies
 export const MATCH_STRATEGIES = {
-  EXACT: 'exact',
-  FUZZY: 'fuzzy',
-  PHONETIC: 'phonetic',
-  DISTANCE: 'distance',
-  CUSTOM: 'custom'
+  EXACT: "exact",
+  FUZZY: "fuzzy",
+  PHONETIC: "phonetic",
+  DISTANCE: "distance",
+  CUSTOM: "custom"
 };
 
 // Master record selection strategies
 export const MASTER_RECORD_STRATEGIES = {
-  MOST_RECENT: 'mostRecent',
-  OLDEST: 'oldest',
-  MOST_COMPLETE: 'mostComplete',
-  MOST_ACTIVITY: 'mostActivity',
-  CUSTOM: 'custom'
+  MOST_RECENT: "mostRecent",
+  OLDEST: "oldest",
+  MOST_COMPLETE: "mostComplete",
+  MOST_ACTIVITY: "mostActivity",
+  CUSTOM: "custom"
 };
 
 // Chart types for visualization
 export const CHART_TYPES = {
-  BAR: 'bar',
-  LINE: 'line',
-  PIE: 'pie',
-  DONUT: 'doughnut',
-  RADAR: 'radar'
+  BAR: "bar",
+  LINE: "line",
+  PIE: "pie",
+  DONUT: "doughnut",
+  RADAR: "radar"
 };
 
 // View modes for UI components
 export const VIEW_MODES = {
-  CARD: 'card',
-  TABLE: 'table',
-  LIST: 'list',
-  COMPACT: 'compact',
-  DETAILED: 'detailed'
+  CARD: "card",
+  TABLE: "table",
+  LIST: "list",
+  COMPACT: "compact",
+  DETAILED: "detailed"
 };
 
 // Object types commonly processed for duplicate
 export const COMMON_OBJECTS = [
-  { label: 'Account', value: 'Account' },
-  { label: 'Contact', value: 'Contact' },
-  { label: 'Lead', value: 'Lead' },
-  { label: 'Opportunity', value: 'Opportunity' },
-  { label: 'Case', value: 'Case' }
+  { label: "Account", value: "Account" },
+  { label: "Contact", value: "Contact" },
+  { label: "Lead", value: "Lead" },
+  { label: "Opportunity", value: "Opportunity" },
+  { label: "Case", value: "Case" }
 ];
 
 // Column definitions for data tables
 export const COLUMN_DEFINITIONS = {
   JOB_HISTORY: [
-    { label: 'Object', fieldName: 'objectApiName', type: 'text' },
-    { label: 'Status', fieldName: 'status', type: 'text' },
-    { label: 'Duplicates', fieldName: 'duplicatesFound', type: 'number' },
-    { label: 'Merged', fieldName: 'recordsMerged', type: 'number' },
-    { label: 'Date', fieldName: 'startTime', type: 'date',
+    { label: "Object", fieldName: "objectApiName", type: "text" },
+    { label: "Status", fieldName: "status", type: "text" },
+    { label: "Duplicates", fieldName: "duplicatesFound", type: "number" },
+    { label: "Merged", fieldName: "recordsMerged", type: "number" },
+    {
+      label: "Date",
+      fieldName: "startTime",
+      type: "date",
       typeAttributes: {
-          year: 'numeric',
-          month: 'short',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit'
+        year: "numeric",
+        month: "short",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
       }
     }
   ],
   SCHEDULED_JOBS: [
-    { label: 'Job Name', fieldName: 'name', type: 'text' },
-    { label: 'Object', fieldName: 'objectApiName', type: 'text' },
-    { label: 'Next Run', fieldName: 'nextFireTime', type: 'date',
+    { label: "Job Name", fieldName: "name", type: "text" },
+    { label: "Object", fieldName: "objectApiName", type: "text" },
+    {
+      label: "Next Run",
+      fieldName: "nextFireTime",
+      type: "date",
       typeAttributes: {
-          year: 'numeric',
-          month: 'short',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit'
+        year: "numeric",
+        month: "short",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
       }
     },
-    { label: 'Status', fieldName: 'state', type: 'text' }
+    { label: "Status", fieldName: "state", type: "text" }
   ]
 };
 
 // Field types for UI rendering
 export const FIELD_TYPES = {
-  TEXT: 'text',
-  NUMBER: 'number',
-  BOOLEAN: 'boolean',
-  DATE: 'date',
-  DATETIME: 'datetime',
-  PICKLIST: 'picklist',
-  MULTIPICKLIST: 'multipicklist',
-  REFERENCE: 'reference',
-  EMAIL: 'email',
-  PHONE: 'phone',
-  URL: 'url',
-  CURRENCY: 'currency',
-  PERCENT: 'percent',
-  TEXTAREA: 'textarea',
-  RICHTEXT: 'richtext'
+  TEXT: "text",
+  NUMBER: "number",
+  BOOLEAN: "boolean",
+  DATE: "date",
+  DATETIME: "datetime",
+  PICKLIST: "picklist",
+  MULTIPICKLIST: "multipicklist",
+  REFERENCE: "reference",
+  EMAIL: "email",
+  PHONE: "phone",
+  URL: "url",
+  CURRENCY: "currency",
+  PERCENT: "percent",
+  TEXTAREA: "textarea",
+  RICHTEXT: "richtext"
 };

@@ -60,7 +60,7 @@ export function formatDate(dateValue, format = "medium") {
         month: "long",
         day: "numeric",
         hour: "2-digit",
-        minute: "2-digit",
+        minute: "2-digit"
       };
       break;
     case "time":
@@ -73,7 +73,7 @@ export function formatDate(dateValue, format = "medium") {
         month: "short",
         day: "numeric",
         hour: "2-digit",
-        minute: "2-digit",
+        minute: "2-digit"
       };
   }
 
@@ -91,7 +91,7 @@ export function formatNumber(value, decimals = 0) {
 
   return Number(value).toLocaleString("en-US", {
     minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
+    maximumFractionDigits: decimals
   });
 }
 
@@ -107,7 +107,7 @@ export function formatPercentage(value, decimals = 1) {
   return Number(value).toLocaleString("en-US", {
     style: "percent",
     minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
+    maximumFractionDigits: decimals
   });
 }
 

@@ -1,214 +1,115 @@
 <template>
-  <div class="container slds-p-around_medium">
-    <div class="slds-grid slds-gutters slds-wrap">
-      <!-- Left Column -->
-      <div class="slds-col slds-size_1-of-1 slds-medium-size_8-of-12">
-        <lightning-card title="Duplicate Finder" icon-name="standard:merge">
-          <div class="slds-p-horizontal_medium">
-            <header class="slds-p-bottom_medium">
-              <div class="slds-page-header">
-                <div class="slds-page-header__row">
-                  <div class="slds-page-header__col-title">
-                    <div class="slds-media">
-                      <div class="slds-media__figure">
-                        <lightning-icon
-                          icon-name="standard:merge"
-                          size="medium"
-                        ></lightning-icon>
-                      </div>
-                      <div class="slds-media__body">
-                        <div class="slds-page-header__name">
-                          <div class="slds-page-header__name-title">
-                            <h1>
-                              <span
-                                class="slds-page-header__title slds-truncate"
-                                title="Find & Merge Duplicates"
-                                >Find & Merge Duplicates</span
-                              >
-                            </h1>
-                          </div>
-                        </div>
-                        <p class="slds-page-header__name-meta">
-                          Streamline your data by finding and merging duplicate
-                          records
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </header>
+  <div
+    class="container slds-is-relative slds-brand-band_cover slds-brand-band_medium slds-p-around_medium"
+  >
+    <div class="slds-grid slds-grid_vertical">
+      <!-- Loading Spinner -->
+      <template if:true={isLoading}>
+        <div
+          class="slds-is-relative"
+          style="position: absolute; z-index: 5; width: 100%; height: 100%"
+        >
+          <lightning-spinner
+            alternative-text="Loading"
+            size="large"
+          ></lightning-spinner>
+        </div>
+      </template>
 
-            <div
-              class="slds-box slds-theme_default slds-var-m-bottom_medium slds-box_x-small"
-            >
-              <div class="slds-media">
-                <div class="slds-media__figure">
-                  <lightning-icon
-                    icon-name="utility:info_alt"
-                    size="small"
-                    alternative-text="Info"
-                    class="slds-m-right_small"
-                  ></lightning-icon>
-                </div>
-                <div class="slds-media__body">
-                  <p>
-                    Welcome to the Duplication Manager! This tool helps you find
-                    and merge duplicate records in your Salesforce org. Select
-                    an object to get started.
-                  </p>
-                </div>
-              </div>
-            </div>
+      <!-- Error Alert -->
+      <template if:true={error}>
+        <div
+          class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error slds-m-bottom_medium"
+          role="alert"
+        >
+          <span class="slds-assistive-text">Error</span>
+          <lightning-icon
+            icon-name="utility:error"
+            size="small"
+            variant="inverse"
+            class="slds-m-right_x-small"
+          ></lightning-icon>
+          <h2>{errorMessage}</h2>
+        </div>
+      </template>
 
-            <div class="slds-form slds-var-p-around_medium slds-card">
-              <div
-                class="slds-grid slds-gutters slds-grid_vertical-align-center"
-              >
-                <div class="slds-col slds-medium-size_1-of-2">
-                  <lightning-combobox
-                    label="Select Object"
-                    value={selectedObject}
-                    options={objectOptions}
-                    onchange={handleObjectChange}
-                    class="slds-var-m-bottom_small"
-                  ></lightning-combobox>
-                </div>
-
-                <template if:true={selectedObject}>
-                  <div class="slds-col slds-medium-size_1-of-2">
-                    <lightning-combobox
-                      label="Batch Size"
-                      value={batchSize}
-                      options={batchSizeOptions}
-                      onchange={handleBatchSizeChange}
-                      class="slds-var-m-bottom_small"
-                    ></lightning-combobox>
-                  </div>
-                </template>
-              </div>
-
-              <template if:true={selectedObject}>
-                <div
-                  class="slds-form-element slds-var-m-bottom_medium slds-m-top_medium"
-                >
-                  <lightning-input
-                    type="toggle"
-                    label="Dry Run Mode (Find duplicates but don't merge)"
-                    checked={isDryRun}
-                    onchange={handleDryRunChange}
-                    message-toggle-active="Enabled"
-                    message-toggle-inactive="Disabled"
-                  ></lightning-input>
-                </div>
-
-                <div class="slds-var-m-top_medium slds-text-align_center">
-                  <lightning-button-group>
-                    <lightning-button
-                      label="Find Duplicates"
-                      variant="brand"
-                      icon-name="utility:search"
-                      onclick={findDuplicates}
-                      disabled={isButtonDisabled}
-                    ></lightning-button>
-                    <lightning-button
-                      label="Reset"
-                      icon-name="utility:refresh"
-                      onclick={resetForm}
-                      disabled={isButtonDisabled}
-                    ></lightning-button>
-                  </lightning-button-group>
-                </div>
-              </template>
-            </div>
-
-            <template if:true={showResults}>
-              <div class="slds-var-m-top_medium">
-                <div class="slds-grid slds-gutters slds-wrap">
-                  <div class="slds-col slds-size_1-of-3">
-                    <div
-                      class="slds-box slds-box_xx-small slds-theme_shade slds-text-align_center"
-                    >
-                      <div class="slds-text-heading_large">
-                        {recordsProcessed}
-                      </div>
-                      <div class="slds-text-title">Records Processed</div>
-                    </div>
-                  </div>
-                  <div class="slds-col slds-size_1-of-3">
-                    <div
-                      class="slds-box slds-box_xx-small slds-theme_info slds-text-align_center"
-                    >
-                      <div class="slds-text-heading_large">
-                        {duplicatesFound}
-                      </div>
-                      <div class="slds-text-title">Duplicates Found</div>
-                    </div>
-                  </div>
-                  <div class="slds-col slds-size_1-of-3">
-                    <div
-                      class="slds-box slds-box_xx-small slds-theme_success slds-text-align_center"
-                    >
-                      <div class="slds-text-heading_large">{recordsMerged}</div>
-                      <div class="slds-text-title">Records Merged</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </template>
-
-            <template if:true={isLoading}>
-              <div class="slds-is-relative slds-var-m-top_medium">
-                <lightning-spinner
-                  alternative-text="Loading"
-                  size="medium"
-                ></lightning-spinner>
-              </div>
-            </template>
-          </div>
-        </lightning-card>
+      <!-- Header -->
+      <div class="slds-col slds-size_1-of-1 slds-p-bottom_medium">
+        <div class="slds-text-heading_large">Duplicate Finder</div>
+        <p class="slds-text-body_regular">
+          Find and merge duplicate records in your Salesforce org
+        </p>
       </div>
 
-      <!-- Right Column -->
-      <div class="slds-col slds-size_1-of-1 slds-medium-size_4-of-12">
-        <lightning-card title="Recent Jobs" icon-name="standard:history">
-          <div slot="actions">
-            <lightning-button-icon
-              icon-name="utility:refresh"
-              variant="border-filled"
-              onclick={loadRecentJobs}
-              alternative-text="Refresh"
-            ></lightning-button-icon>
-          </div>
-          <div class="slds-p-horizontal_medium">
-            <template if:true={recentJobs.length}>
-              <div class="slds-scrollable" style="height: 300px">
-                <lightning-datatable
-                  key-field="Id"
-                  data={recentJobs}
-                  columns={jobColumns}
-                  hide-checkbox-column
-                >
-                </lightning-datatable>
+      <!-- Content -->
+      <div class="slds-col slds-size_1-of-1">
+        <div class="slds-card">
+          <div class="slds-card__header slds-grid">
+            <header
+              class="slds-media slds-media_center slds-has-flexi-truncate"
+            >
+              <div class="slds-media__figure">
+                <lightning-icon
+                  icon-name="standard:merge"
+                  alternative-text="Find Duplicates"
+                  size="small"
+                ></lightning-icon>
               </div>
-            </template>
-            <template if:false={recentJobs.length}>
-              <div class="slds-illustration slds-illustration_small">
-                <div class="slds-text-color_weak slds-text-align_center">
-                  <lightning-icon
-                    icon-name="utility:event"
-                    size="medium"
-                    class="slds-m-bottom_small"
-                  ></lightning-icon>
-                  <h3 class="slds-text-heading_small">No Recent Jobs</h3>
-                  <p class="slds-text-body_small">
-                    Run a duplicate detection job to see results here.
-                  </p>
+              <div class="slds-media__body">
+                <h2 class="slds-card__header-title">
+                  <span>Find & Merge Duplicates</span>
+                </h2>
+              </div>
+            </header>
+          </div>
+          <div class="slds-card__body slds-card__body_inner">
+            <!-- Object Selector -->
+            <div class="slds-form-element slds-m-bottom_medium">
+              <label class="slds-form-element__label" for="object-select"
+                >Select Object</label
+              >
+              <div class="slds-form-element__control">
+                <div class="slds-select_container">
+                  <select
+                    id="object-select"
+                    class="slds-select"
+                    onchange={handleObjectChange}
+                  >
+                    <option value="">--Select Object--</option>
+                    <option value="Account">Account</option>
+                    <option value="Contact">Contact</option>
+                    <option value="Lead">Lead</option>
+                  </select>
                 </div>
               </div>
-            </template>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="slds-grid slds-grid_align-center slds-m-top_medium">
+              <lightning-button
+                label="Find Duplicates"
+                variant="brand"
+                icon-name="utility:search"
+                onclick={handleFindDuplicates}
+                class="slds-m-right_medium"
+              >
+              </lightning-button>
+
+              <lightning-button
+                label="Run Health Check"
+                variant="neutral"
+                icon-name="utility:health_cloud"
+                onclick={handleHealthCheck}
+              >
+              </lightning-button>
+            </div>
           </div>
-        </lightning-card>
+          <footer class="slds-card__footer">
+            <div class="slds-text-body_small slds-text-align_center">
+              Select an object to get started finding duplicates
+            </div>
+          </footer>
+        </div>
       </div>
     </div>
   </div>

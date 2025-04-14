@@ -5,7 +5,7 @@
     <hasActivationRequired>false</hasActivationRequired>
     <label>Duplicate Manager Admin</label>
     <tabSettings>
-        <tab>Duplicate_Manager</tab>
+        <tab>DuplicateManager</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <!-- Core Controllers -->
@@ -285,7 +285,7 @@
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <applicationVisibilities>
-        <application>Duplication_Manager</application>
+        <application>DuplicateManagerApp</application>
         <visible>true</visible>
     </applicationVisibilities>
 </PermissionSet>

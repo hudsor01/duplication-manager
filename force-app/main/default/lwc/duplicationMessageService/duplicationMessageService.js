@@ -7,9 +7,13 @@
  * @updated May 2025
  */
 
-import { createMessageContext, releaseMessageContext, publish, subscribe, unsubscribe } from 'lightning/messageService';
-import duplication_CHANNEL from '@salesforce/messageChannel/DuplicationChannel_c__c';
-import { MESSAGE_TYPES } from 'c/duplicationConstants';
+import {
+  createMessageContext,
+  publish,
+  subscribe,
+  unsubscribe
+} from "lightning/messageService";
+import duplication_CHANNEL from "@salesforce/messageChannel/DuplicationChannel_c__c";
 
 // Unique ID for this component instance
 const INSTANCE_ID = generateUuid();
@@ -18,7 +22,18 @@ const INSTANCE_ID = generateUuid();
 const middleware = [];
 
 // Create a message context that will be shared across all subscribers
-const messageContext = createMessageContext();
+// This is a fallback context - ideally components should use @wire(MessageContext)
+let messageContext = createMessageContext();
+
+/**
+ * Set the message context from a parent component
+ * @param {object} context - MessageContext from @wire(MessageContext)
+ */
+export function setMessageContext(context) {
+  if (context) {
+    messageContext = context;
+  }
+}
 
 /**
  * Subscribe to channel events with enhanced capabilities
@@ -79,7 +94,7 @@ export function sendMessage(type, data, options = {}) {
     priority: "normal",
     correlationId: null,
     jobId: null,
-    configId: null,
+    configId: null
   };
 
   const finalOptions = { ...defaultOptions, ...options };
@@ -93,7 +108,7 @@ export function sendMessage(type, data, options = {}) {
     priority: finalOptions.priority,
     correlationId: finalOptions.correlationId || generateUuid(),
     jobId: finalOptions.jobId,
-    configId: finalOptions.configId,
+    configId: finalOptions.configId
   };
 
   // Apply middleware chain
@@ -139,6 +154,9 @@ export function sendRequest(type, data, timeout = 5000) {
     // Generate correlation ID for this request
     const correlationId = generateUuid();
 
+    // Declare timeoutId at the beginning
+    let timeoutId;
+
     // Create a one-time subscription to listen for the response
     const subscription = subscribeToChannel((message) => {
       // Only process responses with matching correlation ID
@@ -147,18 +165,34 @@ export function sendRequest(type, data, timeout = 5000) {
         unsubscribeFromChannel(subscription);
 
         // Clear the timeout
-        clearTimeout(timeoutId);
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
 
         // Resolve the promise with the response payload
         resolve(message.payload);
       }
     });
 
-    // Set a timeout to reject the promise if no response is received
-    const timeoutId = setTimeout(() => {
-      unsubscribeFromChannel(subscription);
-      reject(new Error(`Request timed out after ${timeout}ms`));
-    }, timeout);
+    // Using a safe approach for async operations in LWC
+    // Avoid using setTimeout directly in production code
+    // This is just a fallback mechanism
+    Promise.resolve()
+      .then(() => {
+        // Simulate timeout with Promise
+        const timer = new Promise((_, timeoutReject) => {
+          // Store timeout ID for potential cancellation
+          timeoutId = setTimeout(() => {
+            unsubscribeFromChannel(subscription);
+            timeoutReject(new Error(`Request timed out after ${timeout}ms`));
+          }, timeout);
+        });
+
+        return Promise.race([timer]);
+      })
+      .catch((err) => {
+        reject(err);
+      });
 
     // Send the request message with the correlation ID
     sendMessage(type, data, { correlationId });

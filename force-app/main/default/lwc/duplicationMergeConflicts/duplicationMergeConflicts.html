@@ -102,7 +102,7 @@
               </tr>
             </thead>
             <tbody>
-              <template for:each={conflicts} for:item="conflict">
+              <template for:each={computedValues} for:item="conflict">
                 <tr key={conflict.field} class="slds-hint-parent">
                   <th data-label="Field" scope="row">
                     <div
@@ -130,7 +130,7 @@
                               <span class="slds-radio">
                                 <input
                                   type="radio"
-                                  id={valueOption.id}
+                                  id={valueOption.recordId}
                                   name={conflict.field}
                                   value={valueOption.recordId}
                                   checked={valueOption.isSelected}
@@ -139,7 +139,7 @@
                                 />
                                 <label
                                   class="slds-radio__label"
-                                  for={valueOption.id}
+                                  for={valueOption.recordId}
                                 >
                                   <span class="slds-radio_faux"></span>
                                   <span class="slds-form-element__label">

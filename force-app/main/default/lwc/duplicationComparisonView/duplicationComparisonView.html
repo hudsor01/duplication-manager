@@ -14,9 +14,14 @@
         <!-- Records Overview Card -->
         <div class="slds-card slds-var-m-bottom_medium">
           <div class="slds-card__header slds-grid">
-            <header class="slds-media slds-media_center slds-has-flexi-truncate">
+            <header
+              class="slds-media slds-media_center slds-has-flexi-truncate"
+            >
               <div class="slds-media__figure">
-                <lightning-icon icon-name="standard:merge" size="small"></lightning-icon>
+                <lightning-icon
+                  icon-name="standard:merge"
+                  size="small"
+                ></lightning-icon>
               </div>
               <div class="slds-media__body">
                 <h2 class="slds-card__header-title">
@@ -27,21 +32,30 @@
           </div>
           <div class="slds-card__body slds-card__body_inner">
             <!-- Master Record Summary -->
-            <div class="slds-grid slds-gutters slds-wrap slds-grid_vertical-align-center">
+            <div
+              class="slds-grid slds-gutters slds-wrap slds-grid_vertical-align-center"
+            >
               <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
                 <div class="slds-box slds-box_x-small slds-theme_shade">
                   <div class="slds-grid slds-grid_vertical-align-center">
                     <div class="slds-col">
-                      <div class="slds-text-title_caps slds-text-color_weak">Master Record</div>
-                      <div class="slds-text-heading_small">{masterRecordName}</div>
+                      <div class="slds-text-title_caps slds-text-color_weak">
+                        Master Record
+                      </div>
+                      <div class="slds-text-heading_small">
+                        {masterRecordName}
+                      </div>
                     </div>
                     <div class="slds-col slds-text-align_right">
-                      <lightning-badge label={masterRecordMatchScore} class="match-score-master"></lightning-badge>
+                      <lightning-badge
+                        label={masterRecordMatchScore}
+                        class="match-score-master"
+                      ></lightning-badge>
                     </div>
                   </div>
                 </div>
               </div>
-              
+
               <!-- Quick Action Buttons -->
               <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-3">
                 <lightning-button
@@ -60,29 +74,42 @@
                 ></lightning-button>
               </div>
             </div>
-            
+
             <!-- Duplicate Records -->
             <div class="slds-var-m-top_medium">
               <div class="slds-grid slds-wrap slds-grid_vertical-align-end">
                 <div class="slds-col slds-size_1-of-1">
-                  <div class="slds-text-title_caps slds-var-p-bottom_x-small">Duplicate Records</div>
+                  <div class="slds-text-title_caps slds-var-p-bottom_x-small">
+                    Duplicate Records
+                  </div>
                 </div>
               </div>
               <div class="slds-grid slds-wrap duplicate-records-container">
                 <template for:each={duplicateRecords} for:item="record">
-                  <div key={record.id} class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-var-p-around_xx-small">
+                  <div
+                    key={record.id}
+                    class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-var-p-around_xx-small"
+                  >
                     <div class="slds-box slds-box_small duplicate-card">
                       <div class="slds-grid slds-grid_vertical-align-center">
                         <div class="slds-col">
-                          <div class="slds-text-body_regular slds-truncate" title={record.name}>
+                          <div
+                            class="slds-text-body_regular slds-truncate"
+                            title={record.name}
+                          >
                             {record.name}
                           </div>
                         </div>
                         <div class="slds-col slds-text-align_right">
-                          <lightning-badge label={record.matchScore} class="match-score"></lightning-badge>
+                          <lightning-badge
+                            label={record.matchScore}
+                            class="match-score"
+                          ></lightning-badge>
                         </div>
                       </div>
-                      <div class="slds-grid slds-grid_vertical-align-center slds-var-m-top_small">
+                      <div
+                        class="slds-grid slds-grid_vertical-align-center slds-var-m-top_small"
+                      >
                         <div class="slds-col">
                           <lightning-button
                             label="Set as Master"
@@ -113,9 +140,14 @@
         <!-- Field Comparison Section -->
         <div class="slds-card">
           <div class="slds-card__header slds-grid">
-            <header class="slds-media slds-media_center slds-has-flexi-truncate">
+            <header
+              class="slds-media slds-media_center slds-has-flexi-truncate"
+            >
               <div class="slds-media__figure">
-                <lightning-icon icon-name="standard:field_sales" size="small"></lightning-icon>
+                <lightning-icon
+                  icon-name="standard:field_sales"
+                  size="small"
+                ></lightning-icon>
               </div>
               <div class="slds-media__body">
                 <h2 class="slds-card__header-title">
@@ -123,7 +155,9 @@
                 </h2>
               </div>
               <div>
-                <span class="slds-badge slds-badge_lightest">{differencesCount} differences found</span>
+                <span class="slds-badge slds-badge_lightest"
+                  >{differencesCount} differences found</span
+                >
               </div>
             </header>
           </div>
@@ -157,13 +191,17 @@
                         <div class="slds-form-element__label">
                           {field.label}
                           <template if:true={field.isRequired}>
-                            <abbr class="slds-required" title="Required">*</abbr>
+                            <abbr class="slds-required" title="Required"
+                              >*</abbr
+                            >
                           </template>
                           <template if:true={field.isReadOnly}>
-                            <lightning-icon icon-name="utility:lock" 
-                              size="xx-small" 
+                            <lightning-icon
+                              icon-name="utility:lock"
+                              size="xx-small"
                               class="slds-icon_container slds-icon-text-default slds-var-m-left_xx-small"
-                              alternative-text="Read Only">
+                              alternative-text="Read Only"
+                            >
                             </lightning-icon>
                           </template>
                         </div>
@@ -174,13 +212,19 @@
                         class="slds-col slds-size_1-of-2 slds-large-size_1-of-4 field-value slds-var-p-horizontal_small slds-var-p-vertical_x-small"
                       >
                         <div class={field.masterClass}>
-                          <div class="slds-text-title_caps slds-text-color_weak slds-var-p-bottom_xx-small slds-truncate">Master</div>
+                          <div
+                            class="slds-text-title_caps slds-text-color_weak slds-var-p-bottom_xx-small slds-truncate"
+                          >
+                            Master
+                          </div>
                           <div class="field-text">{field.masterValue}</div>
                         </div>
                       </div>
 
                       <!-- Duplicate Record Values -->
-                      <div class="slds-col slds-size_1-of-2 slds-large-size_2-of-4 slds-grid slds-wrap">
+                      <div
+                        class="slds-col slds-size_1-of-2 slds-large-size_2-of-4 slds-grid slds-wrap"
+                      >
                         <template
                           for:each={field.duplicateValues}
                           for:item="dupValue"
@@ -190,9 +234,15 @@
                             class="slds-col duplicate-column field-value slds-var-p-horizontal_small slds-var-p-vertical_x-small"
                           >
                             <div class={dupValue.class}>
-                              <div class="slds-grid slds-grid_vertical-align-start">
+                              <div
+                                class="slds-grid slds-grid_vertical-align-start"
+                              >
                                 <div class="slds-col">
-                                  <div class="slds-text-title_caps slds-text-color_weak slds-var-p-bottom_xx-small slds-truncate">Duplicate</div>
+                                  <div
+                                    class="slds-text-title_caps slds-text-color_weak slds-var-p-bottom_xx-small slds-truncate"
+                                  >
+                                    Duplicate
+                                  </div>
                                   <div class="field-text">
                                     {dupValue.value}
                                     <template if:true={dupValue.isSelected}>
@@ -203,8 +253,11 @@
                                     </template>
                                   </div>
                                 </div>
-                                
-                                <div class="slds-col slds-text-align_right" if:true={dupValue.isDifferent}>
+
+                                <div
+                                  class="slds-col slds-text-align_right"
+                                  if:true={dupValue.isDifferent}
+                                >
                                   <lightning-button-icon
                                     icon-name="utility:replace"
                                     variant="border-filled"
@@ -227,7 +280,7 @@
               </template>
             </div>
           </div>
-          
+
           <!-- Actions Footer -->
           <div class="slds-card__footer">
             <div class="slds-grid slds-grid_align-center">
@@ -246,14 +299,19 @@
             </div>
           </div>
         </div>
-        
+
         <!-- Non-Mergeable Data Section (if applicable) -->
         <template if:true={hasNonMergeableData}>
           <div class="slds-card slds-var-m-top_medium">
             <div class="slds-card__header slds-grid">
-              <header class="slds-media slds-media_center slds-has-flexi-truncate">
+              <header
+                class="slds-media slds-media_center slds-has-flexi-truncate"
+              >
                 <div class="slds-media__figure">
-                  <lightning-icon icon-name="standard:information" size="small"></lightning-icon>
+                  <lightning-icon
+                    icon-name="standard:information"
+                    size="small"
+                  ></lightning-icon>
                 </div>
                 <div class="slds-media__body">
                   <h2 class="slds-card__header-title">
@@ -264,20 +322,34 @@
             </div>
             <div class="slds-card__body slds-card__body_inner">
               <div class="slds-box slds-theme_info slds-text-color_default">
-                <lightning-icon icon-name="utility:info" class="slds-var-m-right_small" size="small"></lightning-icon>
-                <span>The following data cannot be merged automatically and will be preserved in a note attached to the master record.</span>
+                <lightning-icon
+                  icon-name="utility:info"
+                  class="slds-var-m-right_small"
+                  size="small"
+                ></lightning-icon>
+                <span
+                  >The following data cannot be merged automatically and will be
+                  preserved in a note attached to the master record.</span
+                >
               </div>
-              
+
               <div class="slds-var-m-top_small">
                 <ul class="slds-has-dividers_bottom-space">
                   <template for:each={nonMergeableData} for:item="item">
-                    <li key={item.apiName} class="slds-item slds-var-p-vertical_x-small">
+                    <li
+                      key={item.apiName}
+                      class="slds-item slds-var-p-vertical_x-small"
+                    >
                       <div class="slds-grid">
                         <div class="slds-col slds-size_1-of-3">
-                          <div class="slds-text-heading_small">{item.label}</div>
+                          <div class="slds-text-heading_small">
+                            {item.label}
+                          </div>
                         </div>
                         <div class="slds-col slds-size_2-of-3">
-                          <div class="slds-text-body_regular">{item.reason}</div>
+                          <div class="slds-text-body_regular">
+                            {item.reason}
+                          </div>
                         </div>
                       </div>
                     </li>

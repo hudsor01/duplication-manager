@@ -92,7 +92,7 @@
 }
 
 .field-different::after {
-  content: '';
+  content: "";
   position: absolute;
   left: -0.5rem;
   top: 0;

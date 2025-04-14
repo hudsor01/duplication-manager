@@ -3,7 +3,7 @@ import {
   releaseMessageContext,
   publish,
   subscribe,
-  unsubscribe,
+  unsubscribe
 } from "lightning/messageService";
 // Using mock implementation to avoid deployment issues with message channel
 // This will be replaced with actual import when the channel is properly configured
@@ -58,7 +58,7 @@ export default class LmsUtils {
 
     const message = {
       messageType,
-      payload: payload || {},
+      payload: payload || {}
     };
 
     this.log(`Publishing message: ${messageType}`);
@@ -80,7 +80,7 @@ export default class LmsUtils {
   static subscribe(messageType, callback) {
     if (!messageType || !callback) {
       console.error(
-        "[LMSUtils] Cannot subscribe without messageType and callback",
+        "[LMSUtils] Cannot subscribe without messageType and callback"
       );
       return null;
     }
@@ -100,7 +100,7 @@ export default class LmsUtils {
           } catch (error) {
             console.error(
               `[LMSUtils] Error in callback for message ${messageType}:`,
-              error,
+              error
             );
           }
         }
@@ -109,8 +109,9 @@ export default class LmsUtils {
       // Provide a mock subscription object if subscribe fails
       console.log(`[LMSUtils] Mock subscribe: ${messageType}`);
       subscription = {
-        id: 'mock-' + Date.now(),
-        unsubscribe: () => console.log(`[LMSUtils] Mock unsubscribe: ${messageType}`)
+        id: "mock-" + Date.now(),
+        unsubscribe: () =>
+          console.log(`[LMSUtils] Mock unsubscribe: ${messageType}`)
       };
     }
 
@@ -130,7 +131,7 @@ export default class LmsUtils {
   static unsubscribe(subscription) {
     if (!subscription) {
       console.error(
-        "[LMSUtils] Cannot unsubscribe without a valid subscription",
+        "[LMSUtils] Cannot unsubscribe without a valid subscription"
       );
       return;
     }
@@ -139,7 +140,10 @@ export default class LmsUtils {
 
     try {
       // Handle both real and mock subscriptions
-      if (subscription.unsubscribe && typeof subscription.unsubscribe === 'function') {
+      if (
+        subscription.unsubscribe &&
+        typeof subscription.unsubscribe === "function"
+      ) {
         subscription.unsubscribe();
       } else {
         unsubscribe(subscription);
@@ -174,13 +178,15 @@ export default class LmsUtils {
     subs.forEach((sub) => {
       try {
         // Handle both real and mock subscriptions
-        if (sub.unsubscribe && typeof sub.unsubscribe === 'function') {
+        if (sub.unsubscribe && typeof sub.unsubscribe === "function") {
           sub.unsubscribe();
         } else {
           unsubscribe(sub);
         }
       } catch (error) {
-        console.log(`[LMSUtils] Error during unsubscribeAll for ${messageType}, continuing`);
+        console.log(
+          `[LMSUtils] Error during unsubscribeAll for ${messageType}, continuing`
+        );
       }
     });
 
@@ -240,14 +246,14 @@ export default class LmsUtils {
       subs.forEach((sub) => {
         try {
           // Handle both real and mock subscriptions
-          if (sub.unsubscribe && typeof sub.unsubscribe === 'function') {
+          if (sub.unsubscribe && typeof sub.unsubscribe === "function") {
             sub.unsubscribe();
           } else {
             unsubscribe(sub);
           }
         } catch (error) {
           console.log(
-            `[LMSUtils] Error unsubscribing from ${messageType}, continuing`,
+            `[LMSUtils] Error unsubscribing from ${messageType}, continuing`
           );
         }
       });

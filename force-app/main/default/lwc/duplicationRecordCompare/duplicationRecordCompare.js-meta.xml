@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
     <apiVersion>58.0</apiVersion>
     <isExposed>true</isExposed>
@@ -9,14 +9,44 @@
     </targets>
     <targetConfigs>
         <targetConfig targets="lightning__AppPage,lightning__RecordPage">
-            <property name="recordId1" type="String" label="Record ID 1" description="ID of the first record to compare"/>
-            <property name="recordId2" type="String" label="Record ID 2" description="ID of the second record to compare"/>
-            <property name="objectApiName" type="String" label="Object API Name" description="API name of the object type to compare"/>
+            <property
+        name="recordId1"
+        type="String"
+        label="Record ID 1"
+        description="ID of the first record to compare"
+      />
+            <property
+        name="recordId2"
+        type="String"
+        label="Record ID 2"
+        description="ID of the second record to compare"
+      />
+            <property
+        name="objectApiName"
+        type="String"
+        label="Object API Name"
+        description="API name of the object type to compare"
+      />
         </targetConfig>
         <targetConfig targets="lightning__FlowScreen">
-            <property name="recordId1" type="String" label="Record ID 1" description="ID of the first record to compare"/>
-            <property name="recordId2" type="String" label="Record ID 2" description="ID of the second record to compare"/>
-            <property name="objectApiName" type="String" label="Object API Name" description="API name of the object type to compare"/>
+            <property
+        name="recordId1"
+        type="String"
+        label="Record ID 1"
+        description="ID of the first record to compare"
+      />
+            <property
+        name="recordId2"
+        type="String"
+        label="Record ID 2"
+        description="ID of the second record to compare"
+      />
+            <property
+        name="objectApiName"
+        type="String"
+        label="Object API Name"
+        description="API name of the object type to compare"
+      />
         </targetConfig>
     </targetConfigs>
 </LightningComponentBundle>

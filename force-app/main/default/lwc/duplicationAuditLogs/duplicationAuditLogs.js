@@ -21,7 +21,7 @@ export default class DuplicationAuditLogs extends LightningElement {
     pageSize: 10,
     currentPage: 1,
     totalRecords: 0,
-    totalPages: 1,
+    totalPages: 1
   };
 
   isLoading = true;
@@ -43,7 +43,7 @@ export default class DuplicationAuditLogs extends LightningElement {
     configId: "$configId",
     pageSize: "$pagination.pageSize",
     pageNumber: "$pagination.currentPage",
-    filters: "$filtersAsJson",
+    filters: "$filtersAsJson"
   })
   wiredLogs(result) {
     this.wiredLogsResult = result;
@@ -93,33 +93,33 @@ export default class DuplicationAuditLogs extends LightningElement {
           month: "short",
           day: "2-digit",
           hour: "2-digit",
-          minute: "2-digit",
+          minute: "2-digit"
         },
-        sortable: true,
+        sortable: true
       },
       {
         label: "User",
         fieldName: "userName",
         type: "text",
-        sortable: true,
+        sortable: true
       },
       {
         label: "Object",
         fieldName: "objectApiName",
         type: "text",
-        sortable: true,
+        sortable: true
       },
       {
         label: "Configuration",
         fieldName: "configName",
         type: "text",
-        sortable: true,
+        sortable: true
       },
       {
         label: "Records Merged",
         fieldName: "recordsMerged",
         type: "number",
-        sortable: true,
+        sortable: true
       },
       {
         label: "Actions",
@@ -130,9 +130,9 @@ export default class DuplicationAuditLogs extends LightningElement {
           title: "View Details",
           variant: "brand",
           iconName: "utility:preview",
-          iconPosition: "left",
-        },
-      },
+          iconPosition: "left"
+        }
+      }
     ];
   }
 
@@ -143,7 +143,7 @@ export default class DuplicationAuditLogs extends LightningElement {
     this.filters = {
       dateRange: "ALL",
       users: [],
-      objectTypes: [],
+      objectTypes: []
     };
 
     // If objectApiName is provided as prop, add to filters
@@ -256,8 +256,8 @@ export default class DuplicationAuditLogs extends LightningElement {
       new ShowToastEvent({
         title: "Error",
         message: errorMessage,
-        variant: "error",
-      }),
+        variant: "error"
+      })
     );
   }
 
@@ -268,7 +268,7 @@ export default class DuplicationAuditLogs extends LightningElement {
     if (this.pagination.currentPage > 1) {
       this.pagination = {
         ...this.pagination,
-        currentPage: this.pagination.currentPage - 1,
+        currentPage: this.pagination.currentPage - 1
       };
     }
   }
@@ -280,7 +280,7 @@ export default class DuplicationAuditLogs extends LightningElement {
     if (this.pagination.currentPage < this.pagination.totalPages) {
       this.pagination = {
         ...this.pagination,
-        currentPage: this.pagination.currentPage + 1,
+        currentPage: this.pagination.currentPage + 1
       };
     }
   }
@@ -296,7 +296,7 @@ export default class DuplicationAuditLogs extends LightningElement {
       this.pagination = {
         ...this.pagination,
         pageSize,
-        currentPage: 1,
+        currentPage: 1
       };
     }
   }
@@ -312,7 +312,7 @@ export default class DuplicationAuditLogs extends LightningElement {
       { label: "This Week", value: "THIS_WEEK" },
       { label: "This Month", value: "THIS_MONTH" },
       { label: "Last Month", value: "LAST_MONTH" },
-      { label: "This Year", value: "THIS_YEAR" },
+      { label: "This Year", value: "THIS_YEAR" }
     ];
   }
 
@@ -352,7 +352,7 @@ export default class DuplicationAuditLogs extends LightningElement {
       { label: "10 records", value: "10" },
       { label: "25 records", value: "25" },
       { label: "50 records", value: "50" },
-      { label: "100 records", value: "100" },
+      { label: "100 records", value: "100" }
     ];
   }
 }

@@ -223,53 +223,228 @@
 
     <!-- Statistics by Object Section -->
     <div class="chart-section">
-      <div class="chart-section-header">
-        <lightning-icon
-          icon-name="utility:table"
-          size="x-small"
-          class="slds-var-m-right_x-small"
-        ></lightning-icon>
-        Duplication Records by Object
+      <div
+        class="chart-section-header slds-grid slds-grid_vertical-align-center"
+      >
+        <div class="slds-col">
+          <lightning-icon
+            icon-name="utility:table"
+            size="x-small"
+            class="slds-var-m-right_x-small"
+          ></lightning-icon>
+          Duplication Records by Object
+        </div>
+        <div class="slds-col slds-grid slds-grid_align-end">
+          <!-- Filters for the table -->
+          <div class="slds-form-element slds-var-m-right_x-small">
+            <div class="slds-form-element__control">
+              <lightning-combobox
+                label="Filter By"
+                name="filterField"
+                value={filterField}
+                options={filterOptions}
+                onchange={handleFilterChange}
+                variant="label-hidden"
+                placeholder="Filter by..."
+                class="filter-dropdown"
+              ></lightning-combobox>
+            </div>
+          </div>
+          <!-- Sort direction toggle button -->
+          <lightning-button-icon
+            icon-name={sortDirectionIcon}
+            variant="border-filled"
+            alternative-text="Toggle Sort Direction"
+            title="Toggle Sort Direction"
+            onclick={handleSortDirectionChange}
+          ></lightning-button-icon>
+        </div>
       </div>
 
       <template if:true={hasStatistics}>
         <div class="data-table-container slds-var-p-around_medium">
-          <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped">
+          <div
+            class="slds-grid slds-grid_vertical-align-center slds-var-m-bottom_small"
+          >
+            <div class="slds-col">
+              <div class="slds-grid slds-grid_vertical-align-center">
+                <span class="slds-badge slds-theme_info slds-var-m-right_small"
+                  >{filteredObjectStatsList.length} items</span
+                >
+                <template if:true={isFiltered}>
+                  <span class="slds-text-body_small">
+                    Filtered by: {filterFieldLabel}
+                    <lightning-button-icon
+                      icon-name="utility:close"
+                      variant="bare"
+                      size="xx-small"
+                      alternative-text="Clear Filter"
+                      title="Clear Filter"
+                      onclick={clearFilter}
+                      class="slds-var-m-left_xx-small"
+                    ></lightning-button-icon>
+                  </span>
+                </template>
+              </div>
+            </div>
+            <div class="slds-col slds-text-align_right">
+              <lightning-button
+                label="Export CSV"
+                icon-name="utility:download"
+                variant="brand-outline"
+                onclick={exportToCsv}
+                class="slds-var-m-right_x-small"
+              ></lightning-button>
+              <lightning-button
+                label="Quick Find"
+                icon-name="utility:search"
+                variant="brand"
+                onclick={handleQuickFind}
+              ></lightning-button>
+            </div>
+          </div>
+
+          <table
+            class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped"
+          >
             <thead>
               <tr class="slds-line-height_reset">
-                <th scope="col">
-                  <div class="slds-truncate" title="Object">Object</div>
+                <th
+                  scope="col"
+                  onclick={handleSortByName}
+                  class="slds-is-sortable"
+                >
+                  <div class="slds-grid slds-grid_vertical-align-center">
+                    <div class="slds-truncate" title="Object">Object</div>
+                    <template if:true={isSortedByName}>
+                      <lightning-icon
+                        icon-name={sortIconName}
+                        size="xx-small"
+                        class="slds-var-m-left_x-small"
+                      ></lightning-icon>
+                    </template>
+                  </div>
+                </th>
+                <th
+                  scope="col"
+                  onclick={handleSortByDuplicates}
+                  class="slds-is-sortable"
+                >
+                  <div class="slds-grid slds-grid_vertical-align-center">
+                    <div class="slds-truncate" title="Duplicates Found">
+                      Duplicates Found
+                    </div>
+                    <template if:true={isSortedByDuplicates}>
+                      <lightning-icon
+                        icon-name={sortIconDuplicates}
+                        size="xx-small"
+                        class="slds-var-m-left_x-small"
+                      ></lightning-icon>
+                    </template>
+                  </div>
+                </th>
+                <th
+                  scope="col"
+                  onclick={handleSortByMerged}
+                  class="slds-is-sortable"
+                >
+                  <div class="slds-grid slds-grid_vertical-align-center">
+                    <div class="slds-truncate" title="Records Merged">
+                      Records Merged
+                    </div>
+                    <template if:true={isSortedByMerged}>
+                      <lightning-icon
+                        icon-name={sortIconMerged}
+                        size="xx-small"
+                        class="slds-var-m-left_x-small"
+                      ></lightning-icon>
+                    </template>
+                  </div>
+                </th>
+                <th
+                  scope="col"
+                  onclick={handleSortByMergeRate}
+                  class="slds-is-sortable"
+                >
+                  <div class="slds-grid slds-grid_vertical-align-center">
+                    <div class="slds-truncate" title="Merge Rate">
+                      Merge Rate
+                    </div>
+                    <template if:true={isSortedByMergeRate}>
+                      <lightning-icon
+                        icon-name={sortIconMergeRate}
+                        size="xx-small"
+                        class="slds-var-m-left_x-small"
+                      ></lightning-icon>
+                    </template>
+                  </div>
                 </th>
                 <th scope="col">
-                  <div class="slds-truncate" title="Duplicates Found">Duplicates Found</div>
-                </th>
-                <th scope="col">
-                  <div class="slds-truncate" title="Records Merged">Records Merged</div>
-                </th>
-                <th scope="col">
-                  <div class="slds-truncate" title="Merge Rate">Merge Rate</div>
+                  <div class="slds-truncate" title="Actions">Actions</div>
                 </th>
               </tr>
             </thead>
             <tbody>
-              <template for:each={objectStatsList} for:item="stat">
-                <tr key={stat.name}>
+              <template for:each={filteredObjectStatsList} for:item="stat">
+                <tr key={stat.name} class="slds-hint-parent">
                   <th scope="row">
-                    <div class="slds-truncate" title={stat.name}>{stat.name}</div>
+                    <div class="slds-truncate" title={stat.name}>
+                      {stat.name}
+                    </div>
                   </th>
                   <td>
                     <div class="slds-truncate">
-                      <lightning-formatted-number value={stat.totalDuplicates}></lightning-formatted-number>
+                      <lightning-formatted-number
+                        value={stat.totalDuplicates}
+                      ></lightning-formatted-number>
                     </div>
                   </td>
                   <td>
                     <div class="slds-truncate">
-                      <lightning-formatted-number value={stat.totalMerged}></lightning-formatted-number>
+                      <lightning-formatted-number
+                        value={stat.totalMerged}
+                      ></lightning-formatted-number>
                     </div>
                   </td>
                   <td>
-                    <div class="slds-truncate">
-                      <lightning-formatted-number value={stat.mergeRate} format-style="percent" maximum-fraction-digits="1"></lightning-formatted-number>
+                    <div class="slds-grid slds-grid_vertical-align-center">
+                      <div
+                        class="slds-progress-bar slds-progress-bar_circular slds-progress-bar_small"
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                        aria-valuenow={stat.mergeRatePercent}
+                        role="progressbar"
+                        style={stat.mergeRateStyle}
+                      >
+                        <span class="slds-progress-bar__value"></span>
+                      </div>
+                      <div class="slds-truncate slds-var-m-left_small">
+                        <lightning-formatted-number
+                          value={stat.mergeRate}
+                          format-style="percent"
+                          maximum-fraction-digits="1"
+                        ></lightning-formatted-number>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="slds-button-group" role="group">
+                      <lightning-button-icon
+                        icon-name="utility:search"
+                        variant="border-filled"
+                        alternative-text="Find Duplicates"
+                        title="Find Duplicates"
+                        data-object={stat.name}
+                        onclick={handleFindObjectDuplicates}
+                      ></lightning-button-icon>
+                      <lightning-button-icon
+                        icon-name="utility:merge"
+                        variant="border-filled"
+                        alternative-text="Merge Records"
+                        title="Merge Records"
+                        data-object={stat.name}
+                        onclick={handleMergeObjectDuplicates}
+                      ></lightning-button-icon>
                     </div>
                   </td>
                 </tr>
@@ -283,14 +458,51 @@
         <div class="empty-state">
           <lightning-icon
             class="empty-state-icon"
-            icon-name="utility:info"
+            icon-name="utility:info_alt"
             alternative-text="No data"
             size="medium"
           ></lightning-icon>
-          <p>No duplication statistics available yet</p>
-          <p class="slds-var-m-top_small">
-            Run duplication finder jobs to collect statistics.
+          <h3 class="slds-text-heading_medium slds-var-m-bottom_small">
+            No duplication statistics available yet
+          </h3>
+          <p class="slds-text-body_regular slds-var-m-bottom_medium">
+            Start identifying duplicates by running your first duplication
+            finder job.
           </p>
+          <div class="slds-grid slds-gutters slds-var-m-top_medium">
+            <div class="slds-col">
+              <lightning-button
+                label="Find Duplicates"
+                icon-name="utility:search"
+                variant="brand"
+                onclick={handleFindDuplicates}
+                class="slds-m-right_small"
+              >
+              </lightning-button>
+            </div>
+            <div class="slds-col">
+              <lightning-button
+                label="Configure Settings"
+                icon-name="utility:settings"
+                onclick={handleConfigureSettings}
+              >
+              </lightning-button>
+            </div>
+          </div>
+          <div class="slds-var-m-top_large">
+            <div class="slds-box slds-theme_shade">
+              <h4 class="slds-var-m-bottom_x-small">Quick Tips:</h4>
+              <ul class="slds-list_dotted">
+                <li>
+                  Choose the object you want to find duplicates for (Account,
+                  Contact, etc.)
+                </li>
+                <li>Configure matching rules in the Settings tab</li>
+                <li>Run a dry run to preview duplicates before merging</li>
+                <li>Schedule regular jobs to keep your data clean</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </template>
     </div>

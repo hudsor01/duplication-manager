@@ -10,7 +10,7 @@ export const ERROR_LEVELS = {
   INFO: "info",
   WARNING: "warning",
   ERROR: "error",
-  CRITICAL: "critical",
+  CRITICAL: "critical"
 };
 
 // Error categories
@@ -22,7 +22,7 @@ export const ERROR_CATEGORIES = {
   SYSTEM: "system",
   VALIDATION: "validation",
   APEX: "apex",
-  UNKNOWN: "unknown",
+  UNKNOWN: "unknown"
 };
 
 /**
@@ -42,7 +42,7 @@ export function handleError(source, operation, error, options = {}) {
     broadcast: true,
     context: {},
     recoveryAction: null,
-    ...options,
+    ...options
   };
 
   // Format the error with context
@@ -101,7 +101,7 @@ function formatError(source, operation, error, config) {
     context: config.context,
     timestamp: new Date().toISOString(),
     recoveryAction: config.recoveryAction,
-    type: errorType,
+    type: errorType
   };
 }
 
@@ -159,7 +159,7 @@ export function sanitizeErrorMessage(message) {
   return strMessage
     .replace(
       /Bearer [a-zA-Z0-9\-_]+\.[a-zA-Z0-9\-_]+\.[a-zA-Z0-9\-_]+/g,
-      "Bearer [REDACTED]",
+      "Bearer [REDACTED]"
     )
     .replace(/[a-zA-Z0-9]{20,}/g, "[REDACTED_ID]")
     .replace(/password(=|:).+?($|&|"|')/gi, "password=[REDACTED]$1")
@@ -185,7 +185,7 @@ export const RECOVERY_ACTIONS = {
 
       if (attempts > maxAttempts) {
         return Promise.reject(
-          new Error(`Maximum retry attempts (${maxAttempts}) exceeded`),
+          new Error(`Maximum retry attempts (${maxAttempts}) exceeded`)
         );
       }
 

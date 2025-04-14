@@ -4,7 +4,10 @@ import { MessageContext } from "lightning/messageService";
 import getActiveSettings from "@salesforce/apex/DuplicateRecordController.getActiveSettings";
 import store from "c/duplicationStore";
 import { duplicationStore } from "c/duplicationStore";
-import { subscribeToChannel, unsubscribeFromChannel } from "c/duplicationMessageService";
+import {
+  subscribeToChannel,
+  unsubscribeFromChannel
+} from "c/duplicationMessageService";
 import { MESSAGE_TYPES } from "c/duplicationConstants";
 
 /**
@@ -35,6 +38,7 @@ export default class DuplicationConfigSelector extends LightningElement {
   connectedCallback() {
     // Subscribe to store changes
     this.subscription = subscribeToChannel((message) => {
+      // Check message type from imported constants
       if (message.type === MESSAGE_TYPES.STORE_UPDATED) {
         this.handleStoreChange(message.payload);
       }
@@ -75,7 +79,6 @@ export default class DuplicationConfigSelector extends LightningElement {
    */
   @wire(getActiveSettings)
   wiredSettings({ error, data }) {
-    console.log("configSelector.wiredSettings called, data:", data);
     this.isLoading = false;
 
     if (data) {
@@ -84,28 +87,35 @@ export default class DuplicationConfigSelector extends LightningElement {
         const configs = Array.isArray(data) ? data : [];
 
         // Update store with configurations
-        store.dispatch(duplicationStore.actions.SET_CONFIGURATIONS, configs);
+        try {
+          if (
+            duplicationStore.actions &&
+            duplicationStore.actions.SET_CONFIGURATIONS
+          ) {
+            store.dispatch(
+              duplicationStore.actions.SET_CONFIGURATIONS,
+              configs
+            );
+          }
+        } catch (error) {
+          this.handleError("Error dispatching to store:", error);
+        }
 
         // Generate options for dropdown
         this.configOptions = this.generateConfigOptions(configs);
         this.configsLoaded = true;
 
-        console.log("Configurations loaded:", configs.length);
-
         if (configs.length === 0) {
-          console.warn("No active duplicate finder settings found in the org");
           // Add detailed troubleshooting information to the error message
           this.handleError("No active settings found", {
             message:
-              'Please verify that DuplicateFinderSetting__mdt custom metadata type is deployed to your org with IsActive__c=true records. You can deploy it using right-click -> "Deploy Source to Org" in VS Code.',
+              'Please verify that DuplicateFinderSetting__mdt custom metadata type is deployed to your org with IsActive__c=true records. You can deploy it using right-click -> "Deploy Source to Org" in VS Code.'
           });
         }
       } catch (e) {
-        console.error("Error processing settings data:", e);
         this.handleError("Error processing settings data", e);
       }
     } else if (error) {
-      console.error("Error in wiredSettings:", error);
       this.handleError("Error loading settings", error);
     }
   }
@@ -116,13 +126,7 @@ export default class DuplicationConfigSelector extends LightningElement {
    * @returns {Array} Formatted options for dropdown
    */
   generateConfigOptions(configs) {
-    console.log(
-      "Generating config options, configs count:",
-      configs?.length || 0,
-    );
-
     if (!configs || !Array.isArray(configs) || configs.length === 0) {
-      console.warn("No configurations available for dropdown");
       return [];
     }
 
@@ -130,7 +134,6 @@ export default class DuplicationConfigSelector extends LightningElement {
       const options = configs
         .map((config) => {
           if (!config.DeveloperName || !config.MasterLabel) {
-            console.warn("Configuration is missing required fields:", config);
             return null;
           }
 
@@ -138,15 +141,14 @@ export default class DuplicationConfigSelector extends LightningElement {
             label: `${config.MasterLabel || "Unknown"} (${config.ObjectApiName || "Unknown"})`,
             value: config.DeveloperName,
             description: this.getConfigDescription(config),
-            config: config,
+            config: config
           };
         })
         .filter((option) => option !== null);
 
-      console.log("Generated options:", options.length);
       return options;
     } catch (error) {
-      console.error("Error generating configuration options:", error);
+      this.handleError("Error generating configuration options", error);
       return [];
     }
   }
@@ -183,39 +185,52 @@ export default class DuplicationConfigSelector extends LightningElement {
   handleConfigChange(event) {
     try {
       const configId = event.detail.value;
-      console.log("Configuration selection changed to:", configId);
 
       if (configId) {
         // Find the selected configuration
         const selectedConfig = this.configOptions.find(
-          (option) => option.value === configId,
+          (option) => option.value === configId
         )?.config;
 
         if (selectedConfig) {
-          console.log("Selected configuration:", selectedConfig);
           this.selectedConfigId = configId;
 
           // Update store with selected configuration
-          store.dispatch(
-            duplicationStore.actions.SELECT_CONFIGURATION,
-            selectedConfig,
-          );
+          try {
+            if (
+              duplicationStore.actions &&
+              duplicationStore.actions.SELECT_CONFIGURATION
+            ) {
+              store.dispatch(
+                duplicationStore.actions.SELECT_CONFIGURATION,
+                selectedConfig
+              );
+            }
+          } catch (error) {
+            this.handleError("Error selecting configuration", error);
+          }
         } else {
-          console.warn("Could not find configuration with id:", configId);
           this.showToast(
             "Warning",
             "Selected configuration could not be found",
-            "warning",
+            "warning"
           );
         }
       } else {
         // Clear selection
         this.selectedConfigId = "";
-        store.dispatch(duplicationStore.actions.SELECT_CONFIGURATION, null);
-        console.log("Configuration selection cleared");
+        try {
+          if (
+            duplicationStore.actions &&
+            duplicationStore.actions.SELECT_CONFIGURATION
+          ) {
+            store.dispatch(duplicationStore.actions.SELECT_CONFIGURATION, null);
+          }
+        } catch (error) {
+          this.handleError("Error clearing configuration", error);
+        }
       }
     } catch (error) {
-      console.error("Error in handleConfigChange:", error);
       this.handleError("Error changing configuration", error);
     }
   }
@@ -230,12 +245,24 @@ export default class DuplicationConfigSelector extends LightningElement {
       // Find the configuration in the store
       const state = store.getState();
       const config = state.configurations.find(
-        (c) => c.DeveloperName === configId,
+        (c) => c.DeveloperName === configId
       );
 
       if (config) {
         this.selectedConfigId = configId;
-        store.dispatch(duplicationStore.actions.SELECT_CONFIGURATION, config);
+        try {
+          if (
+            duplicationStore.actions &&
+            duplicationStore.actions.SELECT_CONFIGURATION
+          ) {
+            store.dispatch(
+              duplicationStore.actions.SELECT_CONFIGURATION,
+              config
+            );
+          }
+        } catch (error) {
+          this.handleError("Error selecting recent configuration", error);
+        }
       }
     }
   }
@@ -251,8 +278,8 @@ export default class DuplicationConfigSelector extends LightningElement {
       new ShowToastEvent({
         title: title,
         message: message,
-        variant: variant,
-      }),
+        variant: variant
+      })
     );
   }
 
@@ -274,14 +301,19 @@ export default class DuplicationConfigSelector extends LightningElement {
       }
     }
 
-    console.error(errorMessage);
     this.error = { message: errorMessage };
 
     // Add to store errors
-    store.dispatch(duplicationStore.actions.ADD_ERROR, {
-      message: errorMessage,
-      timestamp: new Date().toISOString(),
-    });
+    try {
+      if (duplicationStore.actions && duplicationStore.actions.ADD_ERROR) {
+        store.dispatch(duplicationStore.actions.ADD_ERROR, {
+          message: errorMessage,
+          timestamp: new Date().toISOString()
+        });
+      }
+    } catch (error) {
+      // Silently handle error
+    }
 
     this.showToast("Error", errorMessage, "error");
   }
@@ -328,7 +360,7 @@ export default class DuplicationConfigSelector extends LightningElement {
       'Step 2: Right-click on the folder and select "Deploy Source to Org"',
       "Step 3: Verify deployment in Setup > Custom Metadata Types > Duplicate Finder Setting",
       'Step 4: Ensure at least one record has "Is Active" checked',
-      "Step 5: Refresh this page",
+      "Step 5: Refresh this page"
     ].join("\n");
 
     this.showToast("Deployment Instructions", message, "info");

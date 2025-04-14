@@ -46,7 +46,7 @@ export default class duplicationHealthCheck extends LightningElement {
     const evt = new ShowToastEvent({
       title: title,
       message: message,
-      variant: variant,
+      variant: variant
     });
     this.dispatchEvent(evt);
   }
@@ -76,7 +76,7 @@ export default class duplicationHealthCheck extends LightningElement {
         id: issue.id || `issue-${index}`,
         isError: issue.severity === "error",
         isWarning: issue.severity === "warning",
-        isInfo: issue.severity === "info" || !issue.severity,
+        isInfo: issue.severity === "info" || !issue.severity
       };
     });
   }
@@ -97,7 +97,7 @@ export default class duplicationHealthCheck extends LightningElement {
   get infoCount() {
     return this.healthResults
       ? this.healthResults.filter(
-          (issue) => issue.severity === "info" || !issue.severity,
+          (issue) => issue.severity === "info" || !issue.severity
         ).length
       : 0;
   }

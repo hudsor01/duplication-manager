@@ -43,7 +43,7 @@ export default class DuplicationFieldDifferences extends LightningElement {
         // Get the master record value
         let masterValue = "";
         const masterRecord = this.records.find(
-          (r) => r.id === this.masterRecordId,
+          (r) => r.id === this.masterRecordId
         );
         if (
           masterRecord &&
@@ -78,7 +78,7 @@ export default class DuplicationFieldDifferences extends LightningElement {
           fieldLabel: field.label,
           masterValue: masterValue,
           otherValues: otherValues,
-          valueCount: values.size,
+          valueCount: values.size
         });
       }
     });

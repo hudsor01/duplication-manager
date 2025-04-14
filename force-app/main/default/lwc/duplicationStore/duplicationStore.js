@@ -9,9 +9,9 @@
 import {
   sendMessage,
   subscribeToChannel,
-  unsubscribeFromChannel,
-  MESSAGE_TYPES,
+  unsubscribeFromChannel
 } from "c/duplicationMessageService";
+import { MESSAGE_TYPES } from "c/duplicationConstants";
 
 /**
  * Utility to check if we're in a browser environment with localStorage
@@ -79,30 +79,30 @@ const initialState = {
   cache: {
     configurations: {
       timestamp: null,
-      isPending: false,
+      isPending: false
     },
     jobs: {
       timestamp: null,
-      isPending: false,
+      isPending: false
     },
     statistics: {
       timestamp: null,
-      isPending: false,
-    },
+      isPending: false
+    }
   },
   // Statistics
   statistics: {
     totalDuplicates: 0,
     byObject: {},
-    recentMerges: [],
+    recentMerges: []
   },
   // Pagination state
   pagination: {
     pageSize: 10,
     currentPage: 1,
     totalRecords: 0,
-    totalPages: 1,
-  },
+    totalPages: 1
+  }
 };
 
 // Store implementation
@@ -148,12 +148,12 @@ class duplicationStore {
           if (sectionUpdate && sectionUpdate.section && sectionUpdate.state) {
             this._applyExternalSectionUpdate(
               sectionUpdate.section,
-              sectionUpdate.state,
+              sectionUpdate.state
             );
           }
         }
       },
-      { filter: (msg) => msg.type.startsWith("store.") },
+      { filter: (msg) => msg.type.startsWith("store.") }
     );
 
     // Store initialized
@@ -322,7 +322,7 @@ class duplicationStore {
 
     // Global actions
     RESET_STATE: "RESET_STATE",
-    INVALIDATE_CACHE: "INVALIDATE_CACHE",
+    INVALIDATE_CACHE: "INVALIDATE_CACHE"
   };
 
   /**
@@ -331,298 +331,311 @@ class duplicationStore {
    * @param {*} payload - Action payload
    */
   dispatch(actionType, payload) {
-    // Action dispatched
-
-    const prevState = { ...this._state };
-    let stateChanged = false;
-
-    switch (actionType) {
-      case duplicationStore.actions.SET_CONFIGURATIONS:
-        this._state.configurations = Array.isArray(payload) ? payload : [];
-        // Update cache timestamp
-        this._state.cache.configurations = {
-          timestamp: new Date().getTime(),
-          isPending: false,
-        };
-        stateChanged = true;
-        break;
-
-      case duplicationStore.actions.SELECT_CONFIGURATION:
-        this._state.selectedConfiguration = payload;
-        // Add to recent configurations if not already present
-        if (
-          payload &&
-          !this._state.recentConfigurations.some(
-            (c) => c.DeveloperName === payload.DeveloperName,
-          )
-        ) {
-          this._state.recentConfigurations = [
-            payload,
-            ...this._state.recentConfigurations.slice(0, 4), // Keep last 5 including current
-          ];
-        }
-        stateChanged = true;
-        break;
-
-      case duplicationStore.actions.UPDATE_SCHEDULED_JOBS:
-        this._state.scheduledJobs = Array.isArray(payload) ? payload : [];
-        // Update cache timestamp
-        this._state.cache.jobs = {
-          timestamp: new Date().getTime(),
-          isPending: false,
-        };
-        stateChanged = true;
-        break;
-
-      case duplicationStore.actions.UPDATE_ACTIVE_JOBS:
-        this._state.activeJobs = Array.isArray(payload) ? payload : [];
-        stateChanged = true;
-        break;
-
-      case duplicationStore.actions.SET_LOADING:
-        this._state.isLoading = Boolean(payload);
-        stateChanged = true;
-        break;
-
-      case duplicationStore.actions.SET_CACHE_PENDING:
-        if (payload && payload.section && this._state.cache[payload.section]) {
-          this._state.cache[payload.section].isPending = Boolean(
-            payload.status,
-          );
-          stateChanged = true;
-        }
-        break;
-
-      case duplicationStore.actions.ADD_ERROR: {
-        // Add timestamp if not already present
-        const errorObj = { ...payload };
-        if (!errorObj.timestamp) {
-          errorObj.timestamp = new Date().toISOString();
-        }
-        // Add unique id for error reference
-        if (!errorObj.id) {
-          errorObj.id = `err-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-        }
-        this._state.errors = [...this._state.errors, errorObj];
-        stateChanged = true;
-        break;
-      }
-
-      case duplicationStore.actions.CLEAR_ERRORS:
-        this._state.errors = [];
-        stateChanged = true;
-        break;
-
-      case duplicationStore.actions.ADD_RECENT_CONFIGURATION:
-        if (
-          payload &&
-          !this._state.recentConfigurations.some(
-            (c) => c.DeveloperName === payload.DeveloperName,
-          )
-        ) {
-          this._state.recentConfigurations = [
-            payload,
-            ...this._state.recentConfigurations.slice(0, 4), // Keep last 5 including current
-          ];
-          stateChanged = true;
-        }
-        break;
-
-      case duplicationStore.actions.CLEAR_RECENT_CONFIGURATIONS:
-        this._state.recentConfigurations = [];
-        stateChanged = true;
-        break;
-
-      case duplicationStore.actions.SET_MERGE_RULES:
-        this._state.mergeRules = Array.isArray(payload) ? payload : [];
-        stateChanged = true;
-        break;
-
-      case duplicationStore.actions.UPDATE_STATISTICS:
-        this._state.statistics = { ...this._state.statistics, ...payload };
-        // Update cache timestamp
-        this._state.cache.statistics = {
-          timestamp: new Date().getTime(),
-          isPending: false,
-        };
-        stateChanged = true;
-        break;
-
-      case duplicationStore.actions.ADD_MERGE_RESULT:
-        if (payload) {
-          // Add to recent merges with timestamp
-          const mergeResult = {
-            ...payload,
-            timestamp: payload.timestamp || new Date().toISOString(),
-          };
-          this._state.statistics.recentMerges = [
-            mergeResult,
-            ...this._state.statistics.recentMerges.slice(0, 9), // Keep last 10
-          ];
-
-          // Update object statistics if applicable
-          if (payload.objectApiName && payload.count) {
-            const objStats = this._state.statistics.byObject[
-              payload.objectApiName
-            ] || {
-              totalDuplicates: 0,
-              totalMerged: 0,
-            };
-
-            objStats.totalMerged += payload.count;
-            this._state.statistics.byObject[payload.objectApiName] = objStats;
-
-            // Update total count
-            this._state.statistics.totalDuplicates += payload.count;
-          }
-
-          stateChanged = true;
-        }
-        break;
-
-      case duplicationStore.actions.UPDATE_PAGINATION:
-        this._state.pagination = { ...this._state.pagination, ...payload };
-        stateChanged = true;
-        break;
-
-      case duplicationStore.actions.INVALIDATE_CACHE:
-        if (payload && this._state.cache[payload]) {
-          // Invalidate specific cache
-          this._state.cache[payload].timestamp = null;
-        } else {
-          // Invalidate all caches
-          Object.keys(this._state.cache).forEach((key) => {
-            this._state.cache[key].timestamp = null;
-          });
-        }
-        stateChanged = true;
-        break;
-
-      case duplicationStore.actions.SAVE_DRAFT_JOB:
-        if (payload) {
-          // Preserve any existing draft data if merging with partial updates
-          const existingDraft = this._state.draftJob || {};
-
-          this._state.draftJob = {
-            ...existingDraft,
-            ...payload,
-            timestamp: new Date().toISOString(),
-            status: payload.status || existingDraft.status || "draft",
-            lastModified: new Date().toISOString(),
-            savedBy: payload.savedBy || existingDraft.savedBy,
-          };
-
-          // Save to localStorage for persistence
-          try {
-            localStorage.setItem(
-              "duplicateDraftJob",
-              JSON.stringify(this._state.draftJob),
-            );
-          } catch (storageError) {
-            console.error(
-              "Error saving draft job to localStorage:",
-              storageError,
-            );
-          }
-
-          stateChanged = true;
-        }
-        break;
-
-      case duplicationStore.actions.LOAD_DRAFT_JOB:
-        try {
-          // Try to load from localStorage first
-          const savedDraft = localStorage.getItem("duplicateDraftJob");
-          if (savedDraft) {
-            this._state.draftJob = JSON.parse(savedDraft);
-            stateChanged = true;
-          } else if (payload) {
-            // If we have a payload, use that instead
-            this._state.draftJob = payload;
-            stateChanged = true;
-          }
-        } catch (loadError) {
-          console.error(
-            "Error loading draft job from localStorage:",
-            loadError,
-          );
-        }
-        break;
-
-      case duplicationStore.actions.CLEAR_DRAFT_JOB:
-        if (this._state.draftJob) {
-          this._state.draftJob = null;
-
-          // Remove from localStorage
-          try {
-            localStorage.removeItem("duplicateDraftJob");
-          } catch (removeError) {
-            console.error(
-              "Error removing draft job from localStorage:",
-              removeError,
-            );
-          }
-
-          stateChanged = true;
-        }
-        break;
-
-      case duplicationStore.actions.RESET_STATE:
-        this._state = { ...initialState };
-
-        // Clear localStorage
-        try {
-          localStorage.removeItem("duplicateDraftJob");
-        } catch (resetError) {
-          console.error(
-            "Error removing draft job from localStorage:",
-            resetError,
-          );
-        }
-
-        stateChanged = true;
-        break;
-
-      default:
-        console.warn(`Unknown action type: ${actionType}`);
+    // Check if action type is valid
+    if (!actionType || !duplicationStore.actions) {
+      console.error("Invalid action type or actions not defined:", actionType);
+      return;
     }
 
-    if (stateChanged) {
-      // Determine which section was updated for more granular updates
-      let updatedSection = null;
+    // Action dispatched
+    try {
+      const prevState = { ...this._state };
+      let stateChanged = false;
 
-      // Map action types to state sections
       switch (actionType) {
         case duplicationStore.actions.SET_CONFIGURATIONS:
+          this._state.configurations = Array.isArray(payload) ? payload : [];
+          // Update cache timestamp
+          this._state.cache.configurations = {
+            timestamp: new Date().getTime(),
+            isPending: false
+          };
+          stateChanged = true;
+          break;
+
         case duplicationStore.actions.SELECT_CONFIGURATION:
-          updatedSection = "configurations";
+          this._state.selectedConfiguration = payload;
+          // Add to recent configurations if not already present
+          if (
+            payload &&
+            !this._state.recentConfigurations.some(
+              (c) => c.DeveloperName === payload.DeveloperName
+            )
+          ) {
+            this._state.recentConfigurations = [
+              payload,
+              ...this._state.recentConfigurations.slice(0, 4) // Keep last 5 including current
+            ];
+          }
+          stateChanged = true;
           break;
+
         case duplicationStore.actions.UPDATE_SCHEDULED_JOBS:
+          this._state.scheduledJobs = Array.isArray(payload) ? payload : [];
+          // Update cache timestamp
+          this._state.cache.jobs = {
+            timestamp: new Date().getTime(),
+            isPending: false
+          };
+          stateChanged = true;
+          break;
+
         case duplicationStore.actions.UPDATE_ACTIVE_JOBS:
-          updatedSection = "jobs";
+          this._state.activeJobs = Array.isArray(payload) ? payload : [];
+          stateChanged = true;
           break;
-        case duplicationStore.actions.SAVE_DRAFT_JOB:
-        case duplicationStore.actions.LOAD_DRAFT_JOB:
-        case duplicationStore.actions.CLEAR_DRAFT_JOB:
-          updatedSection = "draftJob";
+
+        case duplicationStore.actions.SET_LOADING:
+          this._state.isLoading = Boolean(payload);
+          stateChanged = true;
           break;
-        case duplicationStore.actions.UPDATE_STATISTICS:
-        case duplicationStore.actions.ADD_MERGE_RESULT:
-          updatedSection = "statistics";
+
+        case duplicationStore.actions.SET_CACHE_PENDING:
+          if (
+            payload &&
+            payload.section &&
+            this._state.cache[payload.section]
+          ) {
+            this._state.cache[payload.section].isPending = Boolean(
+              payload.status
+            );
+            stateChanged = true;
+          }
           break;
-        case duplicationStore.actions.UPDATE_PAGINATION:
-          updatedSection = "pagination";
+
+        case duplicationStore.actions.ADD_ERROR: {
+          // Add timestamp if not already present
+          const errorObj = { ...payload };
+          if (!errorObj.timestamp) {
+            errorObj.timestamp = new Date().toISOString();
+          }
+          // Add unique id for error reference
+          if (!errorObj.id) {
+            errorObj.id = `err-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+          }
+          this._state.errors = [...this._state.errors, errorObj];
+          stateChanged = true;
           break;
-        case duplicationStore.actions.ADD_ERROR:
+        }
+
         case duplicationStore.actions.CLEAR_ERRORS:
-          updatedSection = "errors";
+          this._state.errors = [];
+          stateChanged = true;
           break;
-        // Global state updates don't have a specific section
+
+        case duplicationStore.actions.ADD_RECENT_CONFIGURATION:
+          if (
+            payload &&
+            !this._state.recentConfigurations.some(
+              (c) => c.DeveloperName === payload.DeveloperName
+            )
+          ) {
+            this._state.recentConfigurations = [
+              payload,
+              ...this._state.recentConfigurations.slice(0, 4) // Keep last 5 including current
+            ];
+            stateChanged = true;
+          }
+          break;
+
+        case duplicationStore.actions.CLEAR_RECENT_CONFIGURATIONS:
+          this._state.recentConfigurations = [];
+          stateChanged = true;
+          break;
+
+        case duplicationStore.actions.SET_MERGE_RULES:
+          this._state.mergeRules = Array.isArray(payload) ? payload : [];
+          stateChanged = true;
+          break;
+
+        case duplicationStore.actions.UPDATE_STATISTICS:
+          this._state.statistics = { ...this._state.statistics, ...payload };
+          // Update cache timestamp
+          this._state.cache.statistics = {
+            timestamp: new Date().getTime(),
+            isPending: false
+          };
+          stateChanged = true;
+          break;
+
+        case duplicationStore.actions.ADD_MERGE_RESULT:
+          if (payload) {
+            // Add to recent merges with timestamp
+            const mergeResult = {
+              ...payload,
+              timestamp: payload.timestamp || new Date().toISOString()
+            };
+            this._state.statistics.recentMerges = [
+              mergeResult,
+              ...this._state.statistics.recentMerges.slice(0, 9) // Keep last 10
+            ];
+
+            // Update object statistics if applicable
+            if (payload.objectApiName && payload.count) {
+              const objStats = this._state.statistics.byObject[
+                payload.objectApiName
+              ] || {
+                totalDuplicates: 0,
+                totalMerged: 0
+              };
+
+              objStats.totalMerged += payload.count;
+              this._state.statistics.byObject[payload.objectApiName] = objStats;
+
+              // Update total count
+              this._state.statistics.totalDuplicates += payload.count;
+            }
+
+            stateChanged = true;
+          }
+          break;
+
+        case duplicationStore.actions.UPDATE_PAGINATION:
+          this._state.pagination = { ...this._state.pagination, ...payload };
+          stateChanged = true;
+          break;
+
+        case duplicationStore.actions.INVALIDATE_CACHE:
+          if (payload && this._state.cache[payload]) {
+            // Invalidate specific cache
+            this._state.cache[payload].timestamp = null;
+          } else {
+            // Invalidate all caches
+            Object.keys(this._state.cache).forEach((key) => {
+              this._state.cache[key].timestamp = null;
+            });
+          }
+          stateChanged = true;
+          break;
+
+        case duplicationStore.actions.SAVE_DRAFT_JOB:
+          if (payload) {
+            // Preserve any existing draft data if merging with partial updates
+            const existingDraft = this._state.draftJob || {};
+
+            this._state.draftJob = {
+              ...existingDraft,
+              ...payload,
+              timestamp: new Date().toISOString(),
+              status: payload.status || existingDraft.status || "draft",
+              lastModified: new Date().toISOString(),
+              savedBy: payload.savedBy || existingDraft.savedBy
+            };
+
+            // Save to localStorage for persistence
+            try {
+              localStorage.setItem(
+                "duplicateDraftJob",
+                JSON.stringify(this._state.draftJob)
+              );
+            } catch (storageError) {
+              console.error(
+                "Error saving draft job to localStorage:",
+                storageError
+              );
+            }
+
+            stateChanged = true;
+          }
+          break;
+
+        case duplicationStore.actions.LOAD_DRAFT_JOB:
+          try {
+            // Try to load from localStorage first
+            const savedDraft = localStorage.getItem("duplicateDraftJob");
+            if (savedDraft) {
+              this._state.draftJob = JSON.parse(savedDraft);
+              stateChanged = true;
+            } else if (payload) {
+              // If we have a payload, use that instead
+              this._state.draftJob = payload;
+              stateChanged = true;
+            }
+          } catch (loadError) {
+            console.error(
+              "Error loading draft job from localStorage:",
+              loadError
+            );
+          }
+          break;
+
+        case duplicationStore.actions.CLEAR_DRAFT_JOB:
+          if (this._state.draftJob) {
+            this._state.draftJob = null;
+
+            // Remove from localStorage
+            try {
+              localStorage.removeItem("duplicateDraftJob");
+            } catch (removeError) {
+              console.error(
+                "Error removing draft job from localStorage:",
+                removeError
+              );
+            }
+
+            stateChanged = true;
+          }
+          break;
+
+        case duplicationStore.actions.RESET_STATE:
+          this._state = { ...initialState };
+
+          // Clear localStorage
+          try {
+            localStorage.removeItem("duplicateDraftJob");
+          } catch (resetError) {
+            console.error(
+              "Error removing draft job from localStorage:",
+              resetError
+            );
+          }
+
+          stateChanged = true;
+          break;
+
         default:
-          updatedSection = null;
+          console.warn(`Unknown action type: ${actionType}`);
       }
 
-      this._notifyListeners(prevState, updatedSection);
+      if (stateChanged) {
+        // Determine which section was updated for more granular updates
+        let updatedSection = null;
+
+        // Map action types to state sections
+        switch (actionType) {
+          case duplicationStore.actions.SET_CONFIGURATIONS:
+          case duplicationStore.actions.SELECT_CONFIGURATION:
+            updatedSection = "configurations";
+            break;
+          case duplicationStore.actions.UPDATE_SCHEDULED_JOBS:
+          case duplicationStore.actions.UPDATE_ACTIVE_JOBS:
+            updatedSection = "jobs";
+            break;
+          case duplicationStore.actions.SAVE_DRAFT_JOB:
+          case duplicationStore.actions.LOAD_DRAFT_JOB:
+          case duplicationStore.actions.CLEAR_DRAFT_JOB:
+            updatedSection = "draftJob";
+            break;
+          case duplicationStore.actions.UPDATE_STATISTICS:
+          case duplicationStore.actions.ADD_MERGE_RESULT:
+            updatedSection = "statistics";
+            break;
+          case duplicationStore.actions.UPDATE_PAGINATION:
+            updatedSection = "pagination";
+            break;
+          case duplicationStore.actions.ADD_ERROR:
+          case duplicationStore.actions.CLEAR_ERRORS:
+            updatedSection = "errors";
+            break;
+          // Global state updates don't have a specific section
+          default:
+            updatedSection = null;
+        }
+
+        this._notifyListeners(prevState, updatedSection);
+      }
+    } catch (error) {
+      console.error("Error in store dispatch:", error);
     }
   }
 
@@ -655,14 +668,14 @@ class duplicationStore {
         { section: updatedSection, state: currentState[updatedSection] },
         {
           priority: "normal",
-          source: this._instanceId,
-        },
+          source: this._instanceId
+        }
       );
     } else {
       // Otherwise publish the full state update
       sendMessage(MESSAGE_TYPES.STORE_UPDATED, currentState, {
         priority: "normal",
-        source: this._instanceId,
+        source: this._instanceId
       });
     }
 

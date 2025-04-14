@@ -1,11 +1,11 @@
 <template>
-  <div class="container slds-p-around_medium">
+  <div class="container slds-var-p-around_medium">
     <div class="slds-grid slds-gutters slds-wrap">
       <!-- Left Column -->
       <div class="slds-col slds-size_1-of-1 slds-medium-size_8-of-12">
         <lightning-card title="Duplicate Finder" icon-name="standard:merge">
-          <div class="slds-p-horizontal_medium">
-            <header class="slds-p-bottom_medium">
+          <div class="slds-var-p-horizontal_medium">
+            <header class="slds-var-p-bottom_medium">
               <div class="slds-page-header">
                 <div class="slds-page-header__row">
                   <div class="slds-page-header__col-title">
@@ -48,7 +48,7 @@
                     icon-name="utility:info_alt"
                     size="small"
                     alternative-text="Info"
-                    class="slds-m-right_small"
+                    class="slds-var-m-right_small"
                   ></lightning-icon>
                 </div>
                 <div class="slds-media__body">
@@ -90,7 +90,7 @@
 
               <template if:true={selectedObject}>
                 <div
-                  class="slds-form-element slds-var-m-bottom_medium slds-m-top_medium"
+                  class="slds-form-element slds-var-m-bottom_medium slds-var-m-top_medium"
                 >
                   <lightning-input
                     type="toggle"
@@ -180,7 +180,7 @@
               alternative-text="Refresh"
             ></lightning-button-icon>
           </div>
-          <div class="slds-p-horizontal_medium">
+          <div class="slds-var-p-horizontal_medium">
             <template if:true={recentJobs.length}>
               <div class="slds-scrollable" style="height: 300px">
                 <lightning-datatable
@@ -198,7 +198,7 @@
                   <lightning-icon
                     icon-name="utility:event"
                     size="medium"
-                    class="slds-m-bottom_small"
+                    class="slds-var-m-bottom_small"
                   ></lightning-icon>
                   <h3 class="slds-text-heading_small">No Recent Jobs</h3>
                   <p class="slds-text-body_small">

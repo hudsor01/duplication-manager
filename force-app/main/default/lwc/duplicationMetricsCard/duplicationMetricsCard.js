@@ -11,7 +11,7 @@ function formatNumber(value, decimals = 0) {
 
   return Number(value).toLocaleString("en-US", {
     minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
+    maximumFractionDigits: decimals
   });
 }
 
@@ -27,7 +27,7 @@ function formatPercentage(value, decimals = 1) {
   return Number(value).toLocaleString("en-US", {
     style: "percent",
     minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
+    maximumFractionDigits: decimals
   });
 }
 import { loadScript } from "lightning/platformResourceLoader";
@@ -55,7 +55,7 @@ export default class DuplicationMetricsCard extends LightningElement {
         style: "currency",
         currency: "USD",
         minimumFractionDigits: this.decimals,
-        maximumFractionDigits: this.decimals,
+        maximumFractionDigits: this.decimals
       }).format(this.value);
     }
     return formatNumber(this.value, this.decimals);
@@ -162,23 +162,23 @@ export default class DuplicationMetricsCard extends LightningElement {
                 fill: true,
                 tension: 0.4,
                 pointRadius: 0,
-                borderWidth: 2,
-              },
-            ],
+                borderWidth: 2
+              }
+            ]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
               legend: { display: false },
-              tooltip: { enabled: false },
+              tooltip: { enabled: false }
             },
             scales: {
               x: { display: false },
-              y: { display: false },
+              y: { display: false }
             },
-            animation: false,
-          },
+            animation: false
+          }
         };
 
         // Initialize the chart
