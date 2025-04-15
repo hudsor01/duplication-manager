@@ -488,8 +488,9 @@ public with sharing class DuplicateFinderBatch implements Database.Batchable<SOb
         ProcessingTimeMs__c = 0,
         RecordsProcessed__c = 0,
         DuplicatesFound__c = 0,
-        RecordsMerged__c = 0,
-        BatchSize__c = this.batchSize
+        RecordsMerged__c = 0
+        // Temporarily comment out until field is deployed
+        // BatchSize__c = this.batchSize
       );
 
       insert result;
@@ -561,8 +562,9 @@ public with sharing class DuplicateFinderBatch implements Database.Batchable<SOb
           ProcessingTimeMs__c = totalProcessingTime,
           RecordsProcessed__c = recordsProcessed,
           DuplicatesFound__c = duplicatesFound,
-          RecordsMerged__c = recordsMerged,
-          PerformanceMetrics__c = JSON.serialize(performanceMetrics)
+          RecordsMerged__c = recordsMerged
+          // Temporarily comment out until field is deployed
+          // PerformanceMetrics__c = JSON.serialize(performanceMetrics)
         );
       }
     } catch (Exception e) {

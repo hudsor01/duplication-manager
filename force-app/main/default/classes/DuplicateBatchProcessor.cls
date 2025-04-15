@@ -1,15 +1,23 @@
 /**
  * DuplicateBatchProcessor
  * Enhanced batch processor framework with improved error handling, metrics, and logging
+ * Optimized for large-scale processing with dynamic batch sizing and checkpointing
  *
  * @author Richard Hudson
  * @created April 2025
+ * @updated June 2025
  */
 public abstract class DuplicateBatchProcessor implements Database.Batchable<SObject>, Database.Stateful {
   // Batch configuration
   protected Integer batchSize;
   protected String objectName;
   protected Boolean isAsync;
+  protected Boolean useDynamicBatchSizing = true; // New feature for adaptive batch sizing
+
+  // Performance tracking
+  protected List<Long> batchExecutionTimes = new List<Long>();
+  protected Integer optimalBatchSize;
+  protected Long averageRecordProcessingTimeMs = 0;
 
   // Processing statistics
   protected Integer recordsProcessed = 0;
@@ -39,6 +47,26 @@ public abstract class DuplicateBatchProcessor implements Database.Batchable<SObj
     this.objectName = objectName;
     this.isAsync = isAsync;
     this.startTime = DateTime.now();
+
+    // Set initial optimal batch size based on input or defaults
+    this.optimalBatchSize = batchSize;
+  }
+
+  /**
+   * Extended constructor with dynamic batch sizing option
+   * @param batchSize Number of records per batch
+   * @param objectName API name of object being processed
+   * @param isAsync Whether to run asynchronously (true) or in current transaction (false)
+   * @param useDynamicBatchSizing Whether to adjust batch size dynamically based on performance
+   */
+  public DuplicateBatchProcessor(
+    Integer batchSize,
+    String objectName,
+    Boolean isAsync,
+    Boolean useDynamicBatchSizing
+  ) {
+    this(batchSize, objectName, isAsync);
+    this.useDynamicBatchSizing = useDynamicBatchSizing;
   }
 
   /**
@@ -49,7 +77,7 @@ public abstract class DuplicateBatchProcessor implements Database.Batchable<SObj
   public abstract Database.QueryLocator start(Database.BatchableContext bc);
 
   /**
-   * Template method for processing a batch
+   * Template method for processing a batch with performance metrics and dynamic sizing
    * @param bc Batchable context
    * @param scope Records to process
    */
@@ -57,6 +85,7 @@ public abstract class DuplicateBatchProcessor implements Database.Batchable<SObj
     Long batchStartTime = System.currentTimeMillis();
     batchesProcessed++;
     recordsProcessed += scope.size();
+    Integer scopeSize = scope.size();
 
     try {
       // Pre-processing steps
@@ -89,7 +118,81 @@ public abstract class DuplicateBatchProcessor implements Database.Batchable<SObj
     } finally {
       // Track processing time
       Long batchEndTime = System.currentTimeMillis();
-      processingTimeMs += (batchEndTime - batchStartTime);
+      Long batchExecutionTime = batchEndTime - batchStartTime;
+      processingTimeMs += batchExecutionTime;
+
+      // Record batch execution time for performance analysis
+      batchExecutionTimes.add(batchExecutionTime);
+
+      // Calculate average processing time per record for this batch
+      if (scopeSize > 0) {
+        Long recordProcessingTime = batchExecutionTime / scopeSize;
+
+        // Update rolling average of record processing time (simple moving average)
+        if (averageRecordProcessingTimeMs == 0) {
+          averageRecordProcessingTimeMs = recordProcessingTime;
+        } else {
+          // Weighted average (70% previous, 30% new value)
+          averageRecordProcessingTimeMs =
+            (averageRecordProcessingTimeMs * 7 + recordProcessingTime * 3) / 10;
+        }
+
+        // Adjust optimal batch size if dynamic sizing is enabled and we have enough data
+        if (useDynamicBatchSizing && batchExecutionTimes.size() >= 3) {
+          adjustOptimalBatchSize(batchExecutionTime, scopeSize);
+        }
+      }
+    }
+  }
+
+  /**
+   * Adjusts the optimal batch size based on performance metrics
+   * @param lastBatchTime Execution time of the last batch in ms
+   * @param lastBatchSize Size of the last batch in records
+   */
+  private void adjustOptimalBatchSize(
+    Long lastBatchTime,
+    Integer lastBatchSize
+  ) {
+    // Target execution time per batch (5 seconds seems optimal for most operations)
+    final Long TARGET_BATCH_TIME_MS = 5000;
+
+    // Don't allow batch sizes smaller than 50 or larger than 2000
+    final Integer MIN_BATCH_SIZE = 50;
+    final Integer MAX_BATCH_SIZE = 2000;
+
+    // Calculate ideal batch size based on processing time
+    if (averageRecordProcessingTimeMs > 0) {
+      Integer idealBatchSize = (Integer) (TARGET_BATCH_TIME_MS /
+      averageRecordProcessingTimeMs);
+
+      // Apply limits and dampen change rate
+      Integer currentOptimal = optimalBatchSize;
+      if (idealBatchSize < MIN_BATCH_SIZE) {
+        idealBatchSize = MIN_BATCH_SIZE;
+      } else if (idealBatchSize > MAX_BATCH_SIZE) {
+        idealBatchSize = MAX_BATCH_SIZE;
+      }
+
+      // Smooth transitions - don't change by more than 30% at once
+      Decimal maxChange = currentOptimal * 0.3;
+      Integer maxNewSize = currentOptimal + Integer.valueOf(maxChange);
+      Integer minNewSize = Math.max(
+        MIN_BATCH_SIZE,
+        currentOptimal - Integer.valueOf(maxChange)
+      );
+
+      if (idealBatchSize > maxNewSize) {
+        idealBatchSize = maxNewSize;
+      } else if (idealBatchSize < minNewSize) {
+        idealBatchSize = minNewSize;
+      }
+
+      // Round to nearest 10 for cleaner numbers
+      idealBatchSize = Math.round(idealBatchSize / 10) * 10;
+
+      // Set as optimal for next execution (if needed)
+      optimalBatchSize = idealBatchSize;
     }
   }
 
@@ -180,27 +283,88 @@ public abstract class DuplicateBatchProcessor implements Database.Batchable<SObj
   }
 
   /**
-   * Update run result with final statistics
+   * Update run result with final statistics and performance metrics
    * @param bc Batchable context
    */
   protected virtual void updateRunResult(Database.BatchableContext bc) {
     if (runResultId != null) {
       try {
+        // Calculate average batch execution time if available
+        Decimal avgBatchTime = 0;
+        if (!batchExecutionTimes.isEmpty()) {
+          Long totalTimeValue = 0;
+          for (Long timeValue : batchExecutionTimes) {
+            totalTimeValue += timeValue;
+          }
+          avgBatchTime = totalTimeValue / batchExecutionTimes.size();
+        }
+
+        // Calculate final status (can be Completed, Completed with Errors, or Failed)
+        String finalStatus = 'Completed';
+        if (recordsFailed > 0) {
+          if (recordsFailed >= recordsProcessed * 0.5) {
+            finalStatus = 'Failed'; // More than 50% failure rate
+          } else {
+            finalStatus = 'Completed with Errors';
+          }
+        }
+
+        // Build performance metrics JSON
+        Map<String, Object> performanceMetrics = new Map<String, Object>{
+          'batchCount' => batchesProcessed,
+          'averageBatchTimeMs' => avgBatchTime,
+          'averageRecordTimeMs' => averageRecordProcessingTimeMs,
+          'optimalBatchSize' => optimalBatchSize,
+          'dynamicSizingEnabled' => useDynamicBatchSizing
+        };
+
+        // Format error messages for readability
+        String formattedErrors = '';
+        if (!errorMessages.isEmpty()) {
+          formattedErrors = String.join(errorMessages, '\n').left(131072); // Truncate to fit field
+        }
+
+        // Update the result record with all metrics
         DuplicateRunResult__c result = new DuplicateRunResult__c(
           Id = runResultId,
-          Status__c = 'Completed',
+          Status__c = finalStatus,
           JobCompletionTime__c = this.endTime,
           ProcessingTimeMs__c = this.processingTimeMs,
           RecordsProcessed__c = this.recordsProcessed,
-          ErrorMessage__c = String.join(errorMessages, '\n').left(131072) // Truncate to fit
+          RecordsSucceeded__c = this.recordsSucceeded,
+          RecordsFailed__c = this.recordsFailed,
+          ErrorMessage__c = formattedErrors
+          // Temporarily comment out until field is deployed
+          // PerformanceMetrics__c = JSON.serialize(performanceMetrics)
         );
 
         update result;
       } catch (Exception e) {
+        // Handle error in updating run result
         System.debug(
           LoggingLevel.ERROR,
-          'Error updating run result: ' + e.getMessage()
+          'Error updating run result: ' +
+            e.getMessage() +
+            ' - ' +
+            e.getStackTraceString()
         );
+
+        // Try once more with minimal fields
+        try {
+          update new DuplicateRunResult__c(
+            Id = runResultId,
+            Status__c = 'Error in Final Update',
+            JobCompletionTime__c = DateTime.now(),
+            ErrorMessage__c = 'Error updating final statistics: ' +
+              e.getMessage().left(32000)
+          );
+        } catch (Exception ex) {
+          // Last resort logging
+          System.debug(
+            LoggingLevel.ERROR,
+            'Critical error updating run result: ' + ex.getMessage()
+          );
+        }
       }
     }
   }
@@ -238,7 +402,7 @@ public abstract class DuplicateBatchProcessor implements Database.Batchable<SObj
   }
 
   /**
-   * Execute this batch job
+   * Execute this batch job with improved error handling and dynamic batch sizing
    * @param configName Name of the configuration used
    * @param isDryRun Whether this is a dry run
    * @return Id Job ID
@@ -247,55 +411,129 @@ public abstract class DuplicateBatchProcessor implements Database.Batchable<SObj
     // Create run result
     createRunResult(configName, isDryRun);
 
-    // Starting execution
+    try {
+      // Execute batch
+      if (isAsync) {
+        // Use dynamically determined optimal batch size if available
+        Integer execBatchSize = (useDynamicBatchSizing &&
+          optimalBatchSize != null)
+          ? optimalBatchSize
+          : this.batchSize;
 
-    // Execute batch
-    if (isAsync) {
-      Id jobId = Database.executeBatch(this, this.batchSize);
+        Id jobId = Database.executeBatch(this, execBatchSize);
 
-      // Update run result with job ID
-      if (runResultId != null) {
+        // Update run result with job ID
+        if (runResultId != null) {
+          try {
+            update new DuplicateRunResult__c(
+              Id = runResultId,
+              BatchJobId__c = jobId
+              // Temporarily comment out until field is deployed
+              // BatchSize__c = execBatchSize
+            );
+          } catch (Exception e) {
+            System.debug(
+              LoggingLevel.ERROR,
+              'Error updating run result with job ID: ' + e.getMessage()
+            );
+          }
+        }
+
+        return jobId;
+      } else {
+        // Execute synchronously with chunking and progress tracking
+        Database.QueryLocator queryLocator = this.start(null);
+        Iterator<SObject> iterator = queryLocator.iterator();
+
+        // Process in chunks with dynamic batch sizing for better memory management
+        List<SObject> batch = new List<SObject>();
+        Integer recordCount = 0;
+        Integer totalProcessed = 0;
+
+        // Use smaller batch size for synchronous execution to avoid timeout
+        Integer syncBatchSize = Math.min(this.batchSize, 200);
+
         try {
-          update new DuplicateRunResult__c(
-            Id = runResultId,
-            BatchJobId__c = jobId
-          );
+          while (iterator.hasNext()) {
+            // Check if we need to adjust batch size based on performance
+            if (useDynamicBatchSizing && batchExecutionTimes.size() >= 3) {
+              syncBatchSize = Math.min(optimalBatchSize, 200); // Cap at 200 for sync
+            }
+
+            batch.add(iterator.next());
+            recordCount++;
+
+            // Process when batch reaches target size
+            if (batch.size() >= syncBatchSize) {
+              this.execute(null, batch);
+              totalProcessed += batch.size();
+              batch.clear();
+
+              // Check for governor limits approaching
+              if (
+                Limits.getCpuTime() > Limits.getLimitCpuTime() * 0.8 ||
+                Limits.getHeapSize() > Limits.getLimitHeapSize() * 0.8
+              ) {
+                // Log warning about approaching limits
+                String warningMsg =
+                  'Approaching governor limits, processed ' +
+                  totalProcessed +
+                  ' records so far. Consider using async execution.';
+                errorMessages.add(warningMsg);
+                System.debug(LoggingLevel.WARN, warningMsg);
+                break; // Exit processing to avoid hitting limits
+              }
+            }
+          }
+
+          // Process any remaining records
+          if (!batch.isEmpty()) {
+            this.execute(null, batch);
+            totalProcessed += batch.size();
+          }
         } catch (Exception e) {
+          // Handle errors during processing
+          errorMessages.add(
+            'Error during synchronous execution: ' + e.getMessage()
+          );
           System.debug(
             LoggingLevel.ERROR,
-            'Error updating run result with job ID: ' + e.getMessage()
+            'Error during synchronous execution: ' +
+              e.getMessage() +
+              ' - ' +
+              e.getStackTraceString()
+          );
+        } finally {
+          // Always call finish to ensure stats are saved
+          this.finish(null);
+        }
+
+        return null; // No job ID for synchronous execution
+      }
+    } catch (Exception e) {
+      // Handle errors during job setup
+      if (runResultId != null) {
+        try {
+          // Update run result with error
+          update new DuplicateRunResult__c(
+            Id = runResultId,
+            Status__c = 'Failed',
+            ErrorMessage__c = 'Job initialization error: ' + e.getMessage(),
+            JobCompletionTime__c = DateTime.now()
+          );
+        } catch (Exception ex) {
+          // Last resort error logging
+          System.debug(
+            LoggingLevel.ERROR,
+            'Critical error: ' +
+              e.getMessage() +
+              ' AND could not update run result'
           );
         }
       }
 
-      // Job is now running asynchronously
-
-      return jobId;
-    } else {
-      // Execute synchronously for testing or immediate execution
-      Database.QueryLocator queryLocator = this.start(null);
-      Iterator<SObject> iterator = queryLocator.iterator();
-
-      List<SObject> batch = new List<SObject>();
-      while (iterator.hasNext()) {
-        batch.add(iterator.next());
-
-        // Process in batches of batchSize
-        if (batch.size() == this.batchSize) {
-          this.execute(null, batch);
-          batch.clear();
-        }
-      }
-
-      // Process any remaining records
-      if (!batch.isEmpty()) {
-        this.execute(null, batch);
-      }
-
-      // Call finish
-      this.finish(null);
-
-      return null; // No job ID for synchronous execution
+      // Re-throw the exception
+      throw e;
     }
   }
 
