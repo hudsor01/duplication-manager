@@ -584,12 +584,18 @@ public with sharing class DuplicateRecordJobController {
 
       insert jobStat;
 
-      // Create a basic batch job since we can't access the specialized methods
-      // This is a temporary solution until the class references are fixed
-      String configName = 'Test Config';
+      // Create a proper batch job with direct configuration parameters
+      // Using the object API name and field list instead of config ID
+      List<String> fieldList = matchFields.split(',');
+      String masterStrategy = 'MostComplete'; // Default strategy
+
+      // Create batch with explicit parameters instead of config ID
       DuplicateRecordBatch batchJob = new DuplicateRecordBatch(
-        configName,
-        true
+        objectApiName,
+        fieldList,
+        masterStrategy,
+        batchSize,
+        true // isDryRun
       );
       Id batchJobId = Database.executeBatch(batchJob, batchSize);
 

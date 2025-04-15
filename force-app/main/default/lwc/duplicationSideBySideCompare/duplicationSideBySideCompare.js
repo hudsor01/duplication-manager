@@ -487,14 +487,14 @@ export default class DuplicationSideBySideCompare extends LightningElement {
   /**
    * Create note with conflict data
    */
-  createConflictNote(recordId) {
-    const targetId = recordId || this.masterRecordId;
-    const noteContent = this.generateNoteContent();
+  createConflictNote() {
+    // Not used in current implementation
+    // Will be restored in future version with record notes
 
     // Mock the note creation instead of calling the Apex method
-    console.log("Would create note on record:", targetId);
-    console.log("Title: Data preserved from merged records");
-    console.log("Content:", noteContent);
+    // Removed console.log
+    // Removed console.log
+    // Removed console.log
 
     // Return a mock success response
     return Promise.resolve({ success: true });

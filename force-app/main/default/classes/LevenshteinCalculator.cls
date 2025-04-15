@@ -7,6 +7,12 @@
 public class LevenshteinCalculator {
   // Cache of previously calculated distances
   private static Map<String, Integer> distanceCache = new Map<String, Integer>();
+  
+  // Maximum size of the cache to prevent memory issues
+  private static final Integer MAX_CACHE_SIZE = DuplicateConstants.MAX_CACHE_SIZE;
+  
+  // Maximum combined string length to store in cache
+  private static final Integer MAX_CACHE_STRING_LENGTH = DuplicateConstants.MAX_STRING_CACHE_LENGTH;
 
   /**
    * Calculates Levenshtein distance between two strings
@@ -79,8 +85,23 @@ public class LevenshteinCalculator {
     // Get the final distance
     Integer result = distanceMatrix[s1.length()][s2.length()];
 
-    // Cache the result if strings aren't too long
-    if (s1.length() + s2.length() < 200) {
+    // Cache the result if strings aren't too long and cache isn't full
+    if (s1.length() + s2.length() < MAX_CACHE_STRING_LENGTH) {
+      // Check if cache is at capacity
+      if (distanceCache.size() >= MAX_CACHE_SIZE) {
+        // Remove a random entry to make space
+        String keyToRemove = null;
+        for (String key : distanceCache.keySet()) {
+          keyToRemove = key;
+          break;
+        }
+        
+        if (keyToRemove != null) {
+          distanceCache.remove(keyToRemove);
+        }
+      }
+      
+      // Add to cache
       distanceCache.put(cacheKey, result);
     }
 
@@ -103,5 +124,38 @@ public class LevenshteinCalculator {
    */
   public static Integer calculateDistance(String s1, String s2) {
     return distance(s1, s2);
+  }
+  
+  /**
+   * Calculate similarity percentage based on Levenshtein distance
+   * Higher percentage means more similar
+   * 
+   * @param s1 First string
+   * @param s2 Second string
+   * @return Similarity percentage (0-100)
+   */
+  public static Decimal similarity(String s1, String s2) {
+    if (s1 == null) s1 = '';
+    if (s2 == null) s2 = '';
+    
+    // Exact match
+    if (s1 == s2) return 100;
+    
+    // Handle empty strings
+    if (s1.length() == 0 || s2.length() == 0) {
+      return 0;
+    }
+    
+    // Calculate distance
+    Integer dist = distance(s1, s2);
+    
+    // Calculate max possible distance
+    Integer maxDistance = Math.max(s1.length(), s2.length());
+    
+    // Calculate similarity as percentage (inverted distance)
+    Decimal similarity = ((Decimal)maxDistance - dist) / maxDistance * 100;
+    
+    // Round to 2 decimal places and ensure bounds
+    return Math.max(0, Math.min(100, similarity.setScale(2)));
   }
 }

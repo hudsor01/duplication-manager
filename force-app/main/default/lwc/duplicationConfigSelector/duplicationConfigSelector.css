@@ -16,6 +16,163 @@
   margin-bottom: 0;
 }
 
+/* ENHANCED UX STYLES */
+
+/* Custom Field Selection Panel */
+.custom-field-selection-panel {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  animation: fadeIn 0.4s ease-out;
+}
+
+/* Field Type Filter Buttons */
+.field-type-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.field-type-filters .slds-button {
+  font-size: 0.8rem;
+  padding: 0 0.75rem;
+  line-height: 1.75rem;
+  transition: all 0.2s ease;
+  border-radius: 16px;
+}
+
+.field-type-filters .slds-button:hover {
+  background-color: #f3f3f3;
+}
+
+.field-type-filters .active-filter {
+  background-color: #0070d2;
+  color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+/* Search field styling */
+.field-search {
+  min-width: 200px;
+}
+
+/* Field item styling */
+.field-item {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 4px 8px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.field-item:hover {
+  background-color: #f7f9fb;
+  border-color: #d9dbdd;
+}
+
+/* Field type badge */
+.field-type-badge {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  font-size: 0.7rem;
+  color: #706e6b;
+  opacity: 0.8;
+  padding: 1px 4px;
+  border-radius: 10px;
+  background-color: #f3f3f3;
+}
+
+/* Field grid scroll container */
+.field-grid {
+  border: 1px solid #e0e5ee;
+  border-radius: 4px;
+  padding: 8px;
+  background-color: #ffffff;
+}
+
+/* Selected fields summary */
+.selected-fields-summary {
+  padding: 8px 0;
+}
+
+/* Action buttons section */
+.action-buttons {
+  border-color: #e0e5ee;
+}
+
+/* Selection help */
+.selection-help {
+  display: flex;
+  align-items: center;
+  color: #706e6b;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Field highlighting based on type */
+.field-item[data-type="EMAIL"] .field-type-badge,
+.field-item[data-type="PHONE"] .field-type-badge,
+.field-item[data-type="URL"] .field-type-badge {
+  background-color: #cdefc4;
+  color: #064220;
+}
+
+.field-item[data-type="STRING"] .field-type-badge,
+.field-item[data-type="TEXTAREA"] .field-type-badge {
+  background-color: #c2dbf7;
+  color: #0b5cab;
+}
+
+.field-item[data-type="ADDRESS"] .field-type-badge {
+  background-color: #f0d0a0;
+  color: #8e4503;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .field-type-filters {
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .field-item {
+    margin-bottom: 8px;
+  }
+
+  .field-search {
+    min-width: 150px;
+  }
+}
+
+/* Loading effect */
+.field-item.shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
 /* Scrollable field selection container */
 .slds-scrollable {
   overflow-y: auto;

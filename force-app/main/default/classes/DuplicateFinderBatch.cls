@@ -232,14 +232,14 @@ public with sharing class DuplicateFinderBatch implements Database.Batchable<SOb
       recordsProcessed += scope.size();
 
       // Find duplicates using enhanced matching logic
-      Map<String, DuplicateGroup> duplicateGroups = findDuplicates(
+      Map<String, DuplicateMatcherUtility.DuplicateGroup> duplicateGroups = findDuplicates(
         scope
       );
       Integer duplicatesInBatch = 0;
 
       // Process duplicate groups
       for (
-        DuplicateGroup dupGroup : duplicateGroups.values()
+        DuplicateMatcherUtility.DuplicateGroup dupGroup : duplicateGroups.values()
       ) {
         duplicatesInBatch += dupGroup.records.size() - 1; // Don't count master record
 
@@ -361,7 +361,7 @@ public with sharing class DuplicateFinderBatch implements Database.Batchable<SOb
    * @return Number of records merged
    */
   private Integer processDuplicateGroup(
-    DuplicateGroup dupGroup
+    DuplicateMatcherUtility.DuplicateGroup dupGroup
   ) {
     try {
       if (dupGroup.records.size() <= 1) {
@@ -654,7 +654,7 @@ public with sharing class DuplicateFinderBatch implements Database.Batchable<SOb
    * @param records List of records to check for duplicates
    * @return Map of duplicate groups keyed by match key
    */
-  private Map<String, DuplicateGroup> findDuplicates(
+  private Map<String, DuplicateMatcherUtility.DuplicateGroup> findDuplicates(
     List<SObject> records
   ) {
     // Use the DuplicateMatcherUtility class to find duplicates with advanced matching

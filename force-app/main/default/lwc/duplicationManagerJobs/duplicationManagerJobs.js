@@ -627,7 +627,7 @@ export default class DuplicationManagerJobs extends LightningElement {
         // Process next group
         return this.processMergeGroups(groups, index + 1);
       })
-      .catch((error) => {
+      .catch(() => {
         // Error occurred while merging group, continue to next
         // Continue with next group despite error
         return this.processMergeGroups(groups, index + 1);

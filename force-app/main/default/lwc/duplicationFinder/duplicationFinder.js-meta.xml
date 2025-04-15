@@ -25,7 +25,7 @@
         description="Ensures component respects safe areas on mobile devices"
       />
         </targetConfig>
-        <targetConfig targets="lightning__Tab">
+        <targetConfig targets="lightning__RecordPage,lightning__HomePage">
             <property
         name="height"
         type="Integer"

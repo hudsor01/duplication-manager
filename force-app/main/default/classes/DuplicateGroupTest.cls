@@ -1,13 +1,14 @@
 /**
- * Test class for DuplicateGroup
+ * Test class for DuplicateMatcherUtility.DuplicateGroup
  *
  * @author Richard Hudson
  * @date April 2025
+ * @updated 2025-04-15 Updated for DuplicateMatcherUtility.DuplicateGroup
  */
 @isTest
 private class DuplicateGroupTest {
   /**
-   * Test basic functionality of the DuplicateGroup class
+   * Test basic functionality of the DuplicateMatcherUtility.DuplicateGroup class
    */
   @isTest
   static void testBasicFunctionality() {
@@ -42,7 +43,7 @@ private class DuplicateGroupTest {
     ];
 
     // Create a duplicate group
-    DuplicateGroup dupGroup = new DuplicateGroup(
+    DuplicateMatcherUtility.DuplicateGroup dupGroup = new DuplicateMatcherUtility.DuplicateGroup(
       new List<SObject>{ account1, account2 },
       85.5,
       'test-group-key',
@@ -186,7 +187,7 @@ private class DuplicateGroupTest {
     ];
 
     // Create a duplicate group
-    DuplicateGroup dupGroup = new DuplicateGroup(
+    DuplicateMatcherUtility.DuplicateGroup dupGroup = new DuplicateMatcherUtility.DuplicateGroup(
       new List<SObject>{ oldestAccount, newestAccount, completeAccount },
       90.0,
       'test-strategy-group',
@@ -232,7 +233,7 @@ private class DuplicateGroupTest {
   @isTest
   static void testEdgeCases() {
     // Test empty group
-    DuplicateGroup emptyGroup = new DuplicateGroup(
+    DuplicateMatcherUtility.DuplicateGroup emptyGroup = new DuplicateMatcherUtility.DuplicateGroup(
       new List<SObject>(),
       0.0,
       'empty-group',
@@ -264,7 +265,7 @@ private class DuplicateGroupTest {
     Account singleAccount = new Account(Name = 'Single Account');
     insert singleAccount;
 
-    DuplicateGroup singleGroup = new DuplicateGroup(
+    DuplicateMatcherUtility.DuplicateGroup singleGroup = new DuplicateMatcherUtility.DuplicateGroup(
       new List<SObject>{ singleAccount },
       100.0,
       'single-group',
@@ -297,7 +298,7 @@ private class DuplicateGroupTest {
     Account account2 = new Account(Name = 'Test Account 2');
     insert new List<Account>{ account1, account2 };
 
-    DuplicateGroup normalGroup = new DuplicateGroup(
+    DuplicateMatcherUtility.DuplicateGroup normalGroup = new DuplicateMatcherUtility.DuplicateGroup(
       new List<SObject>{ account1, account2 },
       90.0,
       'normal-group',

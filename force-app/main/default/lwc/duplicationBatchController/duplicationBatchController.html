@@ -1,10 +1,12 @@
 <template>
-  <!-- Loading Spinner -->
+  <!-- Loading Spinner (with 5 second timeout) -->
   <template if:true={isLoading}>
-    <lightning-spinner
-      alternative-text="Processing batch operation"
-      size="small"
-    ></lightning-spinner>
+    <div class="spinner-container">
+      <lightning-spinner
+        alternative-text="Processing batch operation"
+        size="small"
+      ></lightning-spinner>
+    </div>
   </template>
 
   <div class="slds-var-p-around_medium">
@@ -55,47 +57,187 @@
       </lightning-card>
     </div>
 
+    <!-- Run Mode Selection -->
+    <div class="slds-var-m-bottom_medium">
+      <lightning-card
+        title="Run Mode Selection"
+        icon-name="standard:process_exception"
+      >
+        <div class="slds-var-p-horizontal_small">
+          <div class="slds-var-m-bottom_medium">
+            <div class="slds-form-element">
+              <label
+                class="slds-form-element__label slds-var-m-bottom_x-small"
+                for="runModeRadio"
+              >
+                <span class="slds-text-heading_small">Select Run Mode</span>
+              </label>
+              <div class="slds-form-element__control">
+                <div class="slds-radio_button-group">
+                  <span
+                    class="slds-button slds-radio_button dry-run-option"
+                    style="width: 50%"
+                  >
+                    <input
+                      type="radio"
+                      class="run-mode-radio"
+                      id="dryRunMode"
+                      name="runMode"
+                      value="dryRun"
+                      checked
+                      onchange={handleRunModeChange}
+                    />
+                    <label class="slds-radio_button__label" for="dryRunMode">
+                      <span class="slds-radio_faux slds-radio_faux-dry-run">
+                        <lightning-icon
+                          icon-name="utility:search"
+                          size="x-small"
+                          class="slds-var-m-right_x-small"
+                        ></lightning-icon>
+                        Dry Run (Find Only)
+                      </span>
+                    </label>
+                  </span>
+                  <span
+                    class="slds-button slds-radio_button live-merge-option"
+                    style="width: 50%"
+                  >
+                    <input
+                      type="radio"
+                      class="run-mode-radio"
+                      id="liveMergeMode"
+                      name="runMode"
+                      value="liveMerge"
+                      onchange={handleRunModeChange}
+                    />
+                    <label class="slds-radio_button__label" for="liveMergeMode">
+                      <span class="slds-radio_faux slds-radio_faux-live-merge">
+                        <lightning-icon
+                          icon-name="utility:merge"
+                          size="x-small"
+                          class="slds-var-m-right_x-small"
+                        ></lightning-icon>
+                        Live Merge
+                      </span>
+                    </label>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Run Mode Description -->
+          <div
+            class="slds-box slds-theme_info slds-var-p-around_medium slds-var-m-top_small"
+          >
+            <template if:true={isDryRunMode}>
+              <h3 class="slds-text-heading_small slds-var-m-bottom_small">
+                <lightning-icon
+                  icon-name="utility:info"
+                  size="small"
+                  class="slds-var-m-right_x-small"
+                ></lightning-icon>
+                Dry Run Mode
+              </h3>
+              <p class="slds-text-body_regular">
+                In <strong>Dry Run</strong> mode, the system will:
+              </p>
+              <ul class="slds-list_dotted slds-var-m-top_x-small">
+                <li>Identify all potential duplicates</li>
+                <li>Show you which records would be merged</li>
+                <li>
+                  Allow you to review the results before any action is taken
+                </li>
+                <li>Not modify any records or merge any data</li>
+              </ul>
+            </template>
+
+            <template if:false={isDryRunMode}>
+              <h3 class="slds-text-heading_small slds-var-m-bottom_small">
+                <lightning-icon
+                  icon-name="utility:warning"
+                  size="small"
+                  class="slds-var-m-right_x-small"
+                ></lightning-icon>
+                Live Merge Mode
+              </h3>
+              <p class="slds-text-body_regular">
+                In <strong>Live Merge</strong> mode, the system will:
+              </p>
+              <ul class="slds-list_dotted slds-var-m-top_x-small">
+                <li>Identify all potential duplicates</li>
+                <li>Automatically merge the duplicate records</li>
+                <li>Permanently combine the data according to merge rules</li>
+                <li><strong>WARNING: This action cannot be undone</strong></li>
+              </ul>
+            </template>
+          </div>
+        </div>
+      </lightning-card>
+    </div>
+
+    <!-- Selected Configuration Summary -->
+    <template if:true={hasSelectedConfiguration}>
+      <div class="slds-var-m-bottom_medium">
+        <lightning-card
+          title="Selected Configuration"
+          icon-name="standard:formula"
+        >
+          <div class="slds-var-p-horizontal_small">
+            <dl class="slds-dl_horizontal">
+              <dt class="slds-dl_horizontal__label slds-truncate">Object:</dt>
+              <dd class="slds-dl_horizontal__detail">
+                {selectedConfiguration.ObjectApiName}
+              </dd>
+              <dt class="slds-dl_horizontal__label slds-truncate">
+                Match Fields:
+              </dt>
+              <dd class="slds-dl_horizontal__detail">
+                {selectedConfiguration.MatchFields}
+              </dd>
+              <dt class="slds-dl_horizontal__label slds-truncate">Strategy:</dt>
+              <dd class="slds-dl_horizontal__detail">
+                {selectedConfiguration.MasterRecordStrategy}
+              </dd>
+            </dl>
+          </div>
+        </lightning-card>
+      </div>
+    </template>
+
     <!-- Action Buttons -->
     <div>
-      <lightning-card title="Batch Operations" icon-name="standard:process">
+      <lightning-card
+        title="Run Duplication Process"
+        icon-name="standard:process"
+      >
         <div class="slds-var-p-horizontal_small">
-          <lightning-layout>
-            <lightning-layout-item padding="around-small">
+          <div class="slds-text-align_center">
+            <template if:true={isDryRunMode}>
               <lightning-button
-                label="Run Dry Run (Find Only)"
+                label="Find Duplicates (No Changes)"
                 variant="brand"
                 onclick={handleDryRun}
                 disabled={isButtonDisabled}
+                class="slds-button_stretch"
                 access-key="d"
                 icon-name="utility:search"
               >
               </lightning-button>
-            </lightning-layout-item>
-            <lightning-layout-item padding="around-small">
+            </template>
+
+            <template if:false={isDryRunMode}>
               <lightning-button
-                label="Run Merge"
+                label="Merge Duplicates (Permanent Action)"
                 variant="destructive"
                 onclick={handleRunMerge}
                 disabled={isButtonDisabled}
+                class="slds-button_stretch"
                 access-key="m"
                 icon-name="utility:merge"
               >
               </lightning-button>
-            </lightning-layout-item>
-          </lightning-layout>
-
-          <!-- Help Text -->
-          <div
-            class="slds-box slds-theme_shade slds-var-p-around_small slds-var-m-top_small slds-text-body_small"
-          >
-            <p>
-              <strong>Dry Run:</strong> Identifies potential duplicates without
-              merging them.
-            </p>
-            <p class="slds-var-m-top_xx-small">
-              <strong>Run Merge:</strong> Permanently merges identified
-              duplicate records.
-            </p>
+            </template>
           </div>
         </div>
       </lightning-card>

@@ -1,25 +1,10 @@
 {
-  "orgName": "dupeSandbox",
+  "orgName": "richard company",
   "edition": "Developer",
-  "features": [
-    "EnableSetPasswordInApi",
-    "LightningScheduler",
-    "AuthorApex",
-    "API",
-    "AuthorApex",
-    "BatchManagement",
-    "BigObjectsBulkAPI",
-    "DebugApex",
-    "DevOpsCenter",
-    "ObjectLinking",
-    "StreamingAPI",
-    "LightningServiceConsole",
-    "LightningSalesConsole"
-  ],
+  "features": ["EnableSetPasswordInApi"],
   "settings": {
     "lightningExperienceSettings": {
-      "enableS1DesktopEnabled": true,
-      "enableLightningPreviewPref": true
+      "enableS1DesktopEnabled": true
     },
     "mobileSettings": {
       "enableS1EncryptedStoragePref2": false

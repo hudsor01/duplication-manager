@@ -1,12 +1,12 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>BatchSize__c</fullName>
     <defaultValue>200</defaultValue>
-    <description>Size of batches to process (between 1 and 2000)</description>
+    <description>Batch size for processing</description>
     <externalId>false</externalId>
     <label>Batch Size</label>
     <precision>18</precision>
-    <required>true</required>
+    <required>false</required>
     <scale>0</scale>
     <trackTrending>false</trackTrending>
     <type>Number</type>

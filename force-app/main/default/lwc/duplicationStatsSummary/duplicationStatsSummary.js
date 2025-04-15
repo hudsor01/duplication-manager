@@ -142,11 +142,7 @@ export default class DuplicationStatsSummary extends LightningElement {
    * @param {Object} result - Statistics result from API
    */
   processStatisticsResult(result) {
-    // Set default values for safety
-    this.totalDuplicates = 0;
-    this.recordsProcessed = 0;
-    this.recordsMerged = 0;
-
+    // Don't reset values to prevent UI flashing
     if (!result) {
       return;
     }

@@ -39,9 +39,9 @@ export default class LmsUtils {
    * Log a message if debug mode is enabled
    * @param {String} message - The message to log
    */
-  static log(message) {
+  static log() {
     if (this.debugMode) {
-      console.log(`[LMSUtils] ${message}`);
+      // Removed console.log
     }
   }
 
@@ -66,7 +66,7 @@ export default class LmsUtils {
     try {
       publish(this.context, duplication_CHANNEL, message);
     } catch (error) {
-      console.log(`[LMSUtils] Mock publish: ${messageType}`, payload);
+      // Removed console.log
       // Continue execution even if publish fails
     }
   }
@@ -107,7 +107,7 @@ export default class LmsUtils {
       });
     } catch (error) {
       // Provide a mock subscription object if subscribe fails
-      console.log(`[LMSUtils] Mock subscribe: ${messageType}`);
+      // Removed console.log
       subscription = {
         id: "mock-" + Date.now(),
         unsubscribe: () =>
@@ -149,7 +149,7 @@ export default class LmsUtils {
         unsubscribe(subscription);
       }
     } catch (error) {
-      console.log("[LMSUtils] Error during unsubscribe, continuing cleanup");
+      // Removed console.log
     }
 
     // Clean up our stored subscriptions
@@ -232,7 +232,7 @@ export default class LmsUtils {
     try {
       releaseMessageContext(this.context);
     } catch (error) {
-      console.log("[LMSUtils] Error releasing context, continuing");
+      // Removed console.log
     }
   }
 
@@ -266,7 +266,7 @@ export default class LmsUtils {
     try {
       releaseMessageContext(this.context);
     } catch (error) {
-      console.log("[LMSUtils] Error releasing message context, continuing");
+      // Removed console.log
     }
 
     // Create a new context

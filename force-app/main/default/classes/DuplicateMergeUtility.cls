@@ -13,7 +13,7 @@ public class DuplicateMergeUtility {
    * @return Result containing merge statistics
    */
   public static MergeResult mergeGroup(
-    DuplicateGroup duplicateGroup,
+    DuplicateMatcherUtility.DuplicateGroup duplicateGroup,
     String masterRecordStrategy
   ) {
     // Skip if no duplicates

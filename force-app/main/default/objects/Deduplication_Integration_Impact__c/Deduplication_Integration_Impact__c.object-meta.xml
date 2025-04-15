@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
     <actionOverrides>
         <actionName>Accept</actionName>
@@ -152,13 +152,13 @@
     <enableSearch>true</enableSearch>
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
-    <label>Deduplicate Integration Impact</label>
+    <label>Deduplication Integration Impact</label>
     <nameField>
-        <label>Deduplicate Integration Impact Name</label>
+        <label>Deduplication Integration Impact Name</label>
         <type>Text</type>
     </nameField>
-    <pluralLabel>Deduplicate Integration Impacts</pluralLabel>
-    <searchLayouts />
+    <pluralLabel>Deduplication Integration Impacts</pluralLabel>
+    <searchLayouts></searchLayouts>
     <sharingModel>ReadWrite</sharingModel>
     <visibility>Public</visibility>
 </CustomObject>

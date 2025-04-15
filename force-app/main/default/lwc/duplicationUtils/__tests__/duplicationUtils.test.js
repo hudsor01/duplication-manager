@@ -1,6 +1,6 @@
 import { createElement } from "@lwc/engine-dom";
 import duplicateUtils from "c/duplicationUtils";
-import { jest, describe, afterEach } from "@salesforce/sfdx-lwc-jest";
+import { describe, afterEach } from "@salesforce/sfdx-lwc-jest";
 
 describe("c-duplicate-utils", () => {
   afterEach(() => {

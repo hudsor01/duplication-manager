@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>DuplicateFinderSetting__mdt</members>
+        <name>CustomObject</name>
+    </types>
+    <types>
+        <members>DuplicateFinderSetting.Account_Standard</members>
+        <members>DuplicateFinderSetting.Contact_Standard</members>
+        <members>DuplicateFinderSetting.Lead_Standard</members>
+        <name>CustomMetadata</name>
+    </types>
+    <version>58.0</version>
+</Package>

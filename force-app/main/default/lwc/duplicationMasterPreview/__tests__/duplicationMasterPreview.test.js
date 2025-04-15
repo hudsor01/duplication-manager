@@ -1,13 +1,6 @@
 import { createElement } from "@lwc/engine-dom";
 import duplicateMasterPreview from "c/duplicationMasterPreview";
-import {
-  jest,
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach
-} from "@testing-library/dom";
+import { describe, it, expect, afterEach } from "@testing-library/dom";
 
 describe("c-duplicate-master-preview", () => {
   afterEach(() => {

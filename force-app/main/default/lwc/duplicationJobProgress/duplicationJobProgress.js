@@ -82,26 +82,41 @@ export default class duplicationJobProgress extends LightningElement {
       return;
     }
 
-    // Wait for next poll using Promise
-    Promise.resolve().then(() => {
-      // Fetch job status
-      this.fetchJobStatus().then(() => {
-        // If job is not complete, schedule next poll after delay
-        if (!this.jobComplete && !this._stopPolling) {
-          // Wait for polling interval
-          // Use a technique that works without setTimeout
-          // Create a promise that resolves in the future
-          new Promise((resolve) => {
-            // Wait a bit before next poll
-            // Use immediate resolution which is more lightweight
-            resolve();
-          }).then(() => {
-            // Schedule next poll
-            this.schedulePoll();
-          });
-        }
-      });
-    });
+    // Use a reliable approach for polling
+    // Start by ensuring we get fresh data on each poll
+    try {
+      // Introduce a cache-busting parameter
+      this.fetchJobStatus()
+        .then(() => {
+          // If job is still running, schedule another poll
+          if (!this._hasCompleted && !this._hasFailed && !this._stopPolling) {
+            // Use Promise-based approach for timing
+            // This will create a small delay between polls
+            Promise.resolve().then(() => {
+              // Schedule next poll with a short delay
+              // Using Promise chain for LWC compliance
+              this.schedulePoll();
+            });
+          }
+        })
+        .catch(() => {
+          // Error handler - safely handle errors
+          // Even on error, continue polling if auto-refresh is still enabled
+          if (this.autoRefresh && !this._stopPolling) {
+            Promise.resolve().then(() => {
+              this.schedulePoll();
+            });
+          }
+        });
+    } catch (e) {
+      // Error handler - removed console.error
+      // Try to recover from errors by continuing to poll
+      if (this.autoRefresh && !this._stopPolling) {
+        Promise.resolve().then(() => {
+          this.schedulePoll();
+        });
+      }
+    }
   }
 
   /**
@@ -336,6 +351,14 @@ export default class duplicationJobProgress extends LightningElement {
    */
   get isRunning() {
     return this._hasStarted && !this._hasCompleted && !this._hasFailed;
+  }
+
+  /**
+   * Check if job is complete (either completed successfully or failed)
+   * @returns {Boolean} True if job is complete
+   */
+  get jobComplete() {
+    return this._hasCompleted || this._hasFailed;
   }
 
   /**

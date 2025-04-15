@@ -69,8 +69,7 @@ private class ArchiveOldLogsBatchTest {
         Id,
         Name,
         OriginalCreatedDate__c,
-        ArchiveDate__c,
-        ArchivedDate__c,
+        ArchivedDateTime__c,
         ErrorMessage__c,
         UserId__c,
         ObjectApiName__c,
@@ -95,7 +94,7 @@ private class ArchiveOldLogsBatchTest {
       );
       System.assertNotEquals(
         null,
-        archive.ArchiveDate__c,
+        archive.ArchivedDateTime__c,
         'Archive date should not be null'
       );
       System.assertNotEquals(

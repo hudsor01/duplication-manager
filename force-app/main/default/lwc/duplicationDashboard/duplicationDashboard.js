@@ -5,10 +5,8 @@ import {
   unsubscribeFromChannel,
   sendMessage
 } from "c/duplicationMessageService";
-import { MESSAGE_TYPES } from "c/duplicationConstants";
-import { TIME_RANGES } from "c/duplicationConstants";
-import store from "c/duplicationStore";
-import * as duplicationStore from "c/duplicationStore";
+import { MESSAGE_TYPES, TIME_RANGES } from "c/duplicationConstants";
+import store, { actions as storeActions } from "c/duplicationStore";
 import getDetailedStatistics from "@salesforce/apex/DuplicateController.getDetailedStatistics";
 /**
  * Enhanced dashboard component displaying duplication record statistics with modern UI
@@ -34,7 +32,6 @@ export default class DuplicationDashboard extends LightningElement {
   @track lastPeriodStats = null; // For trend calculation
 
   // UI state
-  @track debounceTimeout = null;
   @track showTableView = true; // Always show table view instead of chart
 
   // Table sorting and filtering state
@@ -54,18 +51,24 @@ export default class DuplicationDashboard extends LightningElement {
    * Lifecycle hook - Component connected to DOM
    */
   connectedCallback() {
+    // Flag to track if component is connected to DOM
+    this.isConnected = true;
+    
+    // Flag to track initial data loading
+    this.isLoadingInitialData = true;
+    
     // Subscribe to messages
     this.subscribeToMessages();
 
-    // Show loading indicator
+    // Show loading indicator for initial load
     this.isLoading = true;
     try {
       // Use store actions in a try-catch to handle initialization issues
-      if (duplicationStore.actions && duplicationStore.actions.SET_LOADING) {
-        store.dispatch(duplicationStore.actions.SET_LOADING, true);
+      if (storeActions && storeActions.SET_LOADING) {
+        store.dispatch(storeActions.SET_LOADING, true);
       }
     } catch (error) {
-      console.error("Error dispatching store action:", error);
+      // Error handler
     }
 
     // Load statistics from server
@@ -76,14 +79,17 @@ export default class DuplicationDashboard extends LightningElement {
    * Lifecycle hook - Component disconnected from DOM
    */
   disconnectedCallback() {
-    // Clear any pending timeouts
-    if (this.debounceTimeout) {
-      window.clearTimeout(this.debounceTimeout);
-      this.debounceTimeout = null;
-    }
-
+    // Flag that component is no longer connected to DOM
+    this.isConnected = false;
+    
     // Unsubscribe from all messages
     this.unsubscribeFromMessages();
+    
+    // Cancel any pending operations
+    if (this._debounceTimer) {
+      clearTimeout(this._debounceTimer);
+      this._debounceTimer = null;
+    }
   }
 
   /**
@@ -170,7 +176,12 @@ export default class DuplicationDashboard extends LightningElement {
    * Load statistics from server
    */
   loadStatistics() {
-    this.isLoading = true;
+    // Don't enable loading state if we already have data
+    // This prevents UI flicker during refresh
+    const hasExistingData = this.hasStatistics;
+    if (!hasExistingData) {
+      this.isLoading = true;
+    }
 
     // If we have current statistics, save them for trend calculation
     if (
@@ -185,6 +196,22 @@ export default class DuplicationDashboard extends LightningElement {
       };
     }
 
+    // Check if we have valid cached data in the store before making API call
+    const state = store.getState();
+    if (!this.isLoadingInitialData && state.cache && 
+        state.cache.statistics && 
+        state.cache.statistics.timestamp && 
+        state.statistics && 
+        Object.keys(state.statistics.byObject || {}).length > 0) {
+      
+      // Use cached data if available
+      this.syncFromStore();
+      this.isLoading = false;
+      this.lastRefresh = new Date();
+      // Update timestamp only - leave data as is
+      return;
+    }
+    
     // Notify that statistics are loading via LMS
     sendMessage(MESSAGE_TYPES.STATISTICS_LOADING, {
       timeRange: this.timeRange
@@ -195,14 +222,11 @@ export default class DuplicationDashboard extends LightningElement {
       .then((result) => {
         // Update store with statistics
         try {
-          if (
-            duplicationStore.actions &&
-            duplicationStore.actions.UPDATE_STATISTICS
-          ) {
-            store.dispatch(duplicationStore.actions.UPDATE_STATISTICS, result);
+          if (storeActions && storeActions.UPDATE_STATISTICS) {
+            store.dispatch(storeActions.UPDATE_STATISTICS, result);
           }
         } catch (error) {
-          console.error("Error dispatching UPDATE_STATISTICS action:", error);
+          // Error handler
         }
         this.lastRefresh = new Date();
 
@@ -227,79 +251,119 @@ export default class DuplicationDashboard extends LightningElement {
         });
       })
       .finally(() => {
-        // Stop loading
+        // Stop loading state
         this.isLoading = false;
+        this.isLoadingInitialData = false;
         try {
-          if (
-            duplicationStore.actions &&
-            duplicationStore.actions.SET_LOADING
-          ) {
-            store.dispatch(duplicationStore.actions.SET_LOADING, false);
+          if (storeActions && storeActions.SET_LOADING) {
+            store.dispatch(storeActions.SET_LOADING, false);
           }
         } catch (error) {
-          console.error("Error dispatching SET_LOADING action:", error);
+          // Error handler
         }
       });
   }
 
   /**
-   * Prepare data for charts
+   * Prepare data for charts with memory optimization and progressive enhancement
    */
   prepareChartData() {
-    // Prepare data for object breakdown chart
-    const byObjectData = [];
+    // Use requestAnimationFrame to avoid blocking the UI
+    requestAnimationFrame(() => {
+      // Skip if component is no longer connected to DOM
+      if (!this.isConnected) return;
+      
+      // Prepare data for object breakdown chart
+      const byObjectData = [];
 
-    if (this.statistics.byObject) {
-      Object.keys(this.statistics.byObject).forEach((objName) => {
-        const objStats = this.statistics.byObject[objName];
-        byObjectData.push({
-          name: objName,
-          value: objStats.totalDuplicates || 0,
-          merged: objStats.totalMerged || 0,
-          mergeRate:
-            objStats.totalDuplicates > 0
-              ? (objStats.totalMerged || 0) / objStats.totalDuplicates
-              : 0
-        });
-      });
-    }
-
-    // Sort by total duplicates
-    byObjectData.sort((a, b) => b.value - a.value);
-
-    this.chartData = byObjectData;
+      if (this.statistics && this.statistics.byObject) {
+        // Process data in chunks to avoid freezing the UI with large datasets
+        const objectNames = Object.keys(this.statistics.byObject);
+        
+        // Process in chunks of 10 objects at a time
+        const chunkSize = 10;
+        let currentIndex = 0;
+        
+        // Process first chunk immediately
+        processNextChunk.call(this);
+        
+        function processNextChunk() {
+          const endIndex = Math.min(currentIndex + chunkSize, objectNames.length);
+          const chunk = objectNames.slice(currentIndex, endIndex);
+          
+          // Process this chunk
+          chunk.forEach((objName) => {
+            const objStats = this.statistics.byObject[objName] || {};
+            byObjectData.push({
+              name: objName,
+              value: objStats.totalDuplicates || 0,
+              merged: objStats.totalMerged || 0,
+              mergeRate:
+                objStats.totalDuplicates > 0
+                  ? (objStats.totalMerged || 0) / objStats.totalDuplicates
+                  : 0
+            });
+          });
+          
+          // Update chart data after each chunk
+          if (byObjectData.length > 0) {
+            // Sort by total duplicates
+            byObjectData.sort((a, b) => b.value - a.value);
+            this.chartData = [...byObjectData];
+          }
+          
+          // Move to next chunk
+          currentIndex = endIndex;
+          
+          // Schedule next chunk if more data remains
+          if (currentIndex < objectNames.length) {
+            setTimeout(() => requestAnimationFrame(processNextChunk.bind(this)), 0);
+          }
+        }
+      } else {
+        // No data, just set empty chart data
+        this.chartData = [];
+      }
+    });
   }
 
   /**
-   * Refresh statistics data - debounced to prevent multiple calls
+   * Refresh statistics data with debouncing to prevent multiple rapid refreshes
    */
   handleRefresh() {
-    // Clear any pending refresh
-    if (this.debounceTimeout) {
-      window.clearTimeout(this.debounceTimeout);
+    // Clear any existing debounce timer
+    if (this._debounceTimer) {
+      clearTimeout(this._debounceTimer);
     }
-
-    // Use Promise to debounce rapid clicks instead of setTimeout
-    Promise.resolve().then(() => {
-      // Set loading state
-      this.isLoading = true;
+    
+    // Debounce refresh operations to prevent multiple rapid refreshes
+    this._debounceTimer = setTimeout(() => {
+      this._debounceTimer = null;
+      
+      // Skip if component is no longer connected to DOM
+      if (!this.isConnected) return;
+      
+      // Set loading state only if refreshing after significant time
+      // This avoids UI flicker for rapid refreshes
+      const now = new Date();
+      const lastRefreshTime = this.lastRefresh ? this.lastRefresh.getTime() : 0;
+      const timeSinceLastRefresh = now.getTime() - lastRefreshTime;
+      
+      if (timeSinceLastRefresh > 5000) { // Only show loading state if more than 5 seconds since last refresh
+        this.isLoading = true;
+      }
+      
       try {
-        if (duplicationStore.actions && duplicationStore.actions.SET_LOADING) {
-          store.dispatch(duplicationStore.actions.SET_LOADING, true);
+        if (storeActions && storeActions.SET_LOADING) {
+          store.dispatch(storeActions.SET_LOADING, true);
         }
 
         // Invalidate cache
-        if (
-          duplicationStore.actions &&
-          duplicationStore.actions.INVALIDATE_CACHE
-        ) {
-          store.dispatch(
-            duplicationStore.actions.INVALIDATE_CACHE,
-            "statistics"
-          );
+        if (storeActions && storeActions.INVALIDATE_CACHE) {
+          store.dispatch(storeActions.INVALIDATE_CACHE, "statistics");
         }
       } catch (error) {
-        console.error("Error dispatching store actions in refresh:", error);
+        // Error handler
       }
 
       // Notify that refresh is happening via LMS
@@ -311,7 +375,7 @@ export default class DuplicationDashboard extends LightningElement {
 
       // Load fresh data
       this.loadStatistics();
-    });
+    }, 250); // 250ms debounce
   }
 
   /**
@@ -386,7 +450,7 @@ export default class DuplicationDashboard extends LightningElement {
     }
 
     // Add basic error info to the console (no sensitive data)
-    console.error(`${baseMessage}: ${errorDetails}`);
+    // Error handler - removed console.error
 
     // Update local error state
     this.error = {
@@ -397,16 +461,16 @@ export default class DuplicationDashboard extends LightningElement {
 
     // Add to store errors with sanitized info
     try {
-      if (duplicationStore.actions && duplicationStore.actions.ADD_ERROR) {
-        store.dispatch(duplicationStore.actions.ADD_ERROR, {
+      if (storeActions && storeActions.ADD_ERROR) {
+        store.dispatch(storeActions.ADD_ERROR, {
           message: baseMessage,
           details: errorDetails,
           type: "statistics",
           timestamp: new Date().toISOString()
         });
       }
-    } catch (error) {
-      console.error("Error dispatching ADD_ERROR action:", error);
+    } catch (storeError) {
+      // Error handler - removed console.error
     }
 
     // Notify about error via LMS
@@ -561,25 +625,25 @@ export default class DuplicationDashboard extends LightningElement {
    * @returns {Array} Sorted list
    */
   sortStatsList(list) {
-    const sortField = this._sortField || "totalDuplicates";
-    const sortDirection = this._sortDirection || "desc";
+    const currentSortField = this._sortField || "totalDuplicates";
+    const currentSortDirection = this._sortDirection || "desc";
 
     return list.sort((a, b) => {
-      let compareValueA = a[sortField];
-      let compareValueB = b[sortField];
+      let compareValueA = a[currentSortField];
+      let compareValueB = b[currentSortField];
 
       // Handle string fields
-      if (sortField === "name") {
+      if (currentSortField === "name") {
         compareValueA = compareValueA.toLowerCase();
         compareValueB = compareValueB.toLowerCase();
       }
 
       // Compare values
       if (compareValueA < compareValueB) {
-        return sortDirection === "asc" ? -1 : 1;
+        return currentSortDirection === "asc" ? -1 : 1;
       }
       if (compareValueA > compareValueB) {
-        return sortDirection === "asc" ? 1 : -1;
+        return currentSortDirection === "asc" ? 1 : -1;
       }
       return 0;
     });
@@ -891,7 +955,12 @@ export default class DuplicationDashboard extends LightningElement {
    */
   handleFindObjectDuplicates(event) {
     const objectName = event.currentTarget.dataset.object;
-    if (!objectName) return;
+    if (!objectName) {
+      // Error handler - removed console.error
+      return;
+    }
+
+    // Proceed with finding duplicates
 
     // Send message to start duplicate finder for this object
     sendMessage(MESSAGE_TYPES.QUICK_FIND_DUPLICATES, {
@@ -902,6 +971,7 @@ export default class DuplicationDashboard extends LightningElement {
     // Change to batch jobs tab
     sendMessage(MESSAGE_TYPES.CHANGE_TAB, {
       tabName: "batchjobs",
+      objectApiName: objectName,
       source: "dashboard"
     });
   }
@@ -914,15 +984,20 @@ export default class DuplicationDashboard extends LightningElement {
     const objectName = event.currentTarget.dataset.object;
     if (!objectName) return;
 
+    // Proceed with merging duplicates
+
     // Send message to open merge interface for this object
     sendMessage(MESSAGE_TYPES.QUICK_MERGE_DUPLICATES, {
       objectName: objectName,
       source: "dashboard"
     });
 
-    // Change to merge tab
+    // Change to batchjobs tab (since we removed the compare tab)
+    // Including a flag to indicate we want to show the merge view
     sendMessage(MESSAGE_TYPES.CHANGE_TAB, {
-      tabName: "compare",
+      tabName: "batchjobs",
+      showMergeView: true,
+      objectApiName: objectName,
       source: "dashboard"
     });
   }

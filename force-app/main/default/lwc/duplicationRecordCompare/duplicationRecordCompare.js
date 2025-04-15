@@ -6,10 +6,48 @@ import getRecordsForComparison from "@salesforce/apex/DRCCompare.getRecordsForCo
  * Shows differences between records to help with duplicate management
  */
 export default class DuplicationRecordCompare extends LightningElement {
-  @api recordId1;
-  @api recordId2;
-  @api objectApiName;
-  @api group;
+  // Private backing properties
+  _recordId1;
+  _recordId2;
+  _objectApiName;
+  _group;
+
+  // API properties with getters/setters to avoid reassignments
+  @api
+  get recordId1() {
+    return this._recordId1;
+  }
+  set recordId1(value) {
+    this._recordId1 = value;
+  }
+
+  @api
+  get recordId2() {
+    return this._recordId2;
+  }
+  set recordId2(value) {
+    this._recordId2 = value;
+  }
+
+  @api
+  get objectApiName() {
+    return this._objectApiName;
+  }
+  set objectApiName(value) {
+    this._objectApiName = value;
+  }
+
+  @api
+  get group() {
+    return this._group;
+  }
+  set group(value) {
+    this._group = value;
+    // When group changes, load records
+    if (value) {
+      this.loadRecords();
+    }
+  }
 
   @track isLoading = false;
   @track record1 = {};
@@ -28,10 +66,12 @@ export default class DuplicationRecordCompare extends LightningElement {
     this.applyDifferenceHighlighting();
   }
 
-  // Update records when group changes
+  // Update records when group changes - maintained for backward compatibility
   @api
   updateFromGroup(value) {
+    // Update the backing property directly instead of using setter
     this._group = value;
+    // When group changes, load records
     if (value) {
       this.loadRecords();
     }
@@ -51,19 +91,34 @@ export default class DuplicationRecordCompare extends LightningElement {
    * This applies CSS classes programmatically instead of using template expressions
    */
   applyDifferenceHighlighting() {
+    // All 'var' declarations must be at the very top of the function scope
+    var fieldValues;
+    var fieldRows;
+    var i;
+    var j;
+    var k;
+    var m;
+    var element;
+    var fieldId;
+    var field;
+    var rowElement;
+    var rowFieldId;
+    var rowField;
+
+    // Early return if no data
     if (!this.fieldData || this.fieldData.length === 0) {
       return;
     }
 
     // Apply styling to field values
-    var fieldValues = this.template.querySelectorAll(".field-value");
-    for (var i = 0; i < fieldValues.length; i++) {
-      var element = fieldValues[i];
-      var fieldId = element.dataset.id;
+    fieldValues = this.template.querySelectorAll(".field-value");
+    for (i = 0; i < fieldValues.length; i++) {
+      element = fieldValues[i];
+      fieldId = element.dataset.id;
 
       // Find the field in fieldData
-      var field = null;
-      for (var j = 0; j < this.fieldData.length; j++) {
+      field = null;
+      for (j = 0; j < this.fieldData.length; j++) {
         if (this.fieldData[j].field === fieldId) {
           field = this.fieldData[j];
           break;
@@ -79,14 +134,14 @@ export default class DuplicationRecordCompare extends LightningElement {
     }
 
     // Apply styling to table rows
-    var fieldRows = this.template.querySelectorAll(".field-row");
-    for (var k = 0; k < fieldRows.length; k++) {
-      var rowElement = fieldRows[k];
-      var rowFieldId = rowElement.dataset.id;
+    fieldRows = this.template.querySelectorAll(".field-row");
+    for (k = 0; k < fieldRows.length; k++) {
+      rowElement = fieldRows[k];
+      rowFieldId = rowElement.dataset.id;
 
       // Find the field in fieldData
-      var rowField = null;
-      for (var m = 0; m < this.fieldData.length; m++) {
+      rowField = null;
+      for (m = 0; m < this.fieldData.length; m++) {
         if (this.fieldData[m].field === rowFieldId) {
           rowField = this.fieldData[m];
           break;
@@ -108,8 +163,8 @@ export default class DuplicationRecordCompare extends LightningElement {
     if (this.group) {
       if (this.group.duplicateRecordIds) {
         if (this.group.duplicateRecordIds.length >= 2) {
-          this.recordId1 = this.group.duplicateRecordIds[0];
-          this.recordId2 = this.group.duplicateRecordIds[1];
+          this._recordId1 = this.group.duplicateRecordIds[0];
+          this._recordId2 = this.group.duplicateRecordIds[1];
         }
       }
     }
@@ -148,7 +203,11 @@ export default class DuplicationRecordCompare extends LightningElement {
    */
   fetchRecordData(recordId1, recordId2) {
     // DRCCompare.getRecordsForComparison takes a list of record IDs
-    var recordIds = [recordId1, recordId2];
+    // Declare all variables at the top of function scope
+    var recordIds;
+
+    // Initialize variables
+    recordIds = [recordId1, recordId2];
 
     const params = {
       recordIds: recordIds,
@@ -169,17 +228,31 @@ export default class DuplicationRecordCompare extends LightningElement {
    * @returns {Object} Processed data for the component
    */
   processRecordsResponse(result, recordId1, recordId2) {
+    // All 'var' declarations must be at the top of the function scope
+    var records;
+    var record1;
+    var record2;
+    var fields;
+    var fieldDifferences;
+    var i;
+    var j;
+    var fieldName;
+    var value1;
+    var value2;
+    var isDifferent;
+    var fieldLabel;
+
     if (!result || !result.records) {
       return null;
     }
 
     // Extract records from the result
-    var records = result.records;
-    var record1 = null;
-    var record2 = null;
+    records = result.records;
+    record1 = null;
+    record2 = null;
 
     // Find each record by ID
-    for (var i = 0; i < records.length; i++) {
+    for (i = 0; i < records.length; i++) {
       if (records[i].Id === recordId1) {
         record1 = records[i];
       } else if (records[i].Id === recordId2) {
@@ -192,14 +265,14 @@ export default class DuplicationRecordCompare extends LightningElement {
     }
 
     // Process fields and create formatted data for display
-    var fields = result.fields || [];
-    var fieldDifferences = [];
+    fields = result.fields || [];
+    fieldDifferences = [];
 
-    for (var j = 0; j < fields.length; j++) {
-      var fieldName = fields[j];
-      var value1 = record1[fieldName];
-      var value2 = record2[fieldName];
-      var isDifferent = false;
+    for (j = 0; j < fields.length; j++) {
+      fieldName = fields[j];
+      value1 = record1[fieldName];
+      value2 = record2[fieldName];
+      isDifferent = false;
 
       // Handle null values
       if (value1 === null) value1 = "";
@@ -213,7 +286,7 @@ export default class DuplicationRecordCompare extends LightningElement {
       isDifferent = value1 !== value2;
 
       // Get a more user-friendly field label
-      var fieldLabel = this.formatFieldName(fieldName);
+      fieldLabel = this.formatFieldName(fieldName);
 
       fieldDifferences.push({
         field: fieldName,
@@ -237,13 +310,17 @@ export default class DuplicationRecordCompare extends LightningElement {
    * @returns {String} Formatted field name
    */
   formatFieldName(fieldName) {
+    // All 'var' declarations must be at the top of the function scope
+    var words;
+    var i;
+
     if (!fieldName) return "";
 
     // Split by underscore or camel case
-    var words = fieldName.replace(/_/g, " ").split(/(?=[A-Z])/);
+    words = fieldName.replace(/_/g, " ").split(/(?=[A-Z])/);
 
     // Capitalize first letter of each word
-    for (var i = 0; i < words.length; i++) {
+    for (i = 0; i < words.length; i++) {
       if (words[i].length > 0) {
         words[i] = words[i].charAt(0).toUpperCase() + words[i].slice(1);
       }

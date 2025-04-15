@@ -1,185 +1,352 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
-	<types>
-		<members>*</members>
-		<name>ApexClass</name>
-	</types>
-	<types>
-		<members>*</members>
-		<name>ApexPage</name>
-	</types>
-	<types>
-		<members>*</members>
-		<name>ApexTrigger</name>
-	</types>
-	<types>
-		<members>DuplicateManagerApp</members>
-		<name>CustomApplication</name>
-	</types>
-	<types>
-		<members>App_Configuration__mdt.Description__c</members>
-		<members>App_Configuration__mdt.Value__c</members>
-		<members>DeduplicateLog__c.BatchJobId__c</members>
-		<members>DeduplicateLog__c.ConfigurationId__c</members>
-		<members>DeduplicateLog__c.ConfigurationName__c</members>
-		<members>DeduplicateLog__c.ExecutionTime__c</members>
-		<members>DeduplicateLog__c.InitiatedBy__c</members>
-		<members>DeduplicateLog__c.IsScheduledJob__c</members>
-		<members>DeduplicateLog__c.ObjectApiName__c</members>
-		<members>DeduplicateLog__c.RecordIdsJSON__c</members>
-		<members>DeduplicateLog__c.RecordsMerged__c</members>
-		<members>DuplicateFinderSetting__mdt.BatchSize__c</members>
-		<members>DuplicateFinderSetting__mdt.IsActive__c</members>
-		<members>DuplicateFinderSetting__mdt.MasterRecordStrategy__c</members>
-		<members>DuplicateFinderSetting__mdt.MatchFields__c</members>
-		<members>DuplicateFinderSetting__mdt.SObject_API_Name__c</members>
-		<members>DuplicateFinderSettings__c.BatchSize__c</members>
-		<members>DuplicateFinderSettings__c.IsActive__c</members>
-		<members>DuplicateFinderSettings__c.MasterRecordStrategy__c</members>
-		<members>DuplicateFinderSettings__c.MatchFields__c</members>
-		<members>DuplicateFinderSettings__c.ObjectAPIName__c</members>
-		<members>DuplicateGroupDetail__c.DuplicateRecordIds__c</members>
-		<members>DuplicateGroupDetail__c.DuplicateRunResult__c</members>
-		<members>DuplicateGroupDetail__c.FieldValues__c</members>
-		<members>DuplicateGroupDetail__c.GroupKey__c</members>
-		<members>DuplicateGroupDetail__c.MasterRecordId__c</members>
-		<members>DuplicateGroupDetail__c.MatchScore__c</members>
-		<members>DuplicateGroupDetail__c.ObjectName__c</members>
-		<members>DuplicateGroupDetail__c.RecordCount__c</members>
-		<members>DuplicateJobStatistic__c.BatchJobId__c</members>
-		<members>DuplicateJobStatistic__c.ConfigurationName__c</members>
-		<members>DuplicateJobStatistic__c.DuplicatesFound__c</members>
-		<members>DuplicateJobStatistic__c.ErrorMessage__c</members>
-		<members>DuplicateJobStatistic__c.IsDryRun__c</members>
-		<members>DuplicateJobStatistic__c.JobCompletionTime__c</members>
-		<members>DuplicateJobStatistic__c.JobStartTime__c</members>
-		<members>DuplicateJobStatistic__c.MatchScore__c</members>
-		<members>DuplicateJobStatistic__c.ObjectApiName__c</members>
-		<members>DuplicateJobStatistic__c.ProcessingTimeMs__c</members>
-		<members>DuplicateJobStatistic__c.RecordsMerged__c</members>
-		<members>DuplicateJobStatistic__c.RecordsProcessed__c</members>
-		<members>DuplicateJobStatistic__c.Status__c</members>
-		<members>DuplicateMergeLogArchive__c.ArchivedDate__c</members>
-		<members>DuplicateMergeLogArchive__c.ErrorMessage__c</members>
-		<members>DuplicateMergeLogArchive__c.FieldMergeDetails__c</members>
-		<members>DuplicateMergeLogArchive__c.JobId__c</members>
-		<members>DuplicateMergeLogArchive__c.LogName__c</members>
-		<members>DuplicateMergeLogArchive__c.MasterId__c</members>
-		<members>DuplicateMergeLogArchive__c.MergeTime__c</members>
-		<members>DuplicateMergeLogArchive__c.MergedIds__c</members>
-		<members>DuplicateMergeLogArchive__c.ObjectApiName__c</members>
-		<members>DuplicateMergeLogArchive__c.OriginalCreatedDate__c</members>
-		<members>DuplicateMergeLogArchive__c.OriginalLogId__c</members>
-		<members>DuplicateMergeLogArchive__c.UserId__c</members>
-		<members>DuplicateMergeLog__c.ErrorMessage__c</members>
-		<members>DuplicateMergeLog__c.FieldMergeDetails__c</members>
-		<members>DuplicateMergeLog__c.JobId__c</members>
-		<members>DuplicateMergeLog__c.MasterId__c</members>
-		<members>DuplicateMergeLog__c.MatchScore__c</members>
-		<members>DuplicateMergeLog__c.MergeTime__c</members>
-		<members>DuplicateMergeLog__c.MergedIds__c</members>
-		<members>DuplicateMergeLog__c.ObjectApiName__c</members>
-		<members>DuplicateMergeLog__c.UserId__c</members>
-		<members>DuplicateRunResult__c.AverageMatchScore__c</members>
-		<members>DuplicateRunResult__c.BatchJobId__c</members>
-		<members>DuplicateRunResult__c.ConfigurationName__c</members>
-		<members>DuplicateRunResult__c.DuplicatesFound__c</members>
-		<members>DuplicateRunResult__c.ErrorMessage__c</members>
-		<members>DuplicateRunResult__c.IsDryRun__c</members>
-		<members>DuplicateRunResult__c.JobCompletionTime__c</members>
-		<members>DuplicateRunResult__c.ObjectApiName__c</members>
-		<members>DuplicateRunResult__c.ProcessingTimeMs__c</members>
-		<members>DuplicateRunResult__c.RecordsFailed__c</members>
-		<members>DuplicateRunResult__c.RecordsMerged__c</members>
-		<members>DuplicateRunResult__c.RecordsProcessed__c</members>
-		<members>DuplicateRunResult__c.RecordsSucceeded__c</members>
-		<members>DuplicateRunResult__c.Status__c</members>
-		<members>FlowPersonalConfiguration__c.Configuration__c</members>
-		<members>MergeJobLog__c.BatchJobId__c</members>
-		<members>MergeJobLog__c.ConfigurationId__c</members>
-		<members>MergeJobLog__c.ConfigurationName__c</members>
-		<members>MergeJobLog__c.ErrorMessage__c</members>
-		<members>MergeJobLog__c.ExecutionTime__c</members>
-		<members>MergeJobLog__c.FieldMergeDetails__c</members>
-		<members>MergeJobLog__c.InitiatedBy__c</members>
-		<members>MergeJobLog__c.IsScheduledJob__c</members>
-		<members>MergeJobLog__c.JobId__c</members>
-		<members>MergeJobLog__c.MasterId__c</members>
-		<members>MergeJobLog__c.MatchScore__c</members>
-		<members>MergeJobLog__c.MergeTime__c</members>
-		<members>MergeJobLog__c.MergedIds__c</members>
-		<members>MergeJobLog__c.ObjectApiName__c</members>
-		<members>MergeJobLog__c.RecordIdsJSON__c</members>
-		<members>MergeJobLog__c.RecordsMerged__c</members>
-		<members>MergeJobLog__c.UserId__c</members>
-		<members>DuplicationConfiguration__mdt.BatchSize__c</members>
-		<members>DuplicationConfiguration__mdt.Description__c</members>
-		<members>DuplicationConfiguration__mdt.IsActive__c</members>
-		<members>DuplicationConfiguration__mdt.MasterRecordStrategy__c</members>
-		<members>DuplicationConfiguration__mdt.MatchFieldWeights__c</members>
-		<members>DuplicationConfiguration__mdt.MatchFields__c</members>
-		<members>DuplicationConfiguration__mdt.MatchThreshold__c</members>
-		<members>DuplicationConfiguration__mdt.ObjectApiName__c</members>
-		<members>DuplicationConfiguration__mdt.PostMergeApexHandler__c</members>
-		<members>DuplicationConfiguration__mdt.PreMergeApexHandler__c</members>
-		<members>DuplicationConfiguration__mdt.SObject_API_Name__c</members>
-		<members>DuplicationConfiguration__mdt.Version__c</members>
-		<members>DuplicationSetting__mdt.Category__c</members>
-		<members>DuplicationSetting__mdt.Description__c</members>
-		<members>DuplicationSetting__mdt.IsActive__c</members>
-		<members>DuplicationSetting__mdt.Key__c</members>
-		<members>DuplicationSetting__mdt.ObjectApiName__c</members>
-		<members>DuplicationSetting__mdt.Value__c</members>
-		<name>CustomField</name>
-	</types>
-	<types>
-		<members>DuplicateFinderSetting.Account_Standard</members>
-		<members>DuplicateFinderSetting.Contact_Standard</members>
-		<members>DuplicateFinderSetting.Lead_Standard</members>
-		<name>CustomMetadata</name>
-	</types>
-	<types>
-		<members>App_Configuration__mdt</members>
-		<members>DuplicateFinderSetting__mdt</members>
-		<members>DuplicateFinderSettings__c</members>
-		<members>DuplicateGroupDetail__c</members>
-		<members>DuplicateJobStatistic__c</members>
-		<members>DuplicateMergeLogArchive__c</members>
-		<members>DuplicateMergeLog__c</members>
-		<members>DuplicateRunResult__c</members>
-		<members>FlowPersonalConfiguration__c</members>
-		<members>MergeJobLog__c</members>
-		<name>CustomObject</name>
-	</types>
-	<types>
-		<members>DuplicateJobStatistic__c</members>
-		<members>DuplicateRunResult__c</members>
-		<members>DuplicateManager</members>
-		<members>MergeJobLog__c</members>
-		<name>CustomTab</name>
-	</types>
-	<types>
-		<members>DuplicateManagerApp</members>
-		<members>DuplicateManagerUtilityBar</members>
-		<name>FlexiPage</name>
-	</types>
-	<types>
-		<members>DuplicateFinderSetting__mdt-Duplicate Finder Setting Layout</members>
-		<members>DuplicateFinderSettings__c-DuplicateFinderSetting Layout</members>
-		<members>DuplicateGroupDetail__c-DuplicateGroupDetail Layout</members>
-		<members>DuplicateJobStatistic__c-DuplicateJobStatistic Layout</members>
-		<members>DuplicateRecordItem-Duplicate Record Item Layout</members>
-		<members>DuplicateRecordSet-Duplicate Record Set Layout</members>
-		<members>DuplicateRunResult__c-DuplicateRunResult Layout</members>
-		<name>Layout</name>
-	</types>
-	<types>
-		<members>*</members>
-		<name>LightningComponentBundle</name>
-	</types>
-	<types>
-		<members>chartjs</members>
-		<name>StaticResource</name>
-	</types>
-	<version>58.0</version>
+    <!-- Applications -->
+    <types>
+        <members>DuplicateManagerApp</members>
+        <n>CustomApplication</n>
+    </types>
+    
+    <!-- Custom Objects -->
+    <types>
+        <members>App_Configuration__mdt</members>
+        <members>DeduplicationFailure__c</members>
+        <members>DeduplicationFieldConfig__c</members>
+        <members>DeduplicationLog__c</members>
+        <members>Deduplication_Integration_Impact__c</members>
+        <members>Deduplication_Schedule__c</members>
+        <members>DuplicateFinderSetting__mdt</members>
+        <members>DuplicateFinderSettings__c</members>
+        <members>DuplicateGroupDetail__c</members>
+        <members>DuplicateJobStatistic__c</members>
+        <members>DuplicateMergeLog__c</members>
+        <members>DuplicateMergeLogArchive__c</members>
+        <members>DuplicateRunResult__c</members>
+        <members>DuplicationConfiguration__mdt</members>
+        <members>DuplicationSetting__mdt</members>
+        <members>FlowPersonalConfiguration__c</members>
+        <members>MergeJobLog__c</members>
+        <n>CustomObject</n>
+    </types>
+    
+    <!-- Custom Fields -->
+    <types>
+        <members>App_Configuration__mdt.Description__c</members>
+        <members>App_Configuration__mdt.Value__c</members>
+        
+        <members>DeduplicationLog__c.ObjectApiName__c</members>
+        <members>DeduplicationLog__c.ExecutionTime__c</members>
+        <members>DeduplicationLog__c.ConfigurationName__c</members>
+        <members>DeduplicationLog__c.InitiatedBy__c</members>
+        <members>DeduplicationLog__c.RecordIdsJSON__c</members>
+        
+        <members>DuplicateFinderSetting__mdt.BatchSize__c</members>
+        <members>DuplicateFinderSetting__mdt.IsActive__c</members>
+        <members>DuplicateFinderSetting__mdt.MasterRecordStrategy__c</members>
+        <members>DuplicateFinderSetting__mdt.MatchFields__c</members>
+        <members>DuplicateFinderSetting__mdt.SObject_API_Name__c</members>
+        
+        <members>DuplicateFinderSettings__c.IsActive__c</members>
+        <members>DuplicateFinderSettings__c.MatchFields__c</members>
+        <members>DuplicateFinderSettings__c.ObjectAPIName__c</members>
+        <members>DuplicateFinderSettings__c.BatchSize__c</members>
+        <members>DuplicateFinderSettings__c.MasterRecordStrategy__c</members>
+        
+        <members>DuplicateGroupDetail__c.DuplicateRecordIds__c</members>
+        <members>DuplicateGroupDetail__c.DuplicateRunResult__c</members>
+        <members>DuplicateGroupDetail__c.FieldValues__c</members>
+        <members>DuplicateGroupDetail__c.GroupKey__c</members>
+        <members>DuplicateGroupDetail__c.MasterRecordId__c</members>
+        <members>DuplicateGroupDetail__c.MatchScore__c</members>
+        <members>DuplicateGroupDetail__c.ObjectName__c</members>
+        <members>DuplicateGroupDetail__c.RecordCount__c</members>
+        
+        <members>DuplicateJobStatistic__c.BatchJobId__c</members>
+        <members>DuplicateJobStatistic__c.ConfigurationName__c</members>
+        <members>DuplicateJobStatistic__c.DuplicatesFound__c</members>
+        <members>DuplicateJobStatistic__c.ErrorMessage__c</members>
+        <members>DuplicateJobStatistic__c.IsDryRun__c</members>
+        <members>DuplicateJobStatistic__c.JobCompletionTime__c</members>
+        <members>DuplicateJobStatistic__c.JobStartTime__c</members>
+        <members>DuplicateJobStatistic__c.MatchScore__c</members>
+        <members>DuplicateJobStatistic__c.ObjectApiName__c</members>
+        <members>DuplicateJobStatistic__c.ProcessingTimeMs__c</members>
+        <members>DuplicateJobStatistic__c.RecordsMerged__c</members>
+        <members>DuplicateJobStatistic__c.RecordsProcessed__c</members>
+        <members>DuplicateJobStatistic__c.Status__c</members>
+        
+        <members>DuplicateMergeLog__c.ErrorMessage__c</members>
+        <members>DuplicateMergeLog__c.FieldMergeDetails__c</members>
+        <members>DuplicateMergeLog__c.JobId__c</members>
+        <members>DuplicateMergeLog__c.MasterId__c</members>
+        <members>DuplicateMergeLog__c.MatchScore__c</members>
+        <members>DuplicateMergeLog__c.MergeTime__c</members>
+        <members>DuplicateMergeLog__c.MergedIds__c</members>
+        <members>DuplicateMergeLog__c.ObjectApiName__c</members>
+        <members>DuplicateMergeLog__c.UserId__c</members>
+        
+        <members>DuplicateMergeLogArchive__c.ArchivedDateTime__c</members>
+        <members>DuplicateMergeLogArchive__c.ErrorMessage__c</members>
+        <members>DuplicateMergeLogArchive__c.FieldMergeDetails__c</members>
+        <members>DuplicateMergeLogArchive__c.JobId__c</members>
+        <members>DuplicateMergeLogArchive__c.LogName__c</members>
+        <members>DuplicateMergeLogArchive__c.MasterId__c</members>
+        <members>DuplicateMergeLogArchive__c.MergeTime__c</members>
+        <members>DuplicateMergeLogArchive__c.MergedIds__c</members>
+        <members>DuplicateMergeLogArchive__c.ObjectApiName__c</members>
+        <members>DuplicateMergeLogArchive__c.OriginalCreatedDate__c</members>
+        <members>DuplicateMergeLogArchive__c.OriginalLogId__c</members>
+        <members>DuplicateMergeLogArchive__c.UserId__c</members>
+        
+        <members>DuplicateRunResult__c.AverageMatchScore__c</members>
+        <members>DuplicateRunResult__c.BatchJobId__c</members>
+        <members>DuplicateRunResult__c.BatchSize__c</members>
+        <members>DuplicateRunResult__c.ConfigurationName__c</members>
+        <members>DuplicateRunResult__c.DuplicatesFound__c</members>
+        <members>DuplicateRunResult__c.ErrorMessage__c</members>
+        <members>DuplicateRunResult__c.IsDryRun__c</members>
+        <members>DuplicateRunResult__c.JobCompletionTime__c</members>
+        <members>DuplicateRunResult__c.ObjectApiName__c</members>
+        <members>DuplicateRunResult__c.PerformanceMetrics__c</members>
+        <members>DuplicateRunResult__c.ProcessingTimeMs__c</members>
+        <members>DuplicateRunResult__c.RecordsFailed__c</members>
+        <members>DuplicateRunResult__c.RecordsMerged__c</members>
+        <members>DuplicateRunResult__c.RecordsProcessed__c</members>
+        <members>DuplicateRunResult__c.RecordsSucceeded__c</members>
+        <members>DuplicateRunResult__c.Status__c</members>
+        
+        <members>DuplicationConfiguration__mdt.BatchSize__c</members>
+        <members>DuplicationConfiguration__mdt.Description__c</members>
+        <members>DuplicationConfiguration__mdt.IsActive__c</members>
+        <members>DuplicationConfiguration__mdt.MasterRecordStrategy__c</members>
+        <members>DuplicationConfiguration__mdt.MatchFieldWeights__c</members>
+        <members>DuplicationConfiguration__mdt.MatchFields__c</members>
+        <members>DuplicationConfiguration__mdt.MatchThreshold__c</members>
+        <members>DuplicationConfiguration__mdt.ObjectApiName__c</members>
+        <members>DuplicationConfiguration__mdt.PostMergeApexHandler__c</members>
+        <members>DuplicationConfiguration__mdt.PreMergeApexHandler__c</members>
+        <members>DuplicationConfiguration__mdt.SObject_API_Name__c</members>
+        <members>DuplicationConfiguration__mdt.Version__c</members>
+        <members>DuplicationConfiguration__mdt.Value__c</members>
+        
+        <members>DuplicationSetting__mdt.Category__c</members>
+        <members>DuplicationSetting__mdt.Description__c</members>
+        
+        <members>FlowPersonalConfiguration__c.Configuration__c</members>
+        <n>CustomField</n>
+    </types>
+    
+    <!-- Apex Classes -->
+    <types>
+        <members>AddressMatcher</members>
+        <members>ArchiveOldLogsBatch</members>
+        <members>ArchiveOldLogsBatchTest</members>
+        <members>ArchiveOldLogsScheduler</members>
+        <members>ArchiveOldLogsSchedulerTest</members>
+        <members>DMUPreview</members>
+        <members>DRCBatch</members>
+        <members>DRCCompare</members>
+        <members>DRCFields</members>
+        <members>DRCNote</members>
+        <members>DRCSaveSettings</members>
+        <members>DRCSettings</members>
+        <members>DRSCDate</members>
+        <members>DRSCDetailed</members>
+        <members>DRSCStats</members>
+        <members>DataModelMigrationUtil</members>
+        <members>DuplicateBaseBatch</members>
+        <members>DuplicateBatch</members>
+        <members>DuplicateBatchProcessor</members>
+        <members>DuplicateBatchProcessor_Test</members>
+        <members>DuplicateBatchTest</members>
+        <members>DuplicateConfig</members>
+        <members>DuplicateConstants</members>
+        <members>DuplicateController</members>
+        <members>DuplicateControllerTest</members>
+        <members>DuplicateDataProcessor</members>
+        <members>DuplicateDataProcessorTest</members>
+        <members>DuplicateDetectionService</members>
+        <members>DuplicateException</members>
+        <members>DuplicateFinderBatch</members>
+        <members>DuplicateFinderController</members>
+        <members>DuplicateGroupService</members>
+        <members>DuplicateGroupTest</members>
+        <members>DuplicateHealthController</members>
+        <members>DuplicateJobService</members>
+        <members>DuplicateLimitUtil</members>
+        <members>DuplicateLogger</members>
+        <members>DuplicateMatcherRegistry</members>
+        <members>DuplicateMatcherRegistryTest</members>
+        <members>DuplicateMatcherUtility</members>
+        <members>DuplicateMatcherUtilityTest</members>
+        <members>DuplicateMergeService</members>
+        <members>DuplicateMergeUtility</members>
+        <members>DuplicateProcessor</members>
+        <members>DuplicateQueueableChain</members>
+        <members>DuplicateQueueableChainTest</members>
+        <members>DuplicateQueueableProcessor</members>
+        <members>DuplicateRecordBatch</members>
+        <members>DuplicateRecordBatchTest</members>
+        <members>DuplicateRecordController</members>
+        <members>DuplicateRecordControllerTest</members>
+        <members>DuplicateRecordController_MergeJobLogs</members>
+        <members>DuplicateRecordJobController</members>
+        <members>DuplicateRecordJobControllerTest</members>
+        <members>DuplicateRecordLogController</members>
+        <members>DuplicateRecordLogControllerTest</members>
+        <members>DuplicateRecordQueueable</members>
+        <members>DuplicateRecordScheduler</members>
+        <members>DuplicateRecordSchedulerTest</members>
+        <members>DuplicateRecordStatisticsController</members>
+        <members>DuplicateRecordStatisticsControllerTest</members>
+        <members>DuplicateRecordUtility</members>
+        <members>DuplicateRecordUtilityTest</members>
+        <members>DuplicateRuleFinderBatch</members>
+        <members>DuplicateRunResultService</members>
+        <members>DuplicateServicesUtil</members>
+        <members>DuplicateServicesUtilTest</members>
+        <members>DuplicateSettingsService</members>
+        <members>DuplicateSettingsUtil</members>
+        <members>DuplicateStatisticsService</members>
+        <members>DuplicateUtil</members>
+        <members>EmailMatcher</members>
+        <members>EmailMatcherTest</members>
+        <members>EnhancedDuplicateMatcher</members>
+        <members>EnhancedDuplicateMatcherTest</members>
+        <members>FieldMatcherInterface</members>
+        <members>GenericMatcher</members>
+        <members>LevenshteinCalculator</members>
+        <members>MatcherFactory</members>
+        <members>MatcherFactoryTest</members>
+        <members>MetadataController</members>
+        <members>NameMatcher</members>
+        <members>PhoneMatcher</members>
+        <members>PhoneMatcherTest</members>
+        <members>RecordDataController</members>
+        <members>SecurityUtility</members>
+        <members>SecurityUtilityTest</members>
+        <members>StringNormalizer</members>
+        <members>StringNormalizerTest</members>
+        <members>TestUtility</members>
+        <members>TextMatcher</members>
+        <n>ApexClass</n>
+    </types>
+    
+    <!-- Visualforce Pages -->
+    <types>
+        <members>DuplicateRecordManager</members>
+        <members>DuplicationHelp</members>
+        <n>ApexPage</n>
+    </types>
+    
+    <!-- LWC Components -->
+    <types>
+        <members>duplicationAuditLogs</members>
+        <members>duplicationBatchController</members>
+        <members>duplicationComparisonView</members>
+        <members>duplicationConfigSelector</members>
+        <members>duplicationConstants</members>
+        <members>duplicationContainer</members>
+        <members>duplicationDashboard</members>
+        <members>duplicationDashboardCard</members>
+        <members>duplicationDataService</members>
+        <members>duplicationDryRunResult</members>
+        <members>duplicationEnhancedUI</members>
+        <members>duplicationErrorHandler</members>
+        <members>duplicationErrorService</members>
+        <members>duplicationFieldDifferences</members>
+        <members>duplicationFinder</members>
+        <members>duplicationHealthCheck</members>
+        <members>duplicationJobManager</members>
+        <members>duplicationJobProgress</members>
+        <members>duplicationLmsHelper</members>
+        <members>duplicationManagerApp</members>
+        <members>duplicationManagerJobs</members>
+        <members>duplicationManagerScheduler</members>
+        <members>duplicationMasterPreview</members>
+        <members>duplicationMergeConflicts</members>
+        <members>duplicationMergeGroups</members>
+        <members>duplicationMergePreview</members>
+        <members>duplicationMessageService</members>
+        <members>duplicationMetricsCard</members>
+        <members>duplicationRecordCompare</members>
+        <members>duplicationSideBySideCompare</members>
+        <members>duplicationSimple</members>
+        <members>duplicationStatsSummary</members>
+        <members>duplicationStore</members>
+        <members>duplicationTabbedInterface</members>
+        <members>duplicationTest</members>
+        <members>duplicationUtils</members>
+        <members>lmsUtils</members>
+        <members>scheduleJobModal</members>
+        <n>LightningComponentBundle</n>
+    </types>
+    
+    <!-- Aura Components -->
+    <types>
+        <members>duplicationContainerWrapper</members>
+        <members>duplicationFinderWrapper</members>
+        <members>duplicationSimpleWrapper</members>
+        <n>AuraDefinitionBundle</n>
+    </types>
+    
+    <!-- Permission Sets -->
+    <types>
+        <members>Duplicate_Manager_Admin</members>
+        <n>PermissionSet</n>
+    </types>
+    
+    <!-- Tabs -->
+    <types>
+        <members>DuplicateJobStatistic__c</members>
+        <members>DuplicateManager</members>
+        <members>DuplicateRunResult__c</members>
+        <members>MergeJobLog__c</members>
+        <n>CustomTab</n>
+    </types>
+    
+    <!-- Static Resources -->
+    <types>
+        <members>chartjs</members>
+        <n>StaticResource</n>
+    </types>
+    
+    <!-- Message Channels -->
+    <types>
+        <members>DuplicationChannel_c</members>
+        <n>MessageChannel</n>
+    </types>
+    
+    <!-- FlexiPages -->
+    <types>
+        <members>DuplicateManagerApp</members>
+        <members>DuplicateManagerUtilityBar</members>
+        <n>FlexiPage</n>
+    </types>
+    
+    <!-- Layouts -->
+    <types>
+        <members>DeduplicationFailure__c-Deduplication Failure Layout</members>
+        <members>DeduplicationFieldConfig__c-Deduplication Field Config Layout</members>
+        <members>DeduplicationLog__c-Deduplication Log Layout</members>
+        <members>Deduplication_Integration_Impact__c-Deduplication Integration Impact Layout</members>
+        <members>Deduplication_Schedule__c-Deduplication Schedule Layout</members>
+        <members>DuplicateFinderSetting__mdt-Duplicate Finder Setting Layout</members>
+        <members>DuplicateFinderSettings__c-DuplicateFinderSetting Layout</members>
+        <members>DuplicateGroupDetail__c-Duplicate Group Detail Layout</members>
+        <members>DuplicateJobStatistic__c-DuplicateJobStatistic Layout</members>
+        <members>DuplicateRecordItem-Duplicate Record Item Layout</members>
+        <members>DuplicateRecordSet-Duplicate Record Set Layout</members>
+        <members>DuplicateRunResult__c-Duplicate Run Result Layout</members>
+        <n>Layout</n>
+    </types>
+    
+    <!-- Custom Metadata -->
+    <types>
+        <members>DuplicateFinderSetting.Account_Standard</members>
+        <members>DuplicateFinderSetting.Contact_Standard</members>
+        <members>DuplicateFinderSetting.Lead_Standard</members>
+        <n>CustomMetadata</n>
+    </types>
+    
+    <version>59.0</version>
 </Package>

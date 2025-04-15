@@ -108,7 +108,7 @@ public with sharing class DuplicateMergeService {
     );
 
     // Create a duplicate group for merging
-    DuplicateGroup dupGroup = createDuplicateGroup(
+    DuplicateMatcherUtility.DuplicateGroup dupGroup = createDuplicateGroup(
       masterRecord,
       duplicateRecords,
       masterRecordId
@@ -358,7 +358,7 @@ public with sharing class DuplicateMergeService {
   /**
    * Creates a duplicate group from master and duplicate records
    */
-  private DuplicateGroup createDuplicateGroup(
+  private DuplicateMatcherUtility.DuplicateGroup createDuplicateGroup(
     SObject masterRecord,
     List<SObject> duplicateRecords,
     Id masterRecordId
@@ -367,7 +367,7 @@ public with sharing class DuplicateMergeService {
     allRecords.add(masterRecord);
     allRecords.addAll(duplicateRecords);
 
-    return new DuplicateGroup(
+    return new DuplicateMatcherUtility.DuplicateGroup(
       allRecords,
       100, // match score
       'manual-' +
@@ -379,7 +379,7 @@ public with sharing class DuplicateMergeService {
   /**
    * Executes the merge operation
    */
-  private Map<String, Object> executeMerge(DuplicateGroup dupGroup) {
+  private Map<String, Object> executeMerge(DuplicateMatcherUtility.DuplicateGroup dupGroup) {
     Map<String, Object> result = new Map<String, Object>();
     result.put('success', false);
 
@@ -423,7 +423,7 @@ public with sharing class DuplicateMergeService {
    */
   private void saveMergeStatistics(
     String objectApiName,
-    DuplicateGroup dupGroup
+    DuplicateMatcherUtility.DuplicateGroup dupGroup
   ) {
     DuplicateJobStatistic__c stats = new DuplicateJobStatistic__c(
       ConfigurationName__c = 'Manual Merge',

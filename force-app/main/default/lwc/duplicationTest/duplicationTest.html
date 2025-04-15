@@ -1,0 +1,48 @@
+<template>
+  <div class="slds-card">
+    <div class="slds-card__header">
+      <h2 class="slds-card__header-title">Duplication Manager UI Test</h2>
+    </div>
+    <div class="slds-card__body slds-card__body_inner">
+      <p>Status: <strong>{testMessage}</strong></p>
+      <p>This component tests the Duplication Manager UI functionality.</p>
+
+      <div class="slds-var-m-top_medium">
+        <lightning-button-group>
+          <lightning-button
+            label="Test Toast"
+            onclick={handleClick}
+            variant="brand"
+          >
+          </lightning-button>
+          <lightning-button
+            label="Test View Change"
+            onclick={handleTestView}
+            variant="neutral"
+          >
+          </lightning-button>
+        </lightning-button-group>
+      </div>
+
+      <template if:true={receivedMessages.length}>
+        <div class="slds-var-m-top_medium">
+          <h3 class="slds-text-heading_small slds-var-m-bottom_small">
+            Received Messages
+          </h3>
+          <ul class="slds-has-dividers_bottom-space">
+            <template for:each={receivedMessages} for:item="msg">
+              <li key={msg.timestamp} class="slds-item">
+                <div class="slds-grid">
+                  <div class="slds-col slds-size_1-of-4">
+                    <strong>{msg.type}</strong>
+                  </div>
+                  <div class="slds-col slds-size_3-of-4">{msg.payload}</div>
+                </div>
+              </li>
+            </template>
+          </ul>
+        </div>
+      </template>
+    </div>
+  </div>
+</template>

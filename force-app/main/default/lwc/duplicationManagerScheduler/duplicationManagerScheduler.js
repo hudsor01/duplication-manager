@@ -38,7 +38,7 @@ export default class DuplicationManagerScheduler extends LightningElement {
   ];
 
   connectedCallback() {
-    console.log("duplicateManagerScheduler component connected to DOM");
+    // Removed console.log
     if (this.setting) {
       this.scheduleForm.jobName = `${this.setting.ObjectApiName} Duplicate Finder`;
     }
@@ -72,8 +72,8 @@ export default class DuplicationManagerScheduler extends LightningElement {
   }
 
   handleSchedule() {
-    console.log("handleSchedule called, setting:", this.setting);
-    console.log("scheduleForm:", this.scheduleForm);
+    // Removed console.log
+    // Removed console.log
 
     // Validate required fields
     if (!this.scheduleForm.jobName) {

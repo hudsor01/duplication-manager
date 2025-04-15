@@ -9,10 +9,8 @@
   flex: 1;
   overflow: auto;
   background-color: #f3f3f3;
-  /* Set a fixed height to prevent dynamic resizing which causes browser freezing */
-  min-height: 800px; 
-  height: 800px;
-  max-height: 80vh;
+  min-height: 500px;
+  height: auto;
   max-width: 100%;
   box-sizing: border-box;
 }
@@ -40,35 +38,30 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   margin-bottom: 1rem;
   padding: 1rem;
-  /* Removed transitions and animations to prevent Safari freezing */
-  /* transition: all 0.3s ease; */
-  /* animation: fadeIn 0.5s ease-out; */
+  transition: all 0.3s ease;
+  animation: fadeIn 0.5s ease-out;
   max-width: 100%;
   box-sizing: border-box;
   overflow-x: hidden;
 }
 
-/* Animation disabled to prevent Safari freezing 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translate3d(0, 20px, 0);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
-    transform: translate3d(0, 0, 0);
+    transform: translateY(0);
   }
 }
-*/
 
 .sidebar-component-container {
-  /* Removed transitions to prevent Safari freezing */
-  /* transition: all 0.3s ease; */
+  transition: all 0.3s ease;
 }
 
 .sidebar-component-container:hover {
-  /* Removed transforms to prevent Safari freezing */
-  /* transform: translateY(-2px); */
+  transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -82,33 +75,28 @@
 }
 
 .metrics-container {
-  /* Removed transitions to prevent Safari freezing */
-  /* transition:
+  transition:
     transform 0.3s ease,
-    opacity 0.3s ease; */
+    opacity 0.3s ease;
 }
 
 .metrics-container:hover {
-  /* Removed transforms to prevent Safari freezing */
-  /* transform: translateY(-2px); */
+  transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Tab styling - simplified to prevent Safari freezing */
+/* Tab styling */
 .custom-tab {
   border-radius: 4px 4px 0 0;
   border-bottom: 3px solid transparent;
-  /* Removed transitions to prevent Safari freezing */
-  /* transition:
+  transition:
     background-color 0.3s ease,
     border-color 0.3s ease,
     transform 0.3s ease,
-    color 0.3s ease; */
+    color 0.3s ease;
   margin-right: 4px;
   position: relative;
   overflow: hidden;
-  /* Removed will-change to prevent Safari memory issues */
-  /* will-change: transform; */
 }
 
 .custom-tab.active {
@@ -116,20 +104,17 @@
   background-color: rgba(21, 137, 238, 0.08);
   color: #0070d2;
   font-weight: 600;
-  /* Removed transform to prevent Safari freezing */
-  /* transform: translate3d(0, -1px, 0); */
+  transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .custom-tab:hover:not(.active) {
   background-color: rgba(0, 0, 0, 0.03);
   border-bottom-color: #dddbda;
-  /* Removed transform to prevent Safari freezing */
-  /* transform: translate3d(0, -1px, 0); */
+  transform: translateY(-1px);
 }
 
-/* Removed pseudo-element animation that can cause rendering issues */
-/* .custom-tab:before {
+.custom-tab:before {
   content: "";
   position: absolute;
   bottom: 0;
@@ -142,70 +127,62 @@
 
 .custom-tab:hover:not(.active):before {
   width: 100%;
-} */
+}
 
 .custom-tab-icon {
   --sds-c-icon-color-foreground-default: #706e6b;
-  /* Removed transition to prevent Safari freezing */
-  /* transition: transform 0.3s ease; */
+  transition: transform 0.3s ease;
 }
 
 .custom-tab.active .custom-tab-icon {
   --sds-c-icon-color-foreground-default: #1589ee;
-  /* Removed transform to prevent Safari freezing */
-  /* transform: scale(1.1); */
+  transform: scale(1.1);
 }
 
-/* Card styling - simplified to prevent Safari freezing */
+/* Card styling */
 .card-container {
   border-radius: 0.25rem;
   border: 1px solid #dddbda;
-  /* Removed transitions to prevent Safari freezing */
-  /* transition:
+  transition:
     transform 0.2s ease,
-    box-shadow 0.2s ease; */
+    box-shadow 0.2s ease;
 }
 
 .card-container:hover {
-  /* Removed transform to prevent Safari freezing */
-  /* transform: translateY(-2px); */
+  transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Animation for content transitions - simplified to prevent Safari freezing */
+/* Animation for content transitions */
 .tab-content-container {
   position: relative;
 }
 
-/* Using standard Salesforce classes for visibility, removed will-change to prevent Safari memory issues */
+/* Using standard Salesforce classes for visibility */
 .slds-show {
   display: block !important;
   visibility: visible !important;
-  /* Removed will-change to prevent Safari memory issues */
-  /* will-change: opacity; */
 }
 
 .slds-hide {
   display: none !important;
 }
 
-/* Fade-in animation disabled to prevent Safari freezing */
+/* Fade-in animation for content elements */
 .fade-in-element {
-  /* animation: fadeInUp 0.5s ease forwards; */
+  animation: fadeInUp 0.5s ease forwards;
 }
 
-/* Animation disabled to prevent Safari freezing 
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translate3d(0, 20px, 0);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
-    transform: translate3d(0, 0, 0);
+    transform: translateY(0);
   }
 }
-*/
 
 /* Health check status colors */
 .status-success {
@@ -228,52 +205,36 @@
   font-weight: bold;
 }
 
-/* Modern button styles - simplified to prevent Safari freezing */
+/* Modern button styles */
 .modern-button {
-  /* Removed transitions to prevent Safari freezing */
-  /* transition:
+  transition:
     background-color 0.2s ease,
-    transform 0.1s ease; */
+    transform 0.1s ease;
 }
 
 .modern-button:active {
-  /* Removed transform to prevent Safari freezing */
-  /* transform: scale(0.98); */
+  transform: scale(0.98);
 }
 
-/* Settings modal - animation disabled to prevent Safari freezing */
+/* Settings modal animation */
 .settings-modal {
-  /* animation: slideInDown 0.3s ease-out; */
+  animation: slideInDown 0.3s ease-out;
 }
 
-/* Animation disabled to prevent Safari freezing 
 @keyframes slideInDown {
   from {
-    transform: translate3d(0, -20px, 0);
+    transform: translateY(-20px);
     opacity: 0;
   }
   to {
-    transform: translate3d(0, 0, 0);
+    transform: translateY(0);
     opacity: 1;
   }
 }
-*/
 
 /* Make the config container have higher z-index to ensure dropdown appears above other content */
 .config-container {
   position: relative;
   z-index: 5;
   margin-bottom: 2rem;
-}
-
-/* Simplified safe area styles without webkit-specific properties */
-.safe-area-enabled {
-  width: 100%;
-  height: 100%;
-  /* Fixed height value instead of dynamic viewport units */
-  min-height: 800px;
-  max-height: 800px;
-  overflow-x: hidden;
-  position: relative;
-  z-index: 1;
 }

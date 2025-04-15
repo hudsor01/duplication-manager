@@ -1,8 +1,7 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>MasterRecordStrategy__c</fullName>
-    <description
-  >Strategy to determine which record becomes the master record (OldestCreated, NewestCreated, MostComplete)</description>
+    <defaultValue>&quot;Oldest Created&quot;</defaultValue>
     <externalId>false</externalId>
     <fieldManageability>DeveloperControlled</fieldManageability>
     <label>Master Record Strategy</label>
@@ -13,19 +12,19 @@
         <valueSetDefinition>
             <sorted>false</sorted>
             <value>
-                <fullName>OldestCreated</fullName>
+                <fullName>Most Complete</fullName>
                 <default>true</default>
-                <label>Oldest Created</label>
+                <label>Most Complete</label>
             </value>
             <value>
-                <fullName>NewestCreated</fullName>
+                <fullName>Newest Created</fullName>
                 <default>false</default>
                 <label>Newest Created</label>
             </value>
             <value>
-                <fullName>MostComplete</fullName>
+                <fullName>Oldest Created</fullName>
                 <default>false</default>
-                <label>Most Complete</label>
+                <label>Oldest Created</label>
             </value>
         </valueSetDefinition>
     </valueSet>

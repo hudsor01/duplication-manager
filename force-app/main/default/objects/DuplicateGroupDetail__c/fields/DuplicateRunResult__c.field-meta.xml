@@ -7,6 +7,9 @@
     <referenceTo>DuplicateRunResult__c</referenceTo>
     <relationshipLabel>Duplicate Group Details</relationshipLabel>
     <relationshipName>DuplicateGroupDetailRecords</relationshipName>
+    <relationshipOrder>0</relationshipOrder>
+    <reparentableMasterDetail>false</reparentableMasterDetail>
     <trackTrending>false</trackTrending>
-    <type>Lookup</type>
+    <type>MasterDetail</type>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
 </CustomField>

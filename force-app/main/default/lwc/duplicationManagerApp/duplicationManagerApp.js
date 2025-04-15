@@ -105,9 +105,8 @@ export default class DuplicationManagerApp extends LightningElement {
   /**
    * Lifecycle hook - Handles errors that occur in child components
    * @param {Error} error - The error object
-   * @param {string} stack - The error stack trace
    */
-  errorCallback(error, stack) {
+  errorCallback(error) {
     // Error in component or child component
     this.error = error;
     this.showToast("Error", `Component error: ${error.message}`, "error");

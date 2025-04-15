@@ -17,30 +17,56 @@ export default class DuplicationFinder extends LightningElement {
     return true;
   }
   
+  // Store resize handler reference
+  _resizeHandler = null;
+  _resizeTimeout = null;
+  
   connectedCallback() {
-    // Make sure we fully support Safari viewport
-    this.ensureSafariSupport();
+    // Add resize listener for viewport adjustments
+    this._resizeHandler = this.handleResize.bind(this);
+    window.addEventListener('resize', this._resizeHandler, {passive: true});
   }
   
-  renderedCallback() {
-    // Apply Safari-specific handling again after rendering
-    this.ensureSafariSupport();
+  disconnectedCallback() {
+    // Clean up resize listener
+    if (this._resizeHandler) {
+      window.removeEventListener('resize', this._resizeHandler);
+      this._resizeHandler = null;
+    }
+    
+    // Clear any pending animation frames
+    if (this._resizeTimeout) {
+      window.cancelAnimationFrame(this._resizeTimeout);
+      this._resizeTimeout = null;
+    }
   }
   
-  // Add Safari-specific handling to work around viewport issues
-  ensureSafariSupport() {
+  /**
+   * Handle window resize events with throttling
+   */
+  handleResize() {
+    // Use requestAnimationFrame to avoid too many updates
+    if (this._resizeTimeout) {
+      window.cancelAnimationFrame(this._resizeTimeout);
+    }
+    
+    this._resizeTimeout = window.requestAnimationFrame(() => {
+      // Update container height only
+      this.updateContainerHeight();
+    });
+  }
+  
+  /**
+   * Update container height only - no other DOM manipulation
+   */
+  updateContainerHeight() {
     try {
       const container = this.template.querySelector('.container');
       if (container) {
-        // Make sure we apply full viewport height
-        const viewportHeight = window.innerHeight;
-        container.style.minHeight = `${viewportHeight}px`;
-        
-        // Add Safari-specific scrolling
-        container.style.webkitOverflowScrolling = 'touch';
+        container.style.minHeight = `${window.innerHeight}px`;
       }
     } catch (error) {
-      // Handle gracefully, no need to log
+      // Silent error handling
     }
   }
 }

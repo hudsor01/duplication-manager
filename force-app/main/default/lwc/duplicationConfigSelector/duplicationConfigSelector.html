@@ -115,51 +115,245 @@
       <!-- Custom Field Selection -->
       <template if:true={hasSelectedConfiguration}>
         <div class="slds-var-m-top_medium">
-          <lightning-input type="checkbox" 
-                           label="Customize Field Selection" 
-                           checked={useCustomConfig}
-                           onchange={handleCustomConfigChange}>
+          <lightning-input
+            type="checkbox"
+            label="Customize Field Selection"
+            checked={useCustomConfig}
+            onchange={handleCustomConfigChange}
+          >
           </lightning-input>
         </div>
       </template>
 
       <!-- Custom Field Selection Panel -->
       <template if:true={showCustomFieldPanel}>
-        <div class="slds-box slds-theme_default slds-var-m-top_medium">
-          <div class="slds-text-title slds-var-m-bottom_small">
-            <strong>Custom Field Selection</strong>
+        <div
+          class="slds-box slds-theme_default slds-var-m-top_medium custom-field-selection-panel"
+        >
+          <div
+            class="slds-grid slds-grid_vertical-align-center slds-var-m-bottom_medium"
+          >
+            <div class="slds-col">
+              <h2 class="slds-text-heading_medium">
+                <lightning-icon
+                  icon-name="utility:filter"
+                  size="small"
+                  class="slds-var-m-right_x-small"
+                  variant="brand"
+                ></lightning-icon>
+                Custom Matching Fields
+              </h2>
+              <p class="slds-text-body_small slds-var-m-top_xx-small">
+                Select which fields to use for finding duplicate records
+              </p>
+            </div>
+            <div class="slds-col slds-text-align_right">
+              <div class="slds-button-group">
+                <lightning-button-icon
+                  icon-name="utility:filterList"
+                  variant="border-filled"
+                  alternative-text="Select All"
+                  title="Select All"
+                  onclick={handleSelectAll}
+                  class="slds-var-m-right_xx-small"
+                >
+                </lightning-button-icon>
+                <lightning-button-icon
+                  icon-name="utility:clear"
+                  variant="border-filled"
+                  alternative-text="Clear All"
+                  title="Clear All"
+                  onclick={handleClearAll}
+                >
+                </lightning-button-icon>
+              </div>
+            </div>
           </div>
-          
-          <div class="slds-scrollable slds-var-p-around_small" style="max-height: 250px">
-            <lightning-layout multiple-rows>
-              <template for:each={availableFields} for:item="field">
-                <lightning-layout-item key={field.apiName} size="6" padding="around-small">
-                  <lightning-input type="checkbox"
-                                   label={field.label}
-                                   data-field={field.apiName}
-                                   checked={field.selected}
-                                   onchange={handleFieldSelection}>
-                  </lightning-input>
-                </lightning-layout-item>
-              </template>
-            </lightning-layout>
+
+          <!-- Field Type Filters -->
+          <div
+            class="slds-grid slds-grid_vertical-align-center slds-var-m-bottom_small"
+          >
+            <div class="slds-col">
+              <div class="slds-button-group field-type-filters">
+                <button
+                  class="slds-button slds-button_neutral filter-all-btn active-filter"
+                  onclick={handleFilterAll}
+                >
+                  All
+                </button>
+                <button
+                  class="slds-button slds-button_neutral filter-standard-btn"
+                  onclick={handleFilterStandard}
+                >
+                  Standard
+                </button>
+                <button
+                  class="slds-button slds-button_neutral filter-text-btn"
+                  onclick={handleFilterText}
+                >
+                  Text Fields
+                </button>
+                <button
+                  class="slds-button slds-button_neutral filter-contact-btn"
+                  onclick={handleFilterContact}
+                >
+                  Contact Info
+                </button>
+                <button
+                  class="slds-button slds-button_neutral filter-address-btn"
+                  onclick={handleFilterAddress}
+                >
+                  Address
+                </button>
+              </div>
+            </div>
+            <div class="slds-col slds-text-align_right">
+              <lightning-input
+                type="search"
+                label="Search fields"
+                variant="label-hidden"
+                placeholder="Search fields..."
+                onchange={handleFieldSearch}
+                class="field-search"
+              >
+              </lightning-input>
+            </div>
           </div>
-          
-          <div class="slds-var-m-top_medium slds-text-align_right">
-            <lightning-button variant="neutral" 
-                              label="Reset to Default" 
-                              onclick={handleResetFields}
-                              class="slds-var-m-right_small">
-            </lightning-button>
-            <lightning-button variant="brand" 
-                              label="Apply Custom Selection" 
-                              onclick={handleApplyCustomConfig}
-                              disabled={isApplyDisabled}>
-            </lightning-button>
+
+          <!-- Field Selection Area -->
+          <div class="field-selection-area slds-var-p-around_small">
+            <template if:true={isLoadingFields}>
+              <div class="slds-var-p-around_medium slds-text-align_center">
+                <lightning-spinner
+                  alternative-text="Loading fields"
+                  size="small"
+                ></lightning-spinner>
+                <p class="slds-var-p-top_small">Loading fields...</p>
+              </div>
+            </template>
+
+            <template if:false={isLoadingFields}>
+              <div class="selected-fields-summary slds-var-m-bottom_small">
+                <div class="slds-grid slds-grid_vertical-align-center">
+                  <div class="slds-col">
+                    <span class="slds-badge slds-badge_lightest">
+                      {selectedFieldsCount} of {totalFieldsCount} fields
+                      selected
+                    </span>
+                  </div>
+                  <div class="slds-col slds-text-align_right">
+                    <lightning-button
+                      variant="neutral"
+                      label="Reset to Default"
+                      icon-name="utility:undo"
+                      onclick={handleResetFields}
+                      class="slds-var-m-right_x-small"
+                    >
+                    </lightning-button>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="field-grid slds-scrollable_y"
+                style="max-height: 300px; overflow-y: auto"
+              >
+                <lightning-layout multiple-rows>
+                  <template for:each={filteredFields} for:item="field">
+                    <lightning-layout-item
+                      key={field.apiName}
+                      size="6"
+                      padding="horizontal-small"
+                    >
+                      <div
+                        class="field-item slds-var-p-around_xx-small"
+                        data-type={field.type}
+                      >
+                        <lightning-input
+                          type="checkbox"
+                          label={field.label}
+                          data-field={field.apiName}
+                          checked={field.selected}
+                          onchange={handleFieldSelection}
+                        >
+                        </lightning-input>
+                        <span class="field-type-badge">{field.typeLabel}</span>
+                      </div>
+                    </lightning-layout-item>
+                  </template>
+                </lightning-layout>
+
+                <template if:true={noFieldsToShow}>
+                  <div class="slds-var-p-around_medium slds-text-align_center">
+                    <div class="slds-illustration slds-illustration_small">
+                      <lightning-icon
+                        icon-name="utility:filter"
+                        size="medium"
+                        class="slds-var-m-bottom_small"
+                      ></lightning-icon>
+                      <h3 class="slds-text-heading_small">
+                        No fields match your filter
+                      </h3>
+                      <p class="slds-text-body_small">
+                        Try adjusting your search or filters
+                      </p>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </template>
+          </div>
+
+          <!-- Action Buttons -->
+          <div
+            class="action-buttons slds-var-m-top_medium slds-border_top slds-var-p-top_medium"
+          >
+            <div class="slds-grid slds-grid_align-spread">
+              <div class="slds-col">
+                <div class="selection-help">
+                  <lightning-icon
+                    icon-name="utility:info"
+                    size="x-small"
+                    class="slds-var-m-right_x-small"
+                  ></lightning-icon>
+                  <span class="slds-text-body_small"
+                    >Choose the most reliable fields for identifying
+                    duplicates</span
+                  >
+                </div>
+              </div>
+              <div class="slds-col slds-text-align_right">
+                <lightning-button
+                  variant="neutral"
+                  label="Cancel"
+                  onclick={handleCancelCustomConfig}
+                  class="slds-var-m-right_small"
+                >
+                </lightning-button>
+                <lightning-button
+                  variant="brand"
+                  label="Apply Selection"
+                  icon-name="utility:check"
+                  onclick={handleApplyCustomConfig}
+                  disabled={isApplyDisabled}
+                  class="slds-var-m-right_small"
+                >
+                </lightning-button>
+                <lightning-button
+                  variant="success"
+                  label="Find Duplicates Now"
+                  icon-name="utility:search"
+                  onclick={handleFindDuplicatesNow}
+                  disabled={isApplyDisabled}
+                >
+                </lightning-button>
+              </div>
+            </div>
           </div>
         </div>
       </template>
-      
+
       <!-- Selected Configuration Details -->
       <template if:true={hasSelectedConfiguration}>
         <div class="slds-box slds-theme_shade slds-var-m-top_medium">
@@ -202,11 +396,20 @@
                 becomes the "master" during merge.
               </p>
               <div class="slds-var-m-left_small slds-var-m-top_xx-small">
-                <p><strong>Most Complete:</strong> Record with the most non-empty field values</p>
-                <p><strong>Most Recent:</strong> Record with the most recent Last Modified Date</p>
-                <p><strong>Oldest Record:</strong> Record with the oldest Created Date</p>
+                <p>
+                  <strong>Most Complete:</strong> Record with the most non-empty
+                  field values
+                </p>
+                <p>
+                  <strong>Most Recent:</strong> Record with the most recent Last
+                  Modified Date
+                </p>
+                <p>
+                  <strong>Oldest Record:</strong> Record with the oldest Created
+                  Date
+                </p>
               </div>
-              
+
               <p class="slds-var-m-top_small">
                 <lightning-icon
                   icon-name="utility:info_alt"
@@ -219,24 +422,47 @@
               <div class="slds-var-m-left_small slds-var-m-top_xx-small">
                 <p><strong>How matching works:</strong></p>
                 <ol class="slds-list_ordered">
-                  <li>Records are compared using advanced fuzzy matching algorithms</li>
-                  <li>Each field is evaluated independently with appropriate techniques:
+                  <li>
+                    Records are compared using advanced fuzzy matching
+                    algorithms
+                  </li>
+                  <li>
+                    Each field is evaluated independently with appropriate
+                    techniques:
                     <ul class="slds-list_dotted slds-var-m-left_small">
-                      <li><strong>Email:</strong> Normalized for case and common variations</li>
-                      <li><strong>Phone:</strong> Compared after removing formatting characters</li>
-                      <li><strong>Names:</strong> Fuzzy matching for typos and variations</li>
-                      <li><strong>Addresses:</strong> Component-wise comparison (street, city, etc.)</li>
+                      <li>
+                        <strong>Email:</strong> Normalized for case and common
+                        variations
+                      </li>
+                      <li>
+                        <strong>Phone:</strong> Compared after removing
+                        formatting characters
+                      </li>
+                      <li>
+                        <strong>Names:</strong> Fuzzy matching for typos and
+                        variations
+                      </li>
+                      <li>
+                        <strong>Addresses:</strong> Component-wise comparison
+                        (street, city, etc.)
+                      </li>
                     </ul>
                   </li>
-                  <li>A match score is calculated based on field similarities</li>
-                  <li>Records above the match threshold are grouped as duplicates</li>
+                  <li>
+                    A match score is calculated based on field similarities
+                  </li>
+                  <li>
+                    Records above the match threshold are grouped as duplicates
+                  </li>
                 </ol>
                 <p class="slds-var-m-top_xx-small">
-                  <lightning-button variant="brand-outline" 
-                                    label="View Documentation"
-                                    icon-name="utility:knowledge_base" 
-                                    class="slds-var-m-top_x-small"
-                                    onclick={handleViewDocs}>
+                  <lightning-button
+                    variant="brand-outline"
+                    label="View Documentation"
+                    icon-name="utility:knowledge_base"
+                    class="slds-var-m-top_x-small"
+                    onclick={handleViewDocs}
+                  >
                   </lightning-button>
                 </p>
               </div>

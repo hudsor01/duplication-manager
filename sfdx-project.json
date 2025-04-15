@@ -1,8 +1,11 @@
 {
   "packageDirectories": [
-    { "path": "force-app", "default": true },
-    { "path": ".", "default": false }
+    {
+      "path": "force-app/main/default",
+      "default": true
+    }
   ],
+  "name": "dupeManager",
   "namespace": "",
   "sfdcLoginUrl": "https://test.salesforce.com",
   "sourceApiVersion": "58.0"

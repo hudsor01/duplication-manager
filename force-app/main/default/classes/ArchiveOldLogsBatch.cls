@@ -112,7 +112,7 @@ global class ArchiveOldLogsBatch extends DuplicateBaseBatch {
         FieldMergeDetails__c = log.FieldMergeDetails__c,
         ErrorMessage__c = log.ErrorMessage__c,
         OriginalCreatedDate__c = log.CreatedDate,
-        ArchiveDate__c = System.now()
+        ArchivedDateTime__c = System.now()
       );
 
       archiveRecords.add(archive);
