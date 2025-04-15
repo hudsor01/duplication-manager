@@ -13,22 +13,26 @@ public class DuplicateMergeUtility {
    * @return Result containing merge statistics
    */
   public static MergeResult mergeGroup(
-    DuplicateGroup duplicateGroup,
+    DuplicateMatcherUtility.DuplicateGroup duplicateGroup,
     String masterRecordStrategy
   ) {
     // Skip if no duplicates
-    if (!duplicateGroup.hasDuplicates()) {
+    if (duplicateGroup.getRecordCount() <= 1) {
       return new MergeResult(0, 'No duplicates to merge');
     }
 
-    // Get master record
-    SObject masterRecord = duplicateGroup.getMasterRecord(masterRecordStrategy);
+    // Get master record - for DuplicateMatcherUtility.DuplicateGroup, we need to select the first record as master
+    SObject masterRecord = duplicateGroup.records[0];
     if (masterRecord == null) {
       return new MergeResult(0, 'Could not determine master record');
     }
 
-    // Get duplicate IDs
-    List<Id> duplicateIds = duplicateGroup.getDuplicateIds(masterRecord);
+    // Get duplicate IDs - collect IDs from all records except master
+    List<Id> duplicateIds = new List<Id>();
+    for (Integer i = 1; i < duplicateGroup.records.size(); i++) {
+      duplicateIds.add(duplicateGroup.records[i].Id);
+    }
+
     if (duplicateIds.isEmpty()) {
       return new MergeResult(0, 'No duplicates to merge');
     }
