@@ -246,7 +246,11 @@ global class DuplicateRecordBatch extends DuplicateBaseBatch {
     Integer batchSize = 500;
     for (Integer i = 0; i < scope.size(); i += batchSize) {
       Integer endIndex = Math.min(i + batchSize, scope.size());
-      List<SObject> batch = scope.subList(i, endIndex);
+      List<SObject> batch = new List<SObject>();
+      // Manually create a sublist since Apex doesn't support the subList method
+      for (Integer j = i; j < endIndex; j++) {
+        batch.add(scope[j]);
+      }
 
       for (SObject record : batch) {
         // Skip null records
@@ -309,7 +313,11 @@ global class DuplicateRecordBatch extends DuplicateBaseBatch {
       Integer endIndex = Math.min(startIndex + optimalChunkSize, scope.size());
 
       // Get current chunk
-      List<SObject> chunk = scope.subList(startIndex, endIndex);
+      List<SObject> chunk = new List<SObject>();
+      // Manually create a sublist since Apex doesn't support the subList method
+      for (Integer j = startIndex; j < endIndex; j++) {
+        chunk.add(scope[j]);
+      }
 
       // Find duplicates in this chunk
       Map<String, List<SObject>> chunkDuplicates = findDuplicatesInChunk(chunk);

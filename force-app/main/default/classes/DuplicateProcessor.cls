@@ -15,13 +15,13 @@ public class DuplicateProcessor {
    * @param matchFields List of fields to use for matching
    * @return Map of duplicate groups
    */
-  public static Map<String, DuplicateGroup> findDuplicates(
+  public static Map<String, DuplicateMatcherUtility.DuplicateGroup> findDuplicates(
     List<SObject> records,
     List<String> matchFields
   ) {
     // Validate input
     if (records == null || records.isEmpty()) {
-      return new Map<String, DuplicateGroup>();
+      return new Map<String, DuplicateMatcherUtility.DuplicateGroup>();
     }
 
     if (matchFields == null || matchFields.isEmpty()) {
@@ -40,7 +40,7 @@ public class DuplicateProcessor {
    * @return Map of merge results by group key
    */
   public static Map<String, DuplicateMergeUtility.MergeResult> mergeDuplicates(
-    Map<String, DuplicateGroup> duplicateGroups,
+    Map<String, DuplicateMatcherUtility.DuplicateGroup> duplicateGroups,
     String masterRecordStrategy
   ) {
     // Validate input
@@ -52,10 +52,12 @@ public class DuplicateProcessor {
     Map<String, DuplicateMergeUtility.MergeResult> results = new Map<String, DuplicateMergeUtility.MergeResult>();
 
     for (String key : duplicateGroups.keySet()) {
-      DuplicateGroup dupGroup = duplicateGroups.get(key);
+      DuplicateMatcherUtility.DuplicateGroup dupGroup = duplicateGroups.get(
+        key
+      );
 
       // Skip groups without duplicates
-      if (!dupGroup.hasDuplicates()) {
+      if (dupGroup.getRecordCount() <= 1) {
         continue;
       }
 
@@ -88,7 +90,7 @@ public class DuplicateProcessor {
     Long startTime = System.currentTimeMillis();
 
     // Find duplicates
-    Map<String, DuplicateGroup> duplicateGroups = findDuplicates(
+    Map<String, DuplicateMatcherUtility.DuplicateGroup> duplicateGroups = findDuplicates(
       records,
       matchFields
     );
@@ -102,7 +104,9 @@ public class DuplicateProcessor {
     // Calculate average match score
     if (!duplicateGroups.isEmpty()) {
       Decimal totalScore = 0;
-      for (DuplicateGroup dupGroup : duplicateGroups.values()) {
+      for (
+        DuplicateMatcherUtility.DuplicateGroup dupGroup : duplicateGroups.values()
+      ) {
         totalScore += dupGroup.matchScore;
       }
       result.averageMatchScore = (totalScore / duplicateGroups.size())
@@ -202,7 +206,10 @@ public class DuplicateProcessor {
     public Long processingTimeMs { get; set; }
     public Decimal averageMatchScore { get; set; }
     public List<String> errors { get; set; }
-    public Map<String, DuplicateGroup> duplicateGroups { get; set; }
+    public Map<String, DuplicateMatcherUtility.DuplicateGroup> duplicateGroups {
+      get;
+      set;
+    }
 
     /**
      * Constructor
@@ -214,7 +221,7 @@ public class DuplicateProcessor {
       this.processingTimeMs = 0;
       this.averageMatchScore = 0;
       this.errors = new List<String>();
-      this.duplicateGroups = new Map<String, DuplicateGroup>();
+      this.duplicateGroups = new Map<String, DuplicateMatcherUtility.DuplicateGroup>();
     }
 
     /**
