@@ -2,6 +2,7 @@
  * Enhanced centralized store for duplicate manager application state
  * Uses Lightning Message Service exclusively for communication
  * Performance optimized to prevent freezing in Safari and other browsers
+ * Implements self-expiring cache to reduce redundant API calls
  *
  * @author Richard Hudson
  * @updated Richard Hudson - May 2025
@@ -14,7 +15,7 @@ import {
 import { MESSAGE_TYPES } from "c/duplicationConstants";
 
 // Throttle time for state updates to prevent freezing (ms)
-const UPDATE_THROTTLE_MS = 200; // Increased from 50ms to 200ms to prevent Safari freezing
+const UPDATE_THROTTLE_MS = 500; // Increased from 200ms to 500ms to prevent Safari/Chrome freezing
 
 // Flag to track if updates are being throttled
 let isThrottlingUpdates = false;
@@ -99,8 +100,76 @@ const loadInitialDraftJob = () => {
   }
 };
 
-// Cache timeout in milliseconds (5 minutes)
-const CACHE_TIMEOUT = 5 * 60 * 1000;
+// Cache timeout in milliseconds (configurable by cache type with adaptive timeouts)
+const CACHE_TIMEOUT = {
+  configurations: 15 * 60 * 1000,  // 15 minutes for configurations (rarely change)
+  jobs: 2 * 60 * 1000,             // 2 minutes for jobs (more frequently updated)
+  statistics: 5 * 60 * 1000,       // 5 minutes for statistics
+  masterData: 30 * 60 * 1000,      // 30 minutes for master data (very stable)
+  searchResults: 3 * 60 * 1000,    // 3 minutes for search results
+  comparisonData: 10 * 60 * 1000   // 10 minutes for comparison data
+};
+
+// Default cache timeout fallback
+const DEFAULT_CACHE_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+
+// Cache hit tracking to implement adaptive timeout strategy
+const cacheHitTracking = {
+  hits: {},
+  misses: {},
+  adaptiveTimeouts: {},
+  
+  // Record a cache hit for a section
+  recordHit(section) {
+    this.hits[section] = (this.hits[section] || 0) + 1;
+    this.updateAdaptiveTimeout(section);
+  },
+  
+  // Record a cache miss for a section
+  recordMiss(section) {
+    this.misses[section] = (this.misses[section] || 0) + 1;
+    this.updateAdaptiveTimeout(section);
+  },
+  
+  // Update adaptive timeout based on hit/miss ratio
+  updateAdaptiveTimeout(section) {
+    const hits = this.hits[section] || 0;
+    const misses = this.misses[section] || 0;
+    const total = hits + misses;
+    
+    if (total > 10) {
+      const hitRatio = hits / total;
+      const baseTimeout = CACHE_TIMEOUT[section] || DEFAULT_CACHE_TIMEOUT;
+      
+      // If hit ratio is high, extend cache timeout (up to 2x)
+      // If hit ratio is low, reduce cache timeout (down to 0.5x)
+      const factor = Math.max(0.5, Math.min(2.0, 0.5 + hitRatio * 1.5));
+      this.adaptiveTimeouts[section] = Math.round(baseTimeout * factor);
+    }
+  },
+  
+  // Get adaptive timeout for a section
+  getTimeout(section) {
+    // Use adaptive timeout if available, otherwise fall back to standard timeout
+    return this.adaptiveTimeouts[section] || 
+           CACHE_TIMEOUT[section] || 
+           DEFAULT_CACHE_TIMEOUT;
+  },
+  
+  // Reset tracking data for a section
+  resetSection(section) {
+    this.hits[section] = 0;
+    this.misses[section] = 0;
+    delete this.adaptiveTimeouts[section];
+  },
+  
+  // Get hit rate for analytics and debugging
+  getHitRate(section) {
+    const hits = this.hits[section] || 0;
+    const total = hits + (this.misses[section] || 0);
+    return total > 0 ? (hits / total) : 0;
+  }
+};
 
 // Initial state - minimal version to reduce memory usage
 const initialState = {
@@ -114,11 +183,14 @@ const initialState = {
   errors: [],
   // Draft job state
   draftJob: loadInitialDraftJob(),
-  // Cache metadata
+  // Cache metadata with expiration handling and expanded sections
   cache: {
-    configurations: { timestamp: null, isPending: false },
-    jobs: { timestamp: null, isPending: false },
-    statistics: { timestamp: null, isPending: false }
+    configurations: { timestamp: null, isPending: false, lastError: null, hitCount: 0 },
+    jobs: { timestamp: null, isPending: false, lastError: null, hitCount: 0 },
+    statistics: { timestamp: null, isPending: false, lastError: null, hitCount: 0 },
+    masterData: { timestamp: null, isPending: false, lastError: null, hitCount: 0 },
+    searchResults: { timestamp: null, isPending: false, lastError: null, hitCount: 0 },
+    comparisonData: { timestamp: null, isPending: false, lastError: null, hitCount: 0 }
   },
   // Statistics
   statistics: {
@@ -143,6 +215,7 @@ class duplicationStore {
   _subscription = null;
   _instanceId = `store-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
   _updateTimerId = null;
+  _cacheExpirationTimer = null;
   _isInitialized = false;
 
   /**
@@ -193,6 +266,9 @@ class duplicationStore {
         },
         { filter: (msg) => msg && msg.type && msg.type.startsWith("store.") }
       );
+      
+      // Set up automatic cache expiration checking (every 2 minutes)
+      this._setupCacheExpiration();
 
       // Broadcast initial state to ensure all components sync
       // Use setTimeout to avoid Safari rendering issues
@@ -214,6 +290,59 @@ class duplicationStore {
       this._state = { ...initialState, isLoading: false };
     }
   }
+  
+  /**
+   * Sets up periodic cache expiration checking
+   * @private
+   */
+  _setupCacheExpiration() {
+    // Clear any existing timer
+    if (this._cacheExpirationTimer) {
+      clearInterval(this._cacheExpirationTimer);
+    }
+    
+    // Set up periodic cache cleanup (every 2 minutes)
+    this._cacheExpirationTimer = setInterval(() => {
+      this._cleanupExpiredCache();
+    }, 2 * 60 * 1000);
+    
+    // Do an initial cleanup
+    this._cleanupExpiredCache();
+  }
+  
+  /**
+   * Clean up expired caches
+   * @private
+   */
+  _cleanupExpiredCache() {
+    const now = Date.now();
+    let cacheUpdated = false;
+    
+    try {
+      // Check each cache section for expiration
+      Object.keys(this._state.cache).forEach(section => {
+        const cacheData = this._state.cache[section];
+        if (cacheData && cacheData.timestamp) {
+          const timeout = cacheHitTracking.getTimeout(section);
+          
+          // If cache has expired, invalidate it
+          if (now - cacheData.timestamp > timeout) {
+            this._state.cache[section].timestamp = null;
+            cacheUpdated = true;
+          }
+        }
+      });
+      
+      // If any cache was updated, notify listeners
+      if (cacheUpdated) {
+        const prevState = { ...this._state };
+        this._notifyLocalListeners(prevState);
+      }
+    } catch (e) {
+      // Silent error handling for cache cleanup
+      console.error('Error cleaning up cache:', e);
+    }
+  }
 
   /**
    * Clean up subscriptions when store is no longer needed
@@ -225,6 +354,12 @@ class duplicationStore {
     if (this._updateTimerId) {
       clearTimeout(this._updateTimerId);
       this._updateTimerId = null;
+    }
+    
+    // Clear cache expiration timer
+    if (this._cacheExpirationTimer) {
+      clearInterval(this._cacheExpirationTimer);
+      this._cacheExpirationTimer = null;
     }
     
     // Clear pending update
@@ -285,19 +420,25 @@ class duplicationStore {
   _notifyLocalListeners(prevState) {
     if (this._listeners.length === 0) return;
     
-    const currentState = this.getState();
+    // Create a shallow copy of the state to prevent reference issues
+    // Use minimal copying to reduce memory pressure
+    const minimalState = {
+      isLoading: this._state.isLoading,
+      selectedConfiguration: this._state.selectedConfiguration,
+      errors: this._state.errors
+    };
 
-    // Use setTimeout instead of requestAnimationFrame to avoid Safari issues
+    // Increased timeout to reduce stress on the browser
     setTimeout(() => {
       // Notify direct subscribers - protect against errors in listeners
       this._listeners.forEach((listener) => {
         try {
-          listener(currentState, prevState);
+          listener(minimalState, null); // Pass null instead of prevState to reduce memory pressure
         } catch (error) {
           // Silent error handling
         }
       });
-    }, 0);
+    }, 50); // Increased from 0 to 50ms to reduce browser stress
   }
 
   /**
@@ -322,18 +463,52 @@ class duplicationStore {
       ? [...this._state[section]]
       : { ...this._state[section] };
   }
-
+  
   /**
-   * Check if a cached section is still valid
+   * Check if a cached section is still valid using adaptive timeouts
    * @param {String} section - Cache section to check
    * @returns {Boolean} True if cache is valid
    */
   isCacheValid(section) {
     if (!section || !this._state.cache[section] || !this._state.cache[section].timestamp) {
+      if (section) {
+        // Record cache miss for adaptive timeouts
+        cacheHitTracking.recordMiss(section);
+      }
       return false;
     }
 
-    return Date.now() - this._state.cache[section].timestamp < CACHE_TIMEOUT;
+    const cacheAge = Date.now() - this._state.cache[section].timestamp;
+    const timeoutValue = cacheHitTracking.getTimeout(section);
+    const isValid = cacheAge < timeoutValue;
+    
+    // Record hit or miss for future timeout adjustments
+    if (isValid) {
+      cacheHitTracking.recordHit(section);
+    } else {
+      cacheHitTracking.recordMiss(section);
+    }
+    
+    return isValid;
+  }
+  
+  /**
+   * Get cache metrics for a section (for analytics)
+   * @param {String} section - Cache section to check
+   * @returns {Object} Cache metrics
+   */
+  getCacheMetrics(section) {
+    if (!section) {
+      return null;
+    }
+    
+    return {
+      hitRate: cacheHitTracking.getHitRate(section),
+      timeout: cacheHitTracking.getTimeout(section),
+      isAdaptive: !!cacheHitTracking.adaptiveTimeouts[section],
+      lastUpdated: this._state.cache[section]?.timestamp || null,
+      hitCount: this._state.cache[section]?.hitCount || 0
+    };
   }
 
   /**
@@ -411,10 +586,12 @@ class duplicationStore {
       switch (actionType) {
         case duplicationStore.actions.SET_CONFIGURATIONS:
           this._state.configurations = Array.isArray(payload) ? payload : [];
-          // Update cache timestamp
+          // Update cache timestamp and tracking
           this._state.cache.configurations = {
             timestamp: Date.now(),
-            isPending: false
+            isPending: false,
+            lastError: null,
+            hitCount: (this._state.cache.configurations.hitCount || 0) + 1
           };
           updatedSection = "configurations";
           stateChanged = true;
@@ -440,10 +617,12 @@ class duplicationStore {
 
         case duplicationStore.actions.UPDATE_SCHEDULED_JOBS:
           this._state.scheduledJobs = Array.isArray(payload) ? payload : [];
-          // Update cache timestamp
+          // Update cache timestamp and tracking
           this._state.cache.jobs = {
             timestamp: Date.now(),
-            isPending: false
+            isPending: false,
+            lastError: null,
+            hitCount: (this._state.cache.jobs.hitCount || 0) + 1
           };
           updatedSection = "jobs";
           stateChanged = true;
@@ -518,10 +697,12 @@ class duplicationStore {
 
         case duplicationStore.actions.UPDATE_STATISTICS:
           this._state.statistics = { ...this._state.statistics, ...payload };
-          // Update cache timestamp
+          // Update cache timestamp and tracking
           this._state.cache.statistics = {
             timestamp: Date.now(),
-            isPending: false
+            isPending: false,
+            lastError: null,
+            hitCount: (this._state.cache.statistics.hitCount || 0) + 1
           };
           updatedSection = "statistics";
           stateChanged = true;
@@ -691,28 +872,47 @@ class duplicationStore {
    * @private
    */
   _processPendingUpdate(prevState, updatedSection) {
-    const currentState = this.getState();
+    // Don't get the full state to reduce memory pressure
+    // const currentState = this.getState();
     
-    // Use setTimeout instead of requestAnimationFrame to avoid Safari issues
+    // Use a longer timeout to reduce browser stress
     setTimeout(() => {
       // Use Lightning Message Service with optimized messaging
       if (updatedSection) {
         // If a specific section was updated, publish just that section
+        // But only send minimal needed data, not the whole section
+        const sectionData = this._state[updatedSection];
+        let trimmedData;
+        
+        // Handle different section types differently to reduce message size
+        if (Array.isArray(sectionData)) {
+          // For arrays, just send the count instead of the full array
+          trimmedData = { count: sectionData.length };
+        } else if (typeof sectionData === 'object' && sectionData !== null) {
+          // For objects, send a minimal version with just essential properties
+          trimmedData = { 
+            updated: true,
+            timestamp: new Date().getTime()
+          };
+        } else {
+          // For primitive values, send as is
+          trimmedData = sectionData;
+        }
+        
         sendMessage(
           MESSAGE_TYPES.STORE_SECTION_UPDATED,
-          { section: updatedSection, state: currentState[updatedSection] },
+          { section: updatedSection, state: trimmedData },
           {
             priority: "normal",
             source: this._instanceId
           }
         );
       } else {
-        // For full state updates, send only key information instead of the entire state
-        // This reduces the message size and prevents unnecessary re-renders
+        // For full state updates, send only bare minimum information
         const minimalState = {
-          isLoading: currentState.isLoading,
-          hasError: currentState.errors && currentState.errors.length > 0,
-          lastUpdated: new Date().toISOString()
+          isLoading: this._state.isLoading,
+          hasError: !!(this._state.errors && this._state.errors.length > 0),
+          timestamp: Date.now()
         };
         
         sendMessage(MESSAGE_TYPES.STORE_UPDATED, minimalState, {
@@ -723,7 +923,7 @@ class duplicationStore {
 
       // Also notify local listeners
       this._notifyLocalListeners(prevState);
-    }, 0);
+    }, 100); // Increased from 0 to 100ms to reduce browser stress
   }
 
   /**

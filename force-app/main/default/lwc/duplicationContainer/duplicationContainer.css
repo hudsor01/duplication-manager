@@ -9,8 +9,10 @@
   flex: 1;
   overflow: auto;
   background-color: #f3f3f3;
-  min-height: 500px;
-  height: auto;
+  /* Set a fixed height to prevent dynamic resizing which causes browser freezing */
+  min-height: 800px; 
+  height: 800px;
+  max-height: 80vh;
   max-width: 100%;
   box-sizing: border-box;
 }
@@ -38,30 +40,35 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   margin-bottom: 1rem;
   padding: 1rem;
-  transition: all 0.3s ease;
-  animation: fadeIn 0.5s ease-out;
+  /* Removed transitions and animations to prevent Safari freezing */
+  /* transition: all 0.3s ease; */
+  /* animation: fadeIn 0.5s ease-out; */
   max-width: 100%;
   box-sizing: border-box;
   overflow-x: hidden;
 }
 
+/* Animation disabled to prevent Safari freezing 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translate3d(0, 20px, 0); /* Use translate3d for hardware acceleration */
+    transform: translate3d(0, 20px, 0);
   }
   to {
     opacity: 1;
-    transform: translate3d(0, 0, 0); /* Use translate3d for hardware acceleration */
+    transform: translate3d(0, 0, 0);
   }
 }
+*/
 
 .sidebar-component-container {
-  transition: all 0.3s ease;
+  /* Removed transitions to prevent Safari freezing */
+  /* transition: all 0.3s ease; */
 }
 
 .sidebar-component-container:hover {
-  transform: translateY(-2px);
+  /* Removed transforms to prevent Safari freezing */
+  /* transform: translateY(-2px); */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -75,29 +82,33 @@
 }
 
 .metrics-container {
-  transition:
+  /* Removed transitions to prevent Safari freezing */
+  /* transition:
     transform 0.3s ease,
-    opacity 0.3s ease;
+    opacity 0.3s ease; */
 }
 
 .metrics-container:hover {
-  transform: translateY(-2px);
+  /* Removed transforms to prevent Safari freezing */
+  /* transform: translateY(-2px); */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Tab styling */
+/* Tab styling - simplified to prevent Safari freezing */
 .custom-tab {
   border-radius: 4px 4px 0 0;
   border-bottom: 3px solid transparent;
-  transition:
+  /* Removed transitions to prevent Safari freezing */
+  /* transition:
     background-color 0.3s ease,
     border-color 0.3s ease,
     transform 0.3s ease,
-    color 0.3s ease;
+    color 0.3s ease; */
   margin-right: 4px;
   position: relative;
   overflow: hidden;
-  will-change: transform; /* Optimize for Safari rendering */
+  /* Removed will-change to prevent Safari memory issues */
+  /* will-change: transform; */
 }
 
 .custom-tab.active {
@@ -105,17 +116,20 @@
   background-color: rgba(21, 137, 238, 0.08);
   color: #0070d2;
   font-weight: 600;
-  transform: translate3d(0, -1px, 0); /* Use translate3d for hardware acceleration */
+  /* Removed transform to prevent Safari freezing */
+  /* transform: translate3d(0, -1px, 0); */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .custom-tab:hover:not(.active) {
   background-color: rgba(0, 0, 0, 0.03);
   border-bottom-color: #dddbda;
-  transform: translate3d(0, -1px, 0); /* Use translate3d for hardware acceleration */
+  /* Removed transform to prevent Safari freezing */
+  /* transform: translate3d(0, -1px, 0); */
 }
 
-.custom-tab:before {
+/* Removed pseudo-element animation that can cause rendering issues */
+/* .custom-tab:before {
   content: "";
   position: absolute;
   bottom: 0;
@@ -128,63 +142,70 @@
 
 .custom-tab:hover:not(.active):before {
   width: 100%;
-}
+} */
 
 .custom-tab-icon {
   --sds-c-icon-color-foreground-default: #706e6b;
-  transition: transform 0.3s ease;
+  /* Removed transition to prevent Safari freezing */
+  /* transition: transform 0.3s ease; */
 }
 
 .custom-tab.active .custom-tab-icon {
   --sds-c-icon-color-foreground-default: #1589ee;
-  transform: scale(1.1);
+  /* Removed transform to prevent Safari freezing */
+  /* transform: scale(1.1); */
 }
 
-/* Card styling */
+/* Card styling - simplified to prevent Safari freezing */
 .card-container {
   border-radius: 0.25rem;
   border: 1px solid #dddbda;
-  transition:
+  /* Removed transitions to prevent Safari freezing */
+  /* transition:
     transform 0.2s ease,
-    box-shadow 0.2s ease;
+    box-shadow 0.2s ease; */
 }
 
 .card-container:hover {
-  transform: translateY(-2px);
+  /* Removed transform to prevent Safari freezing */
+  /* transform: translateY(-2px); */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Animation for content transitions */
+/* Animation for content transitions - simplified to prevent Safari freezing */
 .tab-content-container {
   position: relative;
 }
 
-/* Using standard Salesforce classes for visibility, with will-change optimization for Safari */
+/* Using standard Salesforce classes for visibility, removed will-change to prevent Safari memory issues */
 .slds-show {
   display: block !important;
   visibility: visible !important;
-  will-change: opacity; /* Optimize for Safari rendering */
+  /* Removed will-change to prevent Safari memory issues */
+  /* will-change: opacity; */
 }
 
 .slds-hide {
   display: none !important;
 }
 
-/* Fade-in animation for content elements */
+/* Fade-in animation disabled to prevent Safari freezing */
 .fade-in-element {
-  animation: fadeInUp 0.5s ease forwards;
+  /* animation: fadeInUp 0.5s ease forwards; */
 }
 
+/* Animation disabled to prevent Safari freezing 
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translate3d(0, 20px, 0); /* Use translate3d for hardware acceleration */
+    transform: translate3d(0, 20px, 0);
   }
   to {
     opacity: 1;
-    transform: translate3d(0, 0, 0); /* Use translate3d for hardware acceleration */
+    transform: translate3d(0, 0, 0);
   }
 }
+*/
 
 /* Health check status colors */
 .status-success {
@@ -207,32 +228,36 @@
   font-weight: bold;
 }
 
-/* Modern button styles */
+/* Modern button styles - simplified to prevent Safari freezing */
 .modern-button {
-  transition:
+  /* Removed transitions to prevent Safari freezing */
+  /* transition:
     background-color 0.2s ease,
-    transform 0.1s ease;
+    transform 0.1s ease; */
 }
 
 .modern-button:active {
-  transform: scale(0.98);
+  /* Removed transform to prevent Safari freezing */
+  /* transform: scale(0.98); */
 }
 
-/* Settings modal animation */
+/* Settings modal - animation disabled to prevent Safari freezing */
 .settings-modal {
-  animation: slideInDown 0.3s ease-out;
+  /* animation: slideInDown 0.3s ease-out; */
 }
 
+/* Animation disabled to prevent Safari freezing 
 @keyframes slideInDown {
   from {
-    transform: translate3d(0, -20px, 0); /* Use translate3d for hardware acceleration */
+    transform: translate3d(0, -20px, 0);
     opacity: 0;
   }
   to {
-    transform: translate3d(0, 0, 0); /* Use translate3d for hardware acceleration */
+    transform: translate3d(0, 0, 0);
     opacity: 1;
   }
 }
+*/
 
 /* Make the config container have higher z-index to ensure dropdown appears above other content */
 .config-container {
@@ -245,7 +270,9 @@
 .safe-area-enabled {
   width: 100%;
   height: 100%;
-  min-height: 100vh; 
+  /* Fixed height value instead of dynamic viewport units */
+  min-height: 800px;
+  max-height: 800px;
   overflow-x: hidden;
   position: relative;
   z-index: 1;

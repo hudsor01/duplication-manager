@@ -129,30 +129,42 @@ export default class duplicationContainer extends NavigationMixin(
     // Update tab states based on active tab
     this.updateTabStates();
     
-    // Add resize listener for viewport adjustments
+    // DISABLED: Resize listener causes severe browser freezing
+    /* 
     this._resizeHandler = this.handleResize.bind(this);
     window.addEventListener('resize', this._resizeHandler, {passive: true});
+    */
   }
   
   /**
    * Handle window resize events with throttling
+   * Using setTimeout instead of requestAnimationFrame to prevent Safari issues
    */
   handleResize() {
-    // Use requestAnimationFrame to avoid too many updates
+    // Use setTimeout instead of requestAnimationFrame to avoid Safari issues
     if (this._resizeTimeout) {
-      window.cancelAnimationFrame(this._resizeTimeout);
+      clearTimeout(this._resizeTimeout);
     }
     
-    this._resizeTimeout = window.requestAnimationFrame(() => {
+    // Use a longer timeout to reduce frequency of updates
+    this._resizeTimeout = setTimeout(() => {
       // Just update the container height - no other DOM manipulation
       this.updateContainerHeight();
-    });
+    }, 250); // 250ms throttle
   }
   
   /**
-   * Update container height only
+   * Update container height only - completely removed dynamic height calculations
+   * to prevent Safari/Chrome freezing during resize operations
    */
   updateContainerHeight() {
+    // DISABLED: Dynamic height calculations cause severe browser freezing
+    // Instead, we'll use fixed CSS in the component
+    
+    // No dynamic height adjustments - safer approach
+    return;
+    
+    /* Original implementation - removed to prevent freezing
     try {
       const rootElement = this.template.querySelector(
         ".slds-grid.slds-grid_vertical.slds-grid_frame"
@@ -164,6 +176,7 @@ export default class duplicationContainer extends NavigationMixin(
     } catch (error) {
       // Silent error handling
     }
+    */
   }
 
   disconnectedCallback() {
@@ -173,29 +186,32 @@ export default class duplicationContainer extends NavigationMixin(
       this.subscription = null;
     }
     
-    // Remove resize listener
+    // DISABLED: Resize listener cleanup not needed since we disabled it
+    /*
     if (this._resizeHandler) {
       window.removeEventListener('resize', this._resizeHandler);
       this._resizeHandler = null;
     }
+    */
     
-    // Clear any pending animation frames
+    // Clear any pending timeouts
     if (this._resizeTimeout) {
-      window.cancelAnimationFrame(this._resizeTimeout);
+      clearTimeout(this._resizeTimeout);
       this._resizeTimeout = null;
     }
   }
 
   /**
    * After component renders, ensure container height is set
-   * Use requestAnimationFrame to prevent Safari rendering issues
+   * Using direct approach instead of requestAnimationFrame to prevent Safari freezing
    */
   renderedCallback() {
-    // Use requestAnimationFrame to avoid Safari rendering issues
-    window.requestAnimationFrame(() => {
+    // Avoid requestAnimationFrame which can cause issues in Safari
+    // Use basic timeout instead with a small delay
+    setTimeout(() => {
       // Just update the container height - no DOM manipulation for tabs
       this.updateContainerHeight();
-    });
+    }, 50);
   }
 
   /**

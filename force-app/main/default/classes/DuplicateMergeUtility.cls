@@ -13,7 +13,7 @@ public class DuplicateMergeUtility {
    * @return Result containing merge statistics
    */
   public static MergeResult mergeGroup(
-    DuplicateMatcherUtility.DuplicateGroup duplicateGroup,
+    DuplicateGroup duplicateGroup,
     String masterRecordStrategy
   ) {
     // Skip if no duplicates
@@ -21,7 +21,7 @@ public class DuplicateMergeUtility {
       return new MergeResult(0, 'No duplicates to merge');
     }
 
-    // Get master record - for DuplicateMatcherUtility.DuplicateGroup, we need to select the first record as master
+    // Get master record - for DuplicateGroup, we need to select the first record as master
     SObject masterRecord = duplicateGroup.records[0];
     if (masterRecord == null) {
       return new MergeResult(0, 'Could not determine master record');

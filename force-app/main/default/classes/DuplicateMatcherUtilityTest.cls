@@ -58,7 +58,7 @@ private class DuplicateMatcherUtilityTest {
     Test.startTest();
 
     // Find duplicates
-    Map<String, DuplicateMatcherUtility.DuplicateGroup> duplicateGroups = DuplicateMatcherUtility.findDuplicateGroups(
+    Map<String, DuplicateGroup> duplicateGroups = DuplicateMatcherUtility.findDuplicateGroups(
       accounts,
       fields
     );
@@ -73,7 +73,7 @@ private class DuplicateMatcherUtilityTest {
     );
 
     // Verify the duplicate group
-    DuplicateMatcherUtility.DuplicateGroup dupGroup = duplicateGroups.values()[0];
+    DuplicateGroup dupGroup = duplicateGroups.values()[0];
     System.assertEquals(
       2,
       dupGroup.getRecordCount(),
@@ -131,7 +131,7 @@ private class DuplicateMatcherUtilityTest {
     Test.startTest();
 
     // Find duplicates
-    Map<String, DuplicateMatcherUtility.DuplicateGroup> duplicateGroups = DuplicateMatcherUtility.findDuplicateGroups(
+    Map<String, DuplicateGroup> duplicateGroups = DuplicateMatcherUtility.findDuplicateGroups(
       accounts,
       fields
     );
@@ -186,7 +186,7 @@ private class DuplicateMatcherUtilityTest {
     Test.startTest();
 
     // Find duplicates
-    Map<String, DuplicateMatcherUtility.DuplicateGroup> duplicateGroups = DuplicateMatcherUtility.findDuplicateGroups(
+    Map<String, DuplicateGroup> duplicateGroups = DuplicateMatcherUtility.findDuplicateGroups(
       accounts,
       fields
     );
@@ -237,7 +237,7 @@ private class DuplicateMatcherUtilityTest {
     Test.startTest();
 
     // Find duplicates based only on name
-    Map<String, DuplicateMatcherUtility.DuplicateGroup> duplicateGroups = DuplicateMatcherUtility.findDuplicateGroups(
+    Map<String, DuplicateGroup> duplicateGroups = DuplicateMatcherUtility.findDuplicateGroups(
       accounts,
       fields
     );
@@ -252,7 +252,7 @@ private class DuplicateMatcherUtilityTest {
     );
 
     // Verify the duplicate group
-    DuplicateMatcherUtility.DuplicateGroup dupGroup = duplicateGroups.values()[0];
+    DuplicateGroup dupGroup = duplicateGroups.values()[0];
     System.assertEquals(
       2,
       dupGroup.getRecordCount(),
