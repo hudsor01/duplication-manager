@@ -4,8 +4,6 @@
 
 Duplication Manager is a robust Salesforce application for detecting, comparing, and merging duplicate records across your Salesforce org. The solution provides an intuitive Lightning UI and powerful backend processing to streamline your data quality efforts.
 
-![Duplication Manager Dashboard](https://placeholder-for-screenshot.png)
-
 ## Key Features
 
 - **Intelligent Matching**: Identify duplicates using configurable field weights and normalization
@@ -15,10 +13,6 @@ Duplication Manager is a robust Salesforce application for detecting, comparing,
 - **Detailed Logging**: Track all detection and merge operations
 - **Scheduled Jobs**: Automate duplicate detection on a regular schedule
 - **Health Check**: Monitor the configuration and performance of your duplicate management
-
-## Getting Started
-
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
 
 ### Quick Start
 
